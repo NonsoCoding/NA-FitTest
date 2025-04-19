@@ -25,9 +25,8 @@ const LoginModal: React.FC<LoginModalIprops> = ({
 
     // Handle the submission of the sign-in form
     const onSignInPress = async () => {
-        // console.log("yes")
         if (!isLoaded) return
-
+        // console.log(emailAddress, password)
         try {
             const signInAttempt = await signIn.create({
                 identifier: emailAddress,
@@ -35,21 +34,25 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                 strategy: "password",
             });
 
+            console.log("done");
+
             if (signInAttempt.status === "complete") {
-                // setPreloader(false);
-                // retrieveData();
+                // This is missing - you need to set the active session
+                await setActive({ session: signInAttempt.createdSessionId });
+
                 console.log("done")
                 setEmailAddress("");
                 setPassword("");
+
+                // You may also want to navigate or close the modal after successful login
+
             } else {
-                // setPreloader(false);
                 console.log("Login failed. Please try again.");
+                // Add user feedback here
             }
         } catch (err) {
-            // setPreloader(false);
-            // console.error("Error during login:", err);
-            // setError(err.message || "An error occurred during login");
             console.log(err)
+            // Add user feedback for errors
         }
     }
 

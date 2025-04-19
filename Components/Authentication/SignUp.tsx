@@ -29,9 +29,9 @@ const SignUpModal: React.FC<SignUpModalIprops> = ({
     const [code, setCode] = useState('')
 
     const onSignUpPress = async () => {
-        // console.log("yes")
-        if (!isLoaded) return
+        // console.log("onSignUpPress")
 
+        if (!isLoaded) return
 
         try {
             await signUp.create({
@@ -48,7 +48,8 @@ const SignUpModal: React.FC<SignUpModalIprops> = ({
         } catch (err) {
             // See https://clerk.com/docs/custom-flows/error-handling
             // for more info on error handling
-            console.error(JSON.stringify(err, null, 2))
+            console.error(JSON.stringify(err, null, 2));
+            console.log(err);
         }
     }
     const onVerifyPress = async () => {
@@ -94,6 +95,7 @@ const SignUpModal: React.FC<SignUpModalIprops> = ({
             });
     };
 
+    // console.log(isSignedIn)
 
     return (
         <Modal
