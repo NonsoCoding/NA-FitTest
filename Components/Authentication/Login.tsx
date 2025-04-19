@@ -1,5 +1,7 @@
 import { Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
+import { useSignIn } from '@clerk/clerk-expo'
+import {useState} from "react";
 
 interface LoginModalIprops {
     navigation?: any;
@@ -14,6 +16,44 @@ const LoginModal: React.FC<LoginModalIprops> = ({
     onClose,
     onSwitchToSignUp
 }) => {
+
+    const { signIn, setActive, isLoaded } = useSignIn()
+    // const router = useRouter()
+
+    const [emailAddress, setEmailAddress] = useState('')
+    const [password, setPassword] = useState('')
+
+    // Handle the submission of the sign-in form
+    const onSignInPress = async () => {
+        // console.log("yes")
+        if (!isLoaded) return
+
+        try {
+            const signInAttempt = await signIn.create({
+                identifier: emailAddress,
+                password: password,
+                strategy: "password",
+            });
+
+            if (signInAttempt.status === "complete") {
+                // setPreloader(false);
+                // retrieveData();
+                console.log("done")
+                setEmailAddress("");
+                setPassword("");
+            } else {
+                // setPreloader(false);
+                console.log("Login failed. Please try again.");
+            }
+        } catch (err) {
+            // setPreloader(false);
+            // console.error("Error during login:", err);
+            // setError(err.message || "An error occurred during login");
+            console.log(err)
+        }
+    }
+
+
     return (
         <Modal
             visible={isVisible}
@@ -28,7 +68,7 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                 <View style={{
                     gap: 20,
                     backgroundColor: "black",
-                    height: "49%",
+                    height: "55%",
                     padding: 30,
                     justifyContent: 'center',
                     borderTopRightRadius: 25,
@@ -51,6 +91,8 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                             placeholder="your email"
                             style={styles.textinput}
                             placeholderTextColor={"#8c8c8e"}
+                            value={emailAddress}
+                            onChangeText={(inp:string) => setEmailAddress(inp)}
                         />
                     </View>
                     <View style={styles.textinput_container}>
@@ -62,6 +104,8 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                             placeholder="your password"
                             placeholderTextColor={"#8c8c8e"}
                             style={styles.textinput}
+                            value={password}
+                            onChangeText={(code: string) => setPassword(code)}
                         />
                     </View>
                     <View style={{
@@ -81,7 +125,9 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                             <Text style={{ color: "white", fontSize: 12, fontFamily: Theme.Montserrat_Font.Mont500 }}>Get Code</Text>
                         </TouchableOpacity>
                     </View>
-                    <TouchableOpacity style={[styles.continue_email_button, {
+                    <TouchableOpacity
+                        onPress={onSignInPress}
+                        style={[styles.continue_email_button, {
                         padding: 15
                     }]}>
                         <Image source={require("../../assets/Icons/fast-forward.png")}
