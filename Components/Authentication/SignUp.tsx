@@ -32,7 +32,7 @@ const SignUpModal: React.FC<SignUpModalIprops> = ({
         // console.log("yes")
         if (!isLoaded) return
 
-        // Start sign-up process using email and password provided
+
         try {
             await signUp.create({
                 emailAddress: emailAddress,
