@@ -1,5 +1,7 @@
 import { Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
+import { useSignIn } from '@clerk/clerk-expo'
+import { useState } from "react";
 
 interface LoginModalIprops {
     navigation?: any;
@@ -14,6 +16,47 @@ const LoginModal: React.FC<LoginModalIprops> = ({
     onClose,
     onSwitchToSignUp
 }) => {
+
+    const { signIn, setActive, isLoaded } = useSignIn()
+    // const router = useRouter()
+
+    const [emailAddress, setEmailAddress] = useState('')
+    const [password, setPassword] = useState('')
+
+    // Handle the submission of the sign-in form
+    const onSignInPress = async () => {
+        if (!isLoaded) return
+        // console.log(emailAddress, password)
+        try {
+            const signInAttempt = await signIn.create({
+                identifier: emailAddress,
+                password: password,
+                strategy: "password",
+            });
+
+            console.log("done");
+
+            if (signInAttempt.status === "complete") {
+                // This is missing - you need to set the active session
+                await setActive({ session: signInAttempt.createdSessionId });
+
+                console.log("done")
+                setEmailAddress("");
+                setPassword("");
+
+                // You may also want to navigate or close the modal after successful login
+
+            } else {
+                console.log("Login failed. Please try again.");
+                // Add user feedback here
+            }
+        } catch (err) {
+            console.log(err)
+            // Add user feedback for errors
+        }
+    }
+
+
     return (
         <Modal
             visible={isVisible}
@@ -28,7 +71,7 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                 <View style={{
                     gap: 20,
                     backgroundColor: "black",
-                    height: "49%",
+                    height: "55%",
                     padding: 30,
                     justifyContent: 'center',
                     borderTopRightRadius: 25,
@@ -51,6 +94,8 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                             placeholder="your email"
                             style={styles.textinput}
                             placeholderTextColor={"#8c8c8e"}
+                            value={emailAddress}
+                            onChangeText={(inp: string) => setEmailAddress(inp)}
                         />
                     </View>
                     <View style={styles.textinput_container}>
@@ -62,9 +107,11 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                             placeholder="your password"
                             placeholderTextColor={"#8c8c8e"}
                             style={styles.textinput}
+                            value={password}
+                            onChangeText={(code: string) => setPassword(code)}
                         />
                     </View>
-                    {/* <View style={{
+                    <View style={{
                         flexDirection: "row",
                         gap: 10
                     }}>
@@ -80,10 +127,12 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                         <TouchableOpacity style={styles.get_code_button}>
                             <Text style={{ color: "white", fontSize: 12, fontFamily: Theme.Montserrat_Font.Mont500 }}>Get Code</Text>
                         </TouchableOpacity>
-                    </View> */}
-                    <TouchableOpacity style={[styles.continue_email_button, {
-                        padding: 15
-                    }]}>
+                    </View>
+                    <TouchableOpacity
+                        onPress={onSignInPress}
+                        style={[styles.continue_email_button, {
+                            padding: 15
+                        }]}>
                         <Image source={require("../../assets/Icons/fast-forward.png")}
                             style={[styles.button_icon, {
                                 height: 30,
