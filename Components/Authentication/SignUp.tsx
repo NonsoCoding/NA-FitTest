@@ -28,7 +28,7 @@ const SignUpModal: React.FC<SignUpModalIprops> = ({
                 <View style={{
                     gap: 20,
                     backgroundColor: "black",
-                    height: "49%",
+                    height: "55%",
                     padding: 30,
                     justifyContent: 'center',
                     borderTopRightRadius: 25,

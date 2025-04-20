@@ -42,7 +42,7 @@ const AuthFlow = ({
 
     useEffect(() => {
         Animated.timing(headerPosition, {
-            toValue: (isLoginModalVisible || isSignUpModalVisible) ? -100 : 0,
+            toValue: (isLoginModalVisible || isSignUpModalVisible) ? -150 : 0,
             duration: 300,
             useNativeDriver: true
         }).start();
@@ -112,7 +112,7 @@ const AuthFlow = ({
                     <Animated.View
                         style={{
                             transform: [{ translateY: headerPosition }],
-                            paddingHorizontal: 10,
+                            paddingHorizontal: 40,
                             marginBottom: 20,
                         }}
                     >
@@ -153,12 +153,11 @@ export default AuthFlow;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        marginTop: Platform.OS === "android" ? StatusBar.currentHeight : null,
         justifyContent: "center",
         gap: 50
     },
     intro_header: {
-        fontSize: 50,
+        fontSize: 40,
         color: "white",
         fontWeight: "500",
         fontFamily: Theme.MuseoModerno_Font.Muse900,

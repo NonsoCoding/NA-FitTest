@@ -64,7 +64,7 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                             style={styles.textinput}
                         />
                     </View>
-                    <View style={{
+                    {/* <View style={{
                         flexDirection: "row",
                         gap: 10
                     }}>
@@ -80,7 +80,7 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                         <TouchableOpacity style={styles.get_code_button}>
                             <Text style={{ color: "white", fontSize: 12, fontFamily: Theme.Montserrat_Font.Mont500 }}>Get Code</Text>
                         </TouchableOpacity>
-                    </View>
+                    </View> */}
                     <TouchableOpacity style={[styles.continue_email_button, {
                         padding: 15
                     }]}>
