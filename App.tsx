@@ -15,8 +15,6 @@ import {
   MuseoModerno_700Bold, MuseoModerno_800ExtraBold, MuseoModerno_900Black
 } from '@expo-google-fonts/museomoderno';
 import StackNavigation from './Components/Navigation/StackNavigator';
-import { StatusBar } from "react-native";
-import {Theme} from "./Components/Branding/Theme";
 
 export default function App() {
 
@@ -70,10 +68,6 @@ export default function App() {
     }}>
       <PaperProvider>
         <StackNavigation />
-        <StatusBar
-            backgroundColor={Theme.colos.primaryColor}
-            barStyle={"dark-content"}
-        />
       </PaperProvider>
     </View>
   );

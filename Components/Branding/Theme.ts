@@ -3,7 +3,7 @@ import { MuseoModerno_100Thin, MuseoModerno_200ExtraLight, MuseoModerno_300Light
 export const Theme = {
     colos: {
         white: "#FFFFF",
-        primaryColor: "#ADCC05",
+        primaryColor: "#4B5320",
         black: "#00000"
     },
     Montserrat_Font: {

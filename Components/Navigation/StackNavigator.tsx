@@ -7,6 +7,11 @@ import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import SignUp from "../Authentication/SignUp";
 
 import HomePage from "../Screens/HomeScreen";
+import PullUpsTestScreen from "../Screens/TestScreens/PullUpTestScreen";
+import PushUpsTestScreen from "../Screens/TestScreens/PushUpTestScreen";
+import SprintTestScreen from "../Screens/TestScreens/SprintTestScreen";
+import SitUpTestScreen from "../Screens/TestScreens/SitUpTextScreen";
+import RunningTestScreen from "../Screens/TestScreens/RunningTestScreen";
 
 const Stack = createStackNavigator();
 
@@ -31,12 +36,15 @@ const StackNavigation: React.FC = () => {
                     // initialRouteName={isSignedIn ? }
                     screenOptions={{
                         headerShown: false,
-                        cardStyle: { backgroundColor: "white" },
-
                     }}>
                     <Stack.Screen name="Intro" component={AuthFlow} />
                     {/*<Stack.Screen name="SignUp" component={SignUp} />*/}
                     <Stack.Screen name="HomePage" component={HomePage} />
+                    <Stack.Screen name="PullUpsScreen" component={PullUpsTestScreen} />
+                    <Stack.Screen name="PushUpsScreen" component={PushUpsTestScreen} />
+                    <Stack.Screen name="SprintScreen" component={SprintTestScreen} />
+                    <Stack.Screen name="SitUpScreen" component={SitUpTestScreen} />
+                    <Stack.Screen name="RunningScreen" component={RunningTestScreen} />
                 </Stack.Navigator>
             </NavigationContainer>
         </ClerkProvider>

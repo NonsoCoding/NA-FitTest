@@ -60,21 +60,21 @@ const AuthFlow = ({
         setIsLoginModalVisible(false);
         setTimeout(() => {
             setIsSignUpModalVisible(true);
-        }, 500)
+        }, 700)
     }
 
     const handleSwicthToLoginFromSignUp = () => {
         setIsSignUpModalVisible(false);
         setTimeout(() => {
             setIsLoginModalVisible(true);
-        }, 500)
+        }, 700)
     }
 
     const handleSwicthToSignUpFromIntro = () => {
         setIsIntroModalVisible(false);
         setTimeout(() => {
             setIsSignUpModalVisible(true);
-        }, 500)
+        }, 700)
     }
 
     const handleSwicthToLoginFromIntro = () => {
@@ -82,7 +82,7 @@ const AuthFlow = ({
         changeBackground();
         setTimeout(() => {
             setIsLoginModalVisible(true);
-        }, 500)
+        }, 700)
     }
 
     return (
@@ -134,6 +134,7 @@ const AuthFlow = ({
                         }}
                         isVisible={isLoginModalVisible}
                         onSwitchToSignUp={handleSwicthToSignUpFromLogin}
+                        navigation={navigation}
                     />
                     <SignUpModal
                         onClose={() => {

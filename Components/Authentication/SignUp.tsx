@@ -1,9 +1,9 @@
-    import { useSignUp, useAuth } from '@clerk/clerk-expo'
-    import * as React from 'react'
+import { useSignUp, useAuth } from '@clerk/clerk-expo'
+import * as React from 'react'
 import { Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
-import {useState} from "react";
-    import * as stream from "node:stream";
+import { useState } from "react";
+import * as stream from "node:stream";
 
 interface SignUpModalIprops {
     navigation?: any;
@@ -21,7 +21,7 @@ const SignUpModal: React.FC<SignUpModalIprops> = ({
 
     const { isLoaded, signUp, setActive } = useSignUp()
 
-    const {signOut, sessionId, isSignedIn} = useAuth()
+    const { signOut, sessionId, isSignedIn } = useAuth()
 
     const [emailAddress, setEmailAddress] = useState('')
     const [password, setPassword] = useState('')
@@ -67,6 +67,7 @@ const SignUpModal: React.FC<SignUpModalIprops> = ({
                 await setActive({ session: signUpAttempt.createdSessionId })
                 // router.replace('/')
                 console.log("You are successfully signed in, move to homescreen");
+                navigation.navigate("HomePage");
                 setEmailAddress("");
                 setPassword("");
             } else {
@@ -83,8 +84,8 @@ const SignUpModal: React.FC<SignUpModalIprops> = ({
 
 
 
-    const signingOut = async (sessionId:string) => {
-       await signOut({
+    const signingOut = async (sessionId: string) => {
+        await signOut({
             sessionId,
         })
             .then(() => {
@@ -94,6 +95,8 @@ const SignUpModal: React.FC<SignUpModalIprops> = ({
                 console.log(e);
             });
     };
+
+    signingOut("signi");
 
     // console.log(isSignedIn)
 
@@ -176,8 +179,8 @@ const SignUpModal: React.FC<SignUpModalIprops> = ({
                     <TouchableOpacity
                         onPress={onVerifyPress}
                         style={[styles.continue_email_button, {
-                        padding: 15
-                    }]}>
+                            padding: 15
+                        }]}>
                         <Image source={require("../../assets/Icons/fast-forward.png")}
                             style={[styles.button_icon, {
                                 width: 30,

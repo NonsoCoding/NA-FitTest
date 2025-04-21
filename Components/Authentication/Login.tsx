@@ -20,7 +20,7 @@ const LoginModal: React.FC<LoginModalIprops> = ({
     const { signIn, setActive, isLoaded } = useSignIn()
     // const router = useRouter()
 
-    const [emailAddress, setEmailAddress] = useState('')
+    const [emailAddress, setEmailAddress] = useState('');
     const [password, setPassword] = useState('')
 
     // Handle the submission of the sign-in form
@@ -40,7 +40,9 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                 // This is missing - you need to set the active session
                 await setActive({ session: signInAttempt.createdSessionId });
 
-                console.log("done")
+                console.log("done");
+                onClose();
+                navigation.navigate("HomePage");
                 setEmailAddress("");
                 setPassword("");
 
@@ -111,7 +113,7 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                             onChangeText={(code: string) => setPassword(code)}
                         />
                     </View>
-                    <View style={{
+                    {/* <View style={{
                         flexDirection: "row",
                         gap: 10
                     }}>
@@ -127,7 +129,7 @@ const LoginModal: React.FC<LoginModalIprops> = ({
                         <TouchableOpacity style={styles.get_code_button}>
                             <Text style={{ color: "white", fontSize: 12, fontFamily: Theme.Montserrat_Font.Mont500 }}>Get Code</Text>
                         </TouchableOpacity>
-                    </View>
+                    </View> */}
                     <TouchableOpacity
                         onPress={onSignInPress}
                         style={[styles.continue_email_button, {
@@ -158,7 +160,6 @@ const LoginModal: React.FC<LoginModalIprops> = ({
 export default LoginModal;
 
 const styles = StyleSheet.create({
-
     continue_google_button: {
         backgroundColor: "white",
         flexDirection: "row",
