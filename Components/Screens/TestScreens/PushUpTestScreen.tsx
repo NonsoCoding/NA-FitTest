@@ -2,10 +2,25 @@ import { Image, ImageBackground, Modal, StyleSheet, Text, TouchableOpacity, View
 import { Theme } from "../../Branding/Theme";
 import { useVideoPlayer, VideoView } from "expo-video";
 import { useEffect, useRef, useState } from "react";
+import { Accelerometer } from "expo-sensors";
 
 
 interface ITestProps {
     navigation?: any;
+}
+
+enum PushupState {
+    READY,       // Starting position, waiting for movement
+    GOING_DOWN,  // User is moving downward
+    DOWN,        // User is in the down position
+    GOING_UP,    // User is moving upward
+    UP           // User has completed a rep
+}
+
+interface SensorData {
+    z?: number;
+    x?: number;
+    y?: number;
 }
 
 const VideoSource = require("../../../assets/ExerciseGifs/pushUps.mp4")
@@ -21,26 +36,79 @@ const PushUpsTestScreen = ({
     const [prepTime, setPrepTime] = useState(5);
     const [isStartRunning, setIsStartRunning] = useState(false);
     const [startTime, setStartTime] = useState(60);
+    const [sensorData, setSensorData] = useState<SensorData>({});
+    const [pushUpCount, setPushUpCount] = useState(0);
+    const [pushupState, setPushupState] = useState<PushupState>(PushupState.READY);
+    const [isFirstCalibration, setIsFirstCalibration] = useState(true);
+    const [calibrationValues, setCalibrationValues] = useState({
+        downThreshold: -0.4,
+        upThreshold: -0.1,
+        midThreshold: -0.25
+    });
+    const [lastCountTime, setLastCountTime] = useState<number>(0);
     const [isRunning, setIsRunning] = useState(false);
+    const [isGoingDown, setIsGoingDown] = useState(false);
+    // const startIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    // const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+
+    const MIN_PUSHUP_TIME = 500; // Minimum time for a valid push-up (ms)
+    const MAX_PUSHUP_TIME = 5000; // Maximum time for a valid push-up (ms)
+    const COOLDOWN_MS = 200; // Reduced cooldown for better responsiveness
+
+    // Track timestamps for each state transition
+    const [stateTimestamps, setStateTimestamps] = useState({
+        downStart: 0,
+        downEnd: 0,
+        upStart: 0,
+        upEnd: 0
+    });
+
+    // Refs for intervals
     const startIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Track recent Z values for smoothing
+    const recentZValues = useRef<number[]>([]);
+    const MAX_HISTORY = 5;
 
     const pullUpsPlayer = useVideoPlayer(VideoSource, (player) => {
         player.loop = true;
         player.play();
     });
 
+    // Function to get smoothed Z value
+    const getSmoothedZ = () => {
+        if (recentZValues.current.length === 0) return 0;
+        const sum = recentZValues.current.reduce((a, b) => a + b, 0);
+        return sum / recentZValues.current.length;
+    };
+
+    // Add new Z value and maintain limited history
+    const addZValue = (z: number) => {
+        recentZValues.current.push(z);
+        if (recentZValues.current.length > MAX_HISTORY) {
+            recentZValues.current.shift();
+        }
+    };
+
+    // Start preparation countdown
     const startPrepCountdown = () => {
         if (prepTime > 0 && !isRunning) {
             setIsRunning(true);
         }
     };
 
+    // Start main countdown when modal is visible
     useEffect(() => {
         if (isStartModalVisible) {
             startMainCountdown();
+            // Reset push-up counter when starting the test
+            setPushUpCount(0);
+            setPushupState(PushupState.READY);
+            setIsFirstCalibration(true);
         }
-    }, [isStartModalVisible])
+    }, [isStartModalVisible]);
 
     const startMainCountdown = () => {
         if (startTime > 0 && !isStartRunning) {
@@ -54,7 +122,197 @@ const PushUpsTestScreen = ({
             setIsPrepModalVisible(true);
             startPrepCountdown();
         }, 700);
-    }
+    };
+
+    // Preparation timer logic
+    useEffect(() => {
+        if (isRunning && prepTime > 0) {
+            intervalRef.current = setInterval(() => {
+                setPrepTime(prev => {
+                    if (prev === 1) {
+                        clearInterval(intervalRef.current as NodeJS.Timeout);
+                        setIsRunning(false);
+                        setIsPrepModalVisible(false);
+                        setTimeout(() => {
+                            setIsStartModalVisible(true);
+                        }, 700);
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        };
+    }, [isRunning]);
+
+    // Main timer logic
+    useEffect(() => {
+        if (isStartRunning && startTime > 0) {
+            startIntervalRef.current = setInterval(() => {
+                setStartTime(prev => {
+                    if (prev === 1) {
+                        clearInterval(startIntervalRef.current as NodeJS.Timeout);
+                        setIsStartRunning(false);
+                        setIsStartModalVisible(false);
+                        setTimeout(() => {
+                            setIsResultModalVisible(true);
+                        }, 700);
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+
+        return () => {
+            if (startIntervalRef.current) clearInterval(startIntervalRef.current);
+        };
+    }, [isStartRunning]);
+
+    // Accelerometer setup
+    useEffect(() => {
+        const subscription = Accelerometer.addListener(accelerometerData => {
+            setSensorData(accelerometerData);
+        });
+
+        Accelerometer.setUpdateInterval(100);
+
+        return () => subscription.remove();
+    }, []);
+
+    // Push-up detection with state machine
+    useEffect(() => {
+        if (sensorData.z === undefined) return;
+
+        const now = Date.now();
+        const z = sensorData.z;
+
+        // Add to recent values for smoothing
+        addZValue(z);
+        const smoothedZ = getSmoothedZ();
+
+        // Auto-calibration for first few push-ups
+        if (isFirstCalibration && pushUpCount === 3) {
+            setIsFirstCalibration(false);
+            console.log("Calibration complete");
+        }
+
+        // State machine for push-up detection
+        switch (pushupState) {
+            case PushupState.READY:
+                // Starting position, looking for downward movement
+                if (smoothedZ < calibrationValues.midThreshold) {
+                    setPushupState(PushupState.GOING_DOWN);
+                    setStateTimestamps(prev => ({ ...prev, downStart: now }));
+                    console.log("Started going down");
+                }
+                break;
+
+            case PushupState.GOING_DOWN:
+                // Transitioning downward
+                if (smoothedZ < calibrationValues.downThreshold) {
+                    setPushupState(PushupState.DOWN);
+                    setStateTimestamps(prev => ({ ...prev, downEnd: now }));
+                    console.log("Reached down position");
+                } else if (smoothedZ > calibrationValues.midThreshold) {
+                    // False start, reset to ready
+                    setPushupState(PushupState.READY);
+                    console.log("False start - reset");
+                }
+                break;
+
+            case PushupState.DOWN:
+                // In down position, looking for upward movement
+                if (smoothedZ > calibrationValues.midThreshold) {
+                    setPushupState(PushupState.GOING_UP);
+                    setStateTimestamps(prev => ({ ...prev, upStart: now }));
+                    console.log("Started going up");
+                }
+                break;
+
+            case PushupState.GOING_UP:
+                // Transitioning upward
+                if (smoothedZ > calibrationValues.upThreshold) {
+                    const pushupDuration = now - stateTimestamps.downStart;
+
+                    // Verify this is a valid push-up with time constraints
+                    if (pushupDuration >= MIN_PUSHUP_TIME &&
+                        pushupDuration <= MAX_PUSHUP_TIME &&
+                        now - lastCountTime > COOLDOWN_MS) {
+
+                        // Count a valid push-up
+                        setPushUpCount(prevCount => {
+                            const newCount = prevCount + 1;
+
+                            // Adjust thresholds based on actual movements for first few push-ups
+                            if (isFirstCalibration && newCount <= 3) {
+                                setCalibrationValues(prev => ({
+                                    downThreshold: (prev.downThreshold * 0.7) + (smoothedZ * 0.3),
+                                    upThreshold: Math.max(prev.upThreshold, smoothedZ * 0.8),
+                                    midThreshold: (prev.downThreshold + prev.upThreshold) / 2
+                                }));
+                            }
+
+                            return newCount;
+                        });
+
+                        setLastCountTime(now);
+                        console.log("Push-up counted! Duration:", pushupDuration);
+                    } else {
+                        console.log("Invalid push-up - time constraints not met");
+                    }
+
+                    // Reset to ready state
+                    setPushupState(PushupState.UP);
+                    setStateTimestamps(prev => ({ ...prev, upEnd: now }));
+                } else if (smoothedZ < calibrationValues.downThreshold) {
+                    // Went back down, reset to DOWN state
+                    setPushupState(PushupState.DOWN);
+                    console.log("Went back down");
+                }
+                break;
+
+            case PushupState.UP:
+                // Reset after brief pause
+                if (now - stateTimestamps.upEnd > 300) {
+                    setPushupState(PushupState.READY);
+                }
+                break;
+        }
+    }, [sensorData]);
+
+
+    // const pullUpsPlayer = useVideoPlayer(VideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
+
+    // const startPrepCountdown = () => {
+    //     if (prepTime > 0 && !isRunning) {
+    //         setIsRunning(true);
+    //     }
+    // };
+
+    useEffect(() => {
+        if (isStartModalVisible) {
+            startMainCountdown();
+        }
+    }, [isStartModalVisible])
+
+    // const startMainCountdown = () => {
+    //     if (startTime > 0 && !isStartRunning) {
+    //         setIsStartRunning(true);
+    //     }
+    // };
+
+    // const modalToPrepModal = () => {
+    //     setIsModalVisible(false);
+    //     setTimeout(() => {
+    //         setIsPrepModalVisible(true);
+    //         startPrepCountdown();
+    //     }, 700);
+    // }
 
     useEffect(() => {
         if (isRunning && prepTime > 0) {
@@ -99,6 +357,19 @@ const PushUpsTestScreen = ({
             if (startIntervalRef.current) clearInterval(startIntervalRef.current);
         };
     }, [isStartRunning]);
+
+    useEffect(() => {
+        const subscription = Accelerometer.addListener(accelerometerData => {
+            setSensorData(accelerometerData);
+        });
+
+        Accelerometer.setUpdateInterval(100);
+
+        return () => subscription.remove();
+    }, []);
+
+
+
 
     return (
         <View style={{
@@ -532,7 +803,7 @@ const PushUpsTestScreen = ({
                                         fontSize: 60,
                                         color: "white",
                                         fontFamily: Theme.Montserrat_Font.Mont700
-                                    }}>58</Text>
+                                    }}>{pushUpCount}</Text>
                                     {/* <Text style={{
                                         fontSize: 17,
                                         bottom: 10,
@@ -545,7 +816,7 @@ const PushUpsTestScreen = ({
                                     <Text style={{
                                         fontFamily: Theme.MuseoModerno_Font.Muse600,
                                         color: "white"
-                                    }}>INPUT SCORE</Text>
+                                    }}>Correct Push Ups</Text>
                                 </View>
                                 <TouchableOpacity style={styles.getStartedBtn}
                                     onPress={() => {
@@ -569,6 +840,9 @@ const PushUpsTestScreen = ({
                         </View>
                     </View>
                 </Modal>
+                <Text>Push-Up Count: {pushUpCount}</Text>
+                <Text>Sensor Z: {sensorData.z?.toFixed(2)}</Text>
+
             </ImageBackground>
         </View>
     )
