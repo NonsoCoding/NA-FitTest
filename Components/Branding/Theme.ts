@@ -4,7 +4,8 @@ export const Theme = {
     colos: {
         white: "#FFFFF",
         primaryColor: "#4B5320",
-        black: "#00000"
+        black: "#00000",
+        borderColor: "#D3D3D3"
     },
     Montserrat_Font: {
         Mont100: "Montserrat_100Thin",
