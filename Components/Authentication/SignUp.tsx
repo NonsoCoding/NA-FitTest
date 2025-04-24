@@ -7,7 +7,7 @@ import * as stream from "node:stream";
 import * as yup from "yup";
 import LottieView from 'lottie-react-native';
 import { Formik } from 'formik';
-import { AntDesign, FontAwesome6, Fontisto } from '@expo/vector-icons';
+import { AntDesign, Feather, FontAwesome6, Fontisto } from '@expo/vector-icons';
 
 interface SignUpIprops {
     navigation?: any;
@@ -36,6 +36,7 @@ const SignUpScreen = ({
 
     const [isLoading, setIsLoading] = useState(false);
     const [pendingVerification, setPendingVerification] = useState(false)
+    const [togglePasswordVisibility, setTogglePasswordVisibility] = useState(false);
     const [code, setCode] = useState('');
 
     // Inside your component
@@ -118,117 +119,6 @@ const SignUpScreen = ({
 
 
     return (
-        // <View style={{
-        //     justifyContent: "flex-end",
-        //     flex: 1,
-        // }}>
-        //     <View style={{
-        //         gap: 20,
-        //         backgroundColor: Theme.colos.primaryColor,
-        //         height: "55%",
-        //         paddingBottom: 50,
-        //         padding: 30,
-        //         justifyContent: 'center',
-        //         borderTopRightRadius: 25,
-        //         borderTopLeftRadius: 25,
-        //         shadowColor: '#000',
-        //         shadowOffset: {
-        //             width: 0,
-        //             height: -80,
-        //         },
-        //         shadowOpacity: 0.6,
-        //         shadowRadius: 25,
-        //         elevation: 10,
-        //     }}>
-        //         <ScrollView
-        //             showsVerticalScrollIndicator={true}
-        //             contentContainerStyle={{
-        //                 justifyContent: "space-between",
-        //                 flex: 1,
-        //             }}
-        //         >
-        //             <View style={{
-        //                 gap: 20
-        //             }}>
-        //                 <View style={styles.textinput_container}>
-        //                     <Image
-        //                         style={styles.button_icon}
-        //                         source={require("../../assets/Icons/Email_Login_Icon.png")}
-        //                     />
-        //                     <TextInput
-        //                         placeholder="your email"
-        //                         placeholderTextColor={"#8c8c8e"}
-        //                         style={styles.textinput}
-        //                         value={emailAddress}
-        //                         onChangeText={setEmailAddress}
-        //                     />
-        //                 </View>
-        //                 <View style={styles.textinput_container}>
-        //                     <Image
-        //                         style={styles.button_icon}
-        //                         source={require("../../assets/Icons/Password_Icon.png")}
-        //                     />
-        //                     <TextInput
-        //                         placeholder="your password"
-        //                         placeholderTextColor={"#8c8c8e"}
-        //                         style={styles.textinput}
-        //                         value={password}
-        //                         onChangeText={setPassword}
-        //                     />
-        //                 </View>
-        //                 <View style={{
-        //                     flexDirection: "row",
-        //                     gap: 10
-        //                 }}>
-        //                     <View style={{
-        //                         flex: 2
-        //                     }}>
-        //                         <TextInput
-        //                             placeholder="OTP..."
-        //                             placeholderTextColor={"#8c8c8e"}
-        //                             style={styles.otp_textinput}
-        //                             value={code}
-        //                             onChangeText={(code: string) => setCode(code)}
-        //                             editable={pendingVerification && true}
-        //                         />
-        //                     </View>
-        //                     <TouchableOpacity
-        //                         onPress={onSignUpPress}
-        //                         style={styles.get_code_button}>
-        //                         <Text style={{ color: "white", fontSize: 12, fontFamily: Theme.Montserrat_Font.Mont500 }}>Get Code</Text>
-        //                     </TouchableOpacity>
-        //                 </View>
-        //             </View>
-        //             <View style={{
-        //                 gap: 20
-        //             }}>
-        //                 <TouchableOpacity
-        //                     onPress={onVerifyPress}
-        //                     style={[styles.continue_email_button, {
-        //                         padding: 15
-        //                     }]}>
-        //                     <Image source={require("../../assets/Icons/fast-forward.png")}
-        //                         style={[styles.button_icon, {
-        //                             width: 30,
-        //                             height: 30
-        //                         }]}
-        //                     />
-        //                     <Text style={styles.email_button_text}>Sign Up</Text>
-        //                 </TouchableOpacity>
-        //                 <View style={{ flexDirection: 'row', gap: 6, alignSelf: "center" }}>
-        //                     <Text style={{ color: 'white', fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Already have an account?</Text>
-        //                     <TouchableOpacity
-        //                         onPress={() => {
-        //                             navigation.navigate("LoginScreen")
-        //                         }}
-        //                     >
-        //                         <Text style={{ color: "#ADCC05", fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>click here</Text>
-        //                     </TouchableOpacity>
-        //                 </View>
-        //             </View>
-        //         </ScrollView>
-        //     </View>
-        // </View>
         <View style={{
             flex: 1
         }}>
@@ -332,10 +222,19 @@ const SignUpScreen = ({
                                             placeholderTextColor={"#8c8c8e"}
                                             style={styles.textinput}
                                             value={values.password}
+                                            secureTextEntry={!togglePasswordVisibility}
                                             placeholder='***********'
                                             onChangeText={handleChange("password")}
                                             onBlur={handleBlur("password")}
                                         />
+                                        <TouchableOpacity style={{
+                                        }}
+                                            onPress={() => {
+                                                setTogglePasswordVisibility(!togglePasswordVisibility)
+                                            }}
+                                        >
+                                            <Feather name={togglePasswordVisibility ? 'eye' : 'eye-off'} size={20} color={Theme.colos.primaryColor} />
+                                        </TouchableOpacity>
                                     </View>
                                     {touched.password && errors.password && (
                                         <Text style={{ color: "red" }}>{errors.password}</Text>

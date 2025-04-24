@@ -3,7 +3,7 @@ import { Theme } from "../Branding/Theme";
 import { useAuth, useSignIn } from '@clerk/clerk-expo'
 import { useState } from "react";
 import LottieView from "lottie-react-native";
-import { AntDesign, FontAwesome6, Fontisto } from "@expo/vector-icons";
+import { AntDesign, Feather, FontAwesome6, Fontisto } from "@expo/vector-icons";
 import * as yup from "yup"
 import { Formik } from "formik";
 
@@ -28,6 +28,7 @@ const LoginScreen = ({
     const { signIn, setActive, isLoaded } = useSignIn()
     // const router = useRouter()
     const [isLoading, setIsLoading] = useState(false);
+    const [togglePasswordVisibility, setTogglePasswordVisibility] = useState(false);
 
     // Handle the submission of the sign-in form
     const onSignInPress = async (emailAddress: string, password: string) => {
@@ -174,10 +175,18 @@ const LoginScreen = ({
                                             placeholderTextColor={"#8c8c8e"}
                                             style={styles.textinput}
                                             value={values.password}
+                                            secureTextEntry={!togglePasswordVisibility}
                                             placeholder="**********"
                                             onChangeText={handleChange("password")}
                                             onBlur={handleBlur("password")}
                                         />
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setTogglePasswordVisibility(!togglePasswordVisibility)
+                                            }}
+                                        >
+                                            <Feather name={togglePasswordVisibility ? 'eye' : 'eye-off'} size={20} color={Theme.colos.primaryColor} />
+                                        </TouchableOpacity>
                                     </View>
                                     {touched.password && errors.password && (
                                         <Text style={{ color: "red" }}>{errors.password}</Text>
