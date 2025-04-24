@@ -1,8 +1,8 @@
 import { Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
+import { useNavigation } from "@react-navigation/native";
 
 interface IntroModalIprops {
-    navigation?: any;
     isVisible: boolean;
     onClose: () => void;
     onSwitchToLogin: () => void;
@@ -11,11 +11,14 @@ interface IntroModalIprops {
 
 const IntroModal: React.FC<IntroModalIprops> = ({
     isVisible,
-    navigation,
     onClose,
     onSwitchToLogin,
     onSwicthToSignUp
 }) => {
+
+
+    const navigation = useNavigation<any>();
+
     return (
         <Modal
             visible={isVisible}
@@ -29,7 +32,7 @@ const IntroModal: React.FC<IntroModalIprops> = ({
             }}>
                 <View style={{
                     gap: 20,
-                    backgroundColor: "black",
+                    backgroundColor: Theme.colos.primaryColor,
                     height: "35%",
                     padding: 30,
                     justifyContent: 'center',
@@ -52,7 +55,10 @@ const IntroModal: React.FC<IntroModalIprops> = ({
                         <Text style={styles.google_button_text}>Continue with Google</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.continue_email_button}
-                        onPress={onSwitchToLogin}
+                        onPress={() => {
+                            navigation.navigate("LoginScreen")
+                            onClose();
+                        }}
                     >
                         <Image source={require("../../assets/Icons/Email_Icon.png")}
                             style={styles.button_icon}
@@ -62,7 +68,10 @@ const IntroModal: React.FC<IntroModalIprops> = ({
                     <View style={{ flexDirection: 'row', gap: 6, alignSelf: "center" }}>
                         <Text style={{ color: 'white', fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Don't have an account?</Text>
                         <TouchableOpacity
-                            onPress={onSwicthToSignUp}
+                            onPress={() => {
+                                navigation.navigate("SignUpScreen");
+                                onClose();
+                            }}
                         >
                             <Text style={{ color: "#ADCC05", fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Sign Up</Text>
                         </TouchableOpacity>
@@ -87,7 +96,7 @@ const styles = StyleSheet.create({
         gap: 15
     },
     continue_email_button: {
-        backgroundColor: "#ADCC05",
+        backgroundColor: "black",
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",

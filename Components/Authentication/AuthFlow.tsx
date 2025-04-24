@@ -6,6 +6,7 @@ import SignUpModal from "./SignUp";
 import { ProgressBar } from "react-native-paper";
 import { Theme } from "../Branding/Theme";
 import { Animated } from 'react-native';
+import { useAuth } from "@clerk/clerk-expo";
 
 
 interface ISignUpProps {
@@ -24,6 +25,23 @@ const AuthFlow = ({
     const headerPosition = useRef(new Animated.Value(0)).current;
     const fadeAnim = useRef(new Animated.Value(1)).current;
     const [bgImage, setBgImage] = useState<ImageSourcePropType>(require("../../assets/BackgroundImages/bg4.png"));
+    const { isLoaded, isSignedIn } = useAuth();
+
+    useEffect(() => {
+        if (!isLoaded) return;
+
+        if (isSignedIn) {
+            navigation.reset({
+                index: 0,
+                routes: [{ name: "HomePage" }],
+            });
+        } else {
+            navigation.reset({
+                index: 0,
+                routes: [{ name: "LoginScreen" }],
+            });
+        }
+    }, [isLoaded, isSignedIn]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -54,20 +72,6 @@ const AuthFlow = ({
                 ? require("../../assets/BackgroundImages/bg3.png")
                 : require('../../assets/BackgroundImages/bg4.png')
         );
-    }
-
-    const handleSwicthToSignUpFromLogin = () => {
-        setIsLoginModalVisible(false);
-        setTimeout(() => {
-            setIsSignUpModalVisible(true);
-        }, 700)
-    }
-
-    const handleSwicthToLoginFromSignUp = () => {
-        setIsSignUpModalVisible(false);
-        setTimeout(() => {
-            setIsLoginModalVisible(true);
-        }, 700)
     }
 
     const handleSwicthToSignUpFromIntro = () => {
@@ -127,21 +131,6 @@ const AuthFlow = ({
                         isVisible={isIntroModalVisible}
                         onSwicthToSignUp={handleSwicthToSignUpFromIntro}
                         onSwitchToLogin={handleSwicthToLoginFromIntro}
-                    />
-                    <LoginModal
-                        onClose={() => {
-                            setIsLoginModalVisible(false)
-                        }}
-                        isVisible={isLoginModalVisible}
-                        onSwitchToSignUp={handleSwicthToSignUpFromLogin}
-                        navigation={navigation}
-                    />
-                    <SignUpModal
-                        onClose={() => {
-                            setIsSignUpModalVisible(false);
-                        }}
-                        isVisible={isSignUpModalVisible}
-                        onSwitchToLogin={handleSwicthToLoginFromSignUp}
                     />
                 </ImageBackground>
             )}

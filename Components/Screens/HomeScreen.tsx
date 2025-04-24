@@ -1,7 +1,9 @@
-import { Image, ImageBackground, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import LottieView from "lottie-react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
+import { useAuth } from "@clerk/clerk-react";
+import { useState } from "react";
 
 
 interface IHomePageProps {
@@ -18,6 +20,32 @@ const runningVideoSource = require('../../assets/ExerciseGifs/running.mp4');
 const HomePage = ({
     navigation
 }: IHomePageProps) => {
+
+    const { signOut } = useAuth();
+    const [isLogOutModalVisible, setIsLogOutModalVisible] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const signingOut = async (sessionId: string) => {
+        setIsLoading(true);
+        await signOut({
+            sessionId,
+        })
+            .then(() => {
+                setIsLoading(false)
+                setIsLogOutModalVisible(false);
+                navigation.reset({
+                    index: 0,
+                    routes: [{ name: "Intro" }],
+                })
+                console.log("done");
+            })
+            .catch((e: Error) => {
+                setIsLoading(false);
+                setIsLogOutModalVisible(false);
+                console.log(e);
+            });
+    };
+
 
     const pushUpsPlayer = useVideoPlayer(pushUpsVideoSource, (player) => {
         player.loop = true;
@@ -52,6 +80,22 @@ const HomePage = ({
                 resizeMode="cover"
             >
                 <View style={styles.top_container}>
+                    {isLoading && (
+                        <View style={styles.loadingOverlay}>
+                            <LottieView
+                                source={require("../../assets/ExerciseGifs/Animation - 1745262738989.json")}
+                                style={{
+                                    height: 80,
+                                    width: 80
+                                }}
+                                resizeMode="contain"
+                                loop={true}
+                                autoPlay={true}
+                            />
+                            <Text style={{ color: "#fff", marginTop: 10, fontFamily: Theme.Montserrat_Font.Mont400 }}>Signing you in...</Text>
+                        </View>
+                    )}
+
                     <View style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -73,15 +117,23 @@ const HomePage = ({
                                 color: "white"
                             }}>April, 17, 2025</Text>
                         </View>
-                        <View>
-                            <Image source={require("../../assets/downloadedIcons/notification.png")}
+                        <TouchableOpacity style={{
+                            backgroundColor: "white",
+                            borderRadius: 10
+                        }}
+                            onPress={() => {
+                                setIsLogOutModalVisible(true);
+                            }}
+                        >
+                            <LottieView source={require("../../assets/downloadedIcons/Animation - 1745329041170.json")}
                                 style={{
                                     width: 40,
                                     height: 40,
-                                    resizeMode: "contain"
+
                                 }}
+                                resizeMode="contain"
                             />
-                        </View>
+                        </TouchableOpacity>
                     </View>
                     <View style={{
                         flexDirection: "row",
@@ -398,6 +450,64 @@ const HomePage = ({
                         </View>
                     </View>
                 </ScrollView>
+                <Modal
+                    visible={isLogOutModalVisible}
+                    animationType="slide"
+                    transparent={true}
+                    onRequestClose={() => {
+
+                    }}
+                >
+                    <View style={{
+                        justifyContent: "flex-end",
+                        backgroundColor: "rgba(0, 0, 0, 0.6)",
+                        flex: 1,
+                    }}>
+                        <View style={{
+                            backgroundColor: "white",
+                            height: 250,
+                            borderRadius: 20,
+                            padding: 20,
+                            gap: 30,
+                            justifyContent: "center"
+                        }}>
+                            <TouchableOpacity style={{
+                                position: "absolute",
+                                top: 0,
+                                right: 0,
+                                padding: 13,
+                            }}
+                                onPress={() => {
+                                    setIsLogOutModalVisible(false);
+                                }}
+                            >
+                                <Text style={{
+                                    color: Theme.colos.primaryColor,
+                                    fontSize: 18
+                                }}>cancel</Text>
+                            </TouchableOpacity>
+                            <View style={{
+                                alignItems: 'center'
+                            }}>
+                                <Text style={{
+                                    fontFamily: Theme.Montserrat_Font.Mont600,
+                                    fontSize: 18
+                                }}>Are you sure you want to logout</Text>
+                                <Text style={{
+                                    fontFamily: Theme.Montserrat_Font.Mont600,
+                                    fontSize: 18
+                                }}>from your account?</Text>
+                            </View>
+                            <TouchableOpacity style={styles.logout_btn}
+                                onPress={() => {
+                                    signingOut("SignedOut");
+                                }}
+                            >
+                                <Text style={styles.logout_text}>Logout</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
             </ImageBackground>
         </View>
     )
@@ -422,5 +532,21 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 20
+    },
+    logout_btn: {
+        backgroundColor: Theme.colos.primaryColor,
+        padding: 15,
+        borderRadius: 10,
+        alignItems: "center"
+    },
+    logout_text: {
+        color: "white",
+    },
+    loadingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999,
     }
 })

@@ -48,6 +48,8 @@ const PushUpsTestScreen = ({
     const [lastCountTime, setLastCountTime] = useState<number>(0);
     const [isRunning, setIsRunning] = useState(false);
     const [isGoingDown, setIsGoingDown] = useState(false);
+    const [isCountingActive, setIsCountingActive] = useState(false);
+
     // const startIntervalRef = useRef<NodeJS.Timeout | null>(null);
     // const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -150,12 +152,19 @@ const PushUpsTestScreen = ({
     // Main timer logic
     useEffect(() => {
         if (isStartRunning && startTime > 0) {
+            // Enable push-up counting when the timer starts
+            setIsCountingActive(true);
+
             startIntervalRef.current = setInterval(() => {
                 setStartTime(prev => {
                     if (prev === 1) {
                         clearInterval(startIntervalRef.current as NodeJS.Timeout);
                         setIsStartRunning(false);
                         setIsStartModalVisible(false);
+
+                        // Disable push-up counting when the timer ends
+                        setIsCountingActive(false);
+
                         setTimeout(() => {
                             setIsResultModalVisible(true);
                         }, 700);
@@ -169,7 +178,6 @@ const PushUpsTestScreen = ({
             if (startIntervalRef.current) clearInterval(startIntervalRef.current);
         };
     }, [isStartRunning]);
-
     // Accelerometer setup
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
@@ -181,6 +189,16 @@ const PushUpsTestScreen = ({
         return () => subscription.remove();
     }, []);
 
+
+    useEffect(() => {
+        // Only process sensor data if counting is active
+        if (!isCountingActive || sensorData.z === undefined) return;
+
+        // Rest of your push-up detection code remains the same
+        const now = Date.now();
+        const z = sensorData.z;
+        // ...
+    }, [sensorData, isCountingActive]);
     // Push-up detection with state machine
     useEffect(() => {
         if (sensorData.z === undefined) return;
@@ -314,49 +332,6 @@ const PushUpsTestScreen = ({
     //     }, 700);
     // }
 
-    useEffect(() => {
-        if (isRunning && prepTime > 0) {
-            intervalRef.current = setInterval(() => {
-                setPrepTime(prev => {
-                    if (prev === 1) {
-                        clearInterval(intervalRef.current as NodeJS.Timeout);
-                        setIsRunning(false);
-                        setIsPrepModalVisible(false);
-                        setTimeout(() => {
-                            setIsStartModalVisible(true);
-                        }, 700)
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
-
-        return () => {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-        };
-    }, [isRunning]);
-
-    useEffect(() => {
-        if (isStartRunning && startTime > 0) {
-            startIntervalRef.current = setInterval(() => {
-                setStartTime(prev => {
-                    if (prev === 1) {
-                        clearInterval(startIntervalRef.current as NodeJS.Timeout);
-                        setIsStartRunning(false);
-                        setIsStartModalVisible(false);
-                        setTimeout(() => {
-                            setIsResultModalVisible(true);
-                        }, 700)
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
-
-        return () => {
-            if (startIntervalRef.current) clearInterval(startIntervalRef.current);
-        };
-    }, [isStartRunning]);
 
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
@@ -688,7 +663,7 @@ const PushUpsTestScreen = ({
                             justifyContent: "center",
                             borderRadius: 20
                         }}>
-                            <View style={{
+                            {/* <View style={{
                                 position: "absolute",
                                 top: 0,
                                 right: 0,
@@ -707,7 +682,7 @@ const PushUpsTestScreen = ({
                                         fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>close</Text>
                                 </TouchableOpacity>
-                            </View>
+                            </View> */}
                             <View style={{
                                 height: 150,
                                 width: '70%',
@@ -776,7 +751,19 @@ const PushUpsTestScreen = ({
 
                                 }}
                                     onPress={() => {
-                                        setIsResultModalVisible(false)
+                                        setIsResultModalVisible(false);
+                                        setPrepTime(5);
+                                        setIsRunning(false);
+                                        if (intervalRef.current) {
+                                            clearInterval(intervalRef.current);
+                                            intervalRef.current = null;
+                                        }
+                                        setStartTime(60);
+                                        setIsStartRunning(false);
+                                        if (startIntervalRef.current) {
+                                            clearInterval(startIntervalRef.current);
+                                            startIntervalRef.current = null;
+                                        }
                                     }}
                                 >
                                     <Text style={{

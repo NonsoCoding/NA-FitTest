@@ -20,7 +20,9 @@ const RunningTestScreen = ({
     const [isResultModalVisible, setIsResultModalVisible] = useState(false);
     const [prepTime, setPrepTime] = useState(5);
     const [isStartRunning, setIsStartRunning] = useState(false);
-    const [startTime, setStartTime] = useState(60);
+    const [timerCount, setTimerCount] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+    const [finalTime, setFinalTime] = useState(0);
     const [isRunning, setIsRunning] = useState(false);
     const startIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -38,14 +40,49 @@ const RunningTestScreen = ({
 
     useEffect(() => {
         if (isStartModalVisible) {
-            startMainCountdown();
+            startMainTimer();
         }
     }, [isStartModalVisible])
 
-    const startMainCountdown = () => {
-        if (startTime > 0 && !isStartRunning) {
+    const startMainTimer = () => {
+        if (!isStartRunning) {
+            setTimerCount(0);
             setIsStartRunning(true);
         }
+    };
+
+    const pauseTimer = () => {
+        setIsPaused(true);
+        if (startIntervalRef.current) {
+            clearInterval(startIntervalRef.current);
+            startIntervalRef.current = null;
+        }
+    };
+
+    const continueTimer = () => {
+        setIsPaused(false);
+        if (!startIntervalRef.current) {
+            startTimerCount();
+        }
+    };
+
+    const stopTimer = () => {
+        setFinalTime(timerCount);
+        setIsStartRunning(false);
+        setIsStartModalVisible(false);
+        if (startIntervalRef.current) {
+            clearInterval(startIntervalRef.current);
+            startIntervalRef.current = null;
+        }
+        setTimeout(() => {
+            setIsResultModalVisible(true);
+        }, 700);
+    };
+
+    const startTimerCount = () => {
+        startIntervalRef.current = setInterval(() => {
+            setTimerCount(prev => prev + 1);
+        }, 1000);
     };
 
     const modalToPrepModal = () => {
@@ -79,26 +116,21 @@ const RunningTestScreen = ({
     }, [isRunning]);
 
     useEffect(() => {
-        if (isStartRunning && startTime > 0) {
-            startIntervalRef.current = setInterval(() => {
-                setStartTime(prev => {
-                    if (prev === 1) {
-                        clearInterval(startIntervalRef.current as NodeJS.Timeout);
-                        setIsStartRunning(false);
-                        setIsStartModalVisible(false);
-                        setTimeout(() => {
-                            setIsResultModalVisible(true);
-                        }, 700)
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
+        if (isStartRunning && !isPaused) {
+            startTimerCount();
         }
 
         return () => {
             if (startIntervalRef.current) clearInterval(startIntervalRef.current);
         };
-    }, [isStartRunning]);
+    }, [isStartRunning, isPaused]);
+
+    // Helper function to format time as MM:SS
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
 
     return (
         <View style={{
@@ -137,7 +169,7 @@ const RunningTestScreen = ({
                         </TouchableOpacity>
                         <Text style={{
                             color: "white"
-                        }}>PUSH-UPS (TEST MODE)</Text>
+                        }}>1.5 MILE RUN (TEST MODE)</Text>
                         <Image source={require("../../../assets/downloadedIcons/notification.png")}
                             style={{
                                 height: 40,
@@ -165,7 +197,7 @@ const RunningTestScreen = ({
                         alignSelf: "center",
                         fontWeight: 200
                     }}>
-                        Maximum number of push-ups in one minute
+                        Quickest 1.5 meter run in your best time
                     </Text>
                     <View style={{
                         padding: 15,
@@ -199,7 +231,7 @@ const RunningTestScreen = ({
                                 fontSize: 25,
                                 fontFamily: Theme.Montserrat_Font.Mont700
                             }}>
-                                01:00
+                                00:00
                             </Text>
                         </View>
                         <View style={{
@@ -292,7 +324,7 @@ const RunningTestScreen = ({
                                         fontSize: 60,
                                         color: "white",
                                         fontFamily: Theme.Montserrat_Font.Mont700
-                                    }}>01:00</Text>
+                                    }}>00:00</Text>
                                     <Text style={{
                                         fontSize: 17,
                                         bottom: 10,
@@ -333,7 +365,7 @@ const RunningTestScreen = ({
                             justifyContent: "center",
                             borderRadius: 20
                         }}>
-                            <View style={{
+                            {/* <View style={{
                                 position: "absolute",
                                 top: 0,
                                 right: 0,
@@ -358,7 +390,7 @@ const RunningTestScreen = ({
                                         fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>close</Text>
                                 </TouchableOpacity>
-                            </View>
+                            </View> */}
                             <View style={{
                                 height: 150,
                                 width: '70%',
@@ -403,7 +435,11 @@ const RunningTestScreen = ({
                     animationType="slide"
                     transparent={true}
                     onRequestClose={() => {
-                        setIsModalVisible(false);
+                        setIsStartModalVisible(false);
+                        if (startIntervalRef.current) {
+                            clearInterval(startIntervalRef.current);
+                            startIntervalRef.current = null;
+                        }
                     }}
                 >
                     <View style={{
@@ -411,7 +447,7 @@ const RunningTestScreen = ({
                         justifyContent: "flex-end"
                     }}>
                         <View style={{
-                            height: 300,
+                            height: 350,
                             backgroundColor: Theme.colos.primaryColor,
                             alignItems: "center",
                             justifyContent: "center",
@@ -423,11 +459,13 @@ const RunningTestScreen = ({
                                 right: 0,
                                 padding: 20
                             }}>
-                                <TouchableOpacity style={{
-
-                                }}
+                                <TouchableOpacity
                                     onPress={() => {
-                                        setIsStartModalVisible(false)
+                                        setIsStartModalVisible(false);
+                                        if (startIntervalRef.current) {
+                                            clearInterval(startIntervalRef.current);
+                                            startIntervalRef.current = null;
+                                        }
                                     }}
                                 >
                                     <Text style={{
@@ -438,12 +476,12 @@ const RunningTestScreen = ({
                                 </TouchableOpacity>
                             </View>
                             <View style={{
-                                height: 150,
+                                height: 250,
                                 width: '70%',
                                 borderRadius: 20,
                                 alignItems: "center",
                                 justifyContent: "center",
-                                gap: 10,
+                                gap: 20,
                                 backgroundColor: "rgba(0, 0, 0, 0.3)"
                             }}>
                                 <View style={{
@@ -454,24 +492,72 @@ const RunningTestScreen = ({
                                         fontSize: 60,
                                         color: "white",
                                         fontFamily: Theme.Montserrat_Font.Mont700
-                                    }}>{startTime}</Text>
-                                    <Text style={{
-                                        fontSize: 17,
-                                        bottom: 10,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
-                                    }}>sec</Text>
+                                    }}>{formatTime(timerCount)}</Text>
                                 </View>
                                 <TouchableOpacity
                                     onPress={() => {
-
+                                        // No action needed here
                                     }}
                                 >
                                     <Text style={{
                                         fontFamily: Theme.MuseoModerno_Font.Muse600,
                                         color: "white"
-                                    }}>G000000!!!</Text>
+                                    }}>{isPaused ? "PAUSED" : "GO!GO!GO!"}</Text>
                                 </TouchableOpacity>
+
+                                <View style={{
+                                    flexDirection: "row",
+                                    justifyContent: "space-around",
+                                    width: "100%",
+                                    paddingHorizontal: 20
+                                }}>
+                                    {isPaused ? (
+                                        <TouchableOpacity
+                                            style={{
+                                                backgroundColor: "#4CAF50",
+                                                paddingVertical: 10,
+                                                paddingHorizontal: 20,
+                                                borderRadius: 10
+                                            }}
+                                            onPress={continueTimer}
+                                        >
+                                            <Text style={{
+                                                color: "white",
+                                                fontFamily: Theme.Montserrat_Font.Mont500
+                                            }}>Continue</Text>
+                                        </TouchableOpacity>
+                                    ) : (
+                                        <TouchableOpacity
+                                            style={{
+                                                backgroundColor: "#FFC107",
+                                                paddingVertical: 10,
+                                                paddingHorizontal: 20,
+                                                borderRadius: 10
+                                            }}
+                                            onPress={pauseTimer}
+                                        >
+                                            <Text style={{
+                                                color: "white",
+                                                fontFamily: Theme.Montserrat_Font.Mont500
+                                            }}>Pause</Text>
+                                        </TouchableOpacity>
+                                    )}
+
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: "#F44336",
+                                            paddingVertical: 10,
+                                            paddingHorizontal: 20,
+                                            borderRadius: 10
+                                        }}
+                                        onPress={stopTimer}
+                                    >
+                                        <Text style={{
+                                            color: "white",
+                                            fontFamily: Theme.Montserrat_Font.Mont500
+                                        }}>Stop</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </View>
                     </View>
@@ -481,7 +567,7 @@ const RunningTestScreen = ({
                     animationType="slide"
                     transparent={true}
                     onRequestClose={() => {
-                        setIsModalVisible(false);
+                        setIsResultModalVisible(false);
                     }}
                 >
                     <View style={{
@@ -501,9 +587,7 @@ const RunningTestScreen = ({
                                 right: 0,
                                 padding: 20
                             }}>
-                                <TouchableOpacity style={{
-
-                                }}
+                                <TouchableOpacity
                                     onPress={() => {
                                         setIsResultModalVisible(false)
                                     }}
@@ -521,9 +605,14 @@ const RunningTestScreen = ({
                                 borderRadius: 20,
                                 alignItems: "center",
                                 justifyContent: "center",
-                                gap: 10,
+                                gap: 20,
                                 backgroundColor: "rgba(0, 0, 0, 0.3)"
                             }}>
+                                <Text style={{
+                                    color: "white",
+                                    fontFamily: Theme.MuseoModerno_Font.Muse600,
+                                    fontSize: 16
+                                }}>YOUR TIME</Text>
                                 <View style={{
                                     flexDirection: "row",
                                     alignItems: "flex-end",
@@ -532,24 +621,17 @@ const RunningTestScreen = ({
                                         fontSize: 60,
                                         color: "white",
                                         fontFamily: Theme.Montserrat_Font.Mont700
-                                    }}>58</Text>
-                                    {/* <Text style={{
-                                        fontSize: 17,
-                                        bottom: 10,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
-                                    }}>min</Text> */}
-                                </View>
-                                <View
-                                >
-                                    <Text style={{
-                                        fontFamily: Theme.MuseoModerno_Font.Muse600,
-                                        color: "white"
-                                    }}>INPUT SCORE</Text>
+                                    }}>{formatTime(finalTime)}</Text>
                                 </View>
                                 <TouchableOpacity style={styles.getStartedBtn}
                                     onPress={() => {
                                         setIsResultModalVisible(false);
+                                        // Reset all states to their initial values
+                                        setTimerCount(0);
+                                        setFinalTime(0);
+                                        setIsPaused(false);
+                                        setIsStartRunning(false);
+                                        setPrepTime(5);
                                         navigation.goBack();
                                     }}
                                 >

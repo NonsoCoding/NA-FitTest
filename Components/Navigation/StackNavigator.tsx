@@ -12,6 +12,10 @@ import PushUpsTestScreen from "../Screens/TestScreens/PushUpTestScreen";
 import SprintTestScreen from "../Screens/TestScreens/SprintTestScreen";
 import SitUpTestScreen from "../Screens/TestScreens/SitUpTextScreen";
 import RunningTestScreen from "../Screens/TestScreens/RunningTestScreen";
+import LoginScreen from "../Authentication/Login";
+import SignUpScreen from "../Authentication/SignUp";
+import ForgottenPassword from "../Authentication/ForgottenPassword";
+import OTPScreen from "../Authentication/Otp";
 
 const Stack = createStackNavigator();
 
@@ -33,13 +37,15 @@ const StackNavigation: React.FC = () => {
         <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
             <NavigationContainer>
                 <Stack.Navigator
-                    // initialRouteName={isSignedIn ? }
                     screenOptions={{
                         headerShown: false,
                     }}>
                     <Stack.Screen name="Intro" component={AuthFlow} />
-                    {/*<Stack.Screen name="SignUp" component={SignUp} />*/}
                     <Stack.Screen name="HomePage" component={HomePage} />
+                    <Stack.Screen name="LoginScreen" component={LoginScreen} />
+                    <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
+                    <Stack.Screen name="ForgottenPassword" component={ForgottenPassword} />
+                    <Stack.Screen name="OTPScreen" component={OTPScreen} />
                     <Stack.Screen name="PullUpsScreen" component={PullUpsTestScreen} />
                     <Stack.Screen name="PushUpsScreen" component={PushUpsTestScreen} />
                     <Stack.Screen name="SprintScreen" component={SprintTestScreen} />
