@@ -1,0 +1,202 @@
+import React from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Platform, StatusBar } from 'react-native';
+import { DrawerContentComponentProps, DrawerNavigationProp } from '@react-navigation/drawer';
+import { useNavigation } from '@react-navigation/native';
+import { Theme } from '../Branding/Theme';
+
+
+type CustomDrawerContentProps = DrawerContentComponentProps & {
+    navigation: DrawerNavigationProp<any, any>;
+};
+
+const CustomDrawerContent = (props: DrawerContentComponentProps) => {
+    const navigation = props.navigation;
+
+    return (
+        <View style={styles.container}>
+            <View style={styles.profileSection}>
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10
+                }}>
+                    <Image
+                        source={require("../../assets/downloadedIcons/profile.png")}
+                        style={{
+                            height: 50,
+                            width: 50,
+                            resizeMode: "contain"
+                        }}
+                    />
+                    <View>
+                        <Text style={{
+                            fontSize: 22,
+                            fontWeight: 600
+                        }}>Timothy Obi</Text>
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: "center"
+                        }}>
+                            <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
+                                style={{
+                                    height: 20,
+                                    width: 20
+                                }}
+                            />
+                            <Text>109</Text>
+                        </View>
+                    </View>
+                </View>
+                <TouchableOpacity
+                    onPress={() => navigation.closeDrawer()}
+                >
+                    <Image source={require("../../assets/downloadedIcons/close.png")}
+                        style={{
+                            width: 30,
+                            height: 30,
+                            resizeMode: "contain"
+                        }}
+                    />
+                </TouchableOpacity>
+            </View>
+            <View style={{
+                padding: 20,
+                gap: 10
+            }}>
+                <TouchableOpacity
+                    onPress={() => props.navigation.navigate('')}
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 15,
+                        paddingVertical: 10,
+                        justifyContent: "space-between"
+                    }}
+                >
+                    <Text style={{}}>Admin Dashbaord</Text>
+                    <Image source={require("../../assets/downloadedIcons/user-settings-line.png")}
+                        style={{
+                            width: 20,
+                            height: 20,
+                            resizeMode: "contain"
+                        }}
+                    />
+                </TouchableOpacity>
+                <View style={{
+                    borderWidth: 0.5,
+                    borderColor: Theme.colos.second_primary
+                }}></View>
+                <TouchableOpacity
+                    onPress={() => props.navigation.navigate('Profile')}
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 15,
+                        paddingVertical: 10,
+                        justifyContent: "space-between"
+                    }}
+                >
+                    <Text style={{}}>My Profile</Text>
+                    <Image source={require("../../assets/downloadedIcons/user-shared-fill.png")}
+                        style={{
+                            width: 20,
+                            height: 20,
+                            resizeMode: "contain"
+                        }}
+                    />
+                </TouchableOpacity>
+                <View style={{
+                    borderWidth: 0.5,
+                    borderColor: Theme.colos.second_primary
+                }}></View>
+                <TouchableOpacity
+                    onPress={() => props.navigation.navigate('HomePage')}
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 15,
+                        paddingVertical: 10,
+                        justifyContent: "space-between"
+                    }}
+                >
+                    <Text style={{}}>Home</Text>
+                    <Image source={require("../../assets/downloadedIcons/home-9-fill.png")}
+                        style={{
+                            width: 20,
+                            height: 20,
+                            resizeMode: "contain"
+                        }}
+                    />
+                </TouchableOpacity>
+                <View style={{
+                    borderWidth: 0.5,
+                    borderColor: Theme.colos.second_primary
+                }}></View>
+                <TouchableOpacity
+                    onPress={() => props.navigation.navigate('History')}
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingVertical: 10,
+                        paddingHorizontal: 15,
+                        justifyContent: "space-between"
+                    }}
+                >
+                    <Text style={{}}>History</Text>
+                    <Image source={require("../../assets/downloadedIcons/history-line (1).png")}
+                        style={{
+                            width: 20,
+                            height: 20,
+                            resizeMode: "contain"
+                        }}
+                    />
+                </TouchableOpacity>
+                <View style={{
+                    borderWidth: 0.5,
+                    borderColor: Theme.colos.second_primary
+                }}></View>
+                <TouchableOpacity
+                    onPress={() => props.navigation.navigate('')}
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingHorizontal: 15,
+                        paddingVertical: 10,
+                        justifyContent: "space-between"
+                    }}
+                >
+                    <Text style={{}}>Logout</Text>
+                    <Image source={require("../../assets/downloadedIcons/logout-box-r-line.png")}
+                        style={{
+                            width: 20,
+                            height: 20,
+                            resizeMode: "contain"
+                        }}
+                    />
+                </TouchableOpacity>
+                <View style={{
+                    borderWidth: 0.5,
+                    borderColor: Theme.colos.second_primary
+                }}></View>
+            </View>
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: Theme.colos.backgroundColor,
+        marginTop: Platform.OS === "android" ? StatusBar.currentHeight : null,
+    },
+    profileSection: {
+        alignItems: 'center',
+        padding: 20,
+        gap: 10,
+        paddingTop: 60,
+        justifyContent: "space-between",
+        flexDirection: "row",
+    },
+});
+
+export default CustomDrawerContent;

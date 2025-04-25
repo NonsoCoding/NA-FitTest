@@ -105,18 +105,17 @@ const SignUpScreen = ({
 
 
 
-    // const signingOut = async (sessionId: string) => {
-    //     await signOut({
-    //         sessionId,
-    //     })
-    //         .then(() => {
-    //             console.log("done");
-    //         })
-    //         .catch((e: Error) => {
-    //             console.log(e);
-    //         });
-    // };
-
+    const signingOut = async (sessionId: string) => {
+        await signOut({
+            sessionId,
+        })
+            .then(() => {
+                console.log("done");
+            })
+            .catch((e: Error) => {
+                console.log(e);
+            });
+    };
 
     return (
         <View style={{
@@ -149,32 +148,33 @@ const SignUpScreen = ({
                         flex: 1
                     }}>
                         <View style={{
-                            height: "30%",
+                            flex: 1,
                             backgroundColor: Theme.colos.primaryColor,
                             padding: 20,
                             paddingBottom: 30,
                             justifyContent: "flex-end"
                         }}>
-                            <View>
+                            <View style={{
+                                gap: 10
+                            }}>
                                 <View>
                                     <Text style={{
-                                        fontSize: 30,
-                                        fontWeight: 500,
+                                        fontSize: 40,
+                                        fontWeight: 700,
                                         color: "white",
                                         lineHeight: 45,
-                                    }}>Create an Account</Text>
+                                    }}>Sign up to create your account</Text>
                                 </View>
                                 <Text style={{
                                     fontSize: 16,
-                                    fontWeight: 300,
+                                    fontWeight: 200,
                                     color: "white"
-                                }}>Fill in the details to create an account</Text>
+                                }}>Let us create an account for you</Text>
                             </View>
                         </View>
                         <View style={{
-                            flex: 1,
+                            flex: 3,
                             padding: 20,
-                            paddingTop: 20
                         }}>
                             <View style={{
                                 gap: 10
@@ -182,16 +182,15 @@ const SignUpScreen = ({
                                 <View style={{
                                     gap: 5
                                 }}>
-                                    <Text>
-                                        Email
-                                    </Text>
                                     <View style={[styles.textinput_container, {
                                         marginBottom: 5
                                     }]}>
-                                        <Fontisto
-                                            name="email"
-                                            size={22}
-                                            color={Theme.colos.primaryColor}
+                                        <Image source={require("../../assets/downloadedIcons/mail-fill-black.png")}
+                                            style={{
+                                                height: 20,
+                                                width: 20
+                                            }}
+                                            resizeMode='contain'
                                         />
                                         <TextInput
                                             style={styles.textinput}
@@ -209,14 +208,13 @@ const SignUpScreen = ({
                                 <View style={{
                                     gap: 5
                                 }}>
-                                    <Text>
-                                        Password
-                                    </Text>
                                     <View style={styles.textinput_container}>
-                                        <AntDesign
-                                            name="lock"
-                                            size={25}
-                                            color={Theme.colos.primaryColor}
+                                        <Image source={require("../../assets/downloadedIcons/lock-2-fill.png")}
+                                            style={{
+                                                height: 20,
+                                                width: 20
+                                            }}
+                                            resizeMode='contain'
                                         />
                                         <TextInput
                                             placeholderTextColor={"#8c8c8e"}
@@ -250,15 +248,15 @@ const SignUpScreen = ({
                                         }
                                     }}
                                     style={[styles.continue_email_button, {
-                                        padding: 15
+                                        padding: 20
                                     }]}>
+                                    <Text style={styles.email_button_text}>Sign Up</Text>
                                     <Image source={require("../../assets/Icons/fast-forward.png")}
                                         style={[styles.button_icon, {
-                                            height: 30,
-                                            width: 30
+                                            height: 20,
+                                            width: 20
                                         }]}
                                     />
-                                    <Text style={styles.email_button_text}>Continue</Text>
                                 </TouchableOpacity>
                                 <View style={styles.dividerContainer}>
                                     <View style={styles.line} />
@@ -272,20 +270,21 @@ const SignUpScreen = ({
                                     <TouchableOpacity style={{
                                         borderWidth: 1,
                                         alignItems: "center",
-                                        padding: 2,
+                                        padding: 5,
                                         flex: 1,
-                                        borderRadius: 7,
-                                        borderColor: Theme.colos.borderColor,
+                                        borderRadius: 5,
+                                        borderColor: Theme.colos.lightPrimary,
                                         flexDirection: "row",
                                         justifyContent: "center"
                                     }}
                                         onPress={() => {
-                                            navigation.reset({
-                                                index: 0,
-                                                routes: [{ name: "OTPScreen" }]
-                                            })
+                                            signingOut("done")
                                         }}
                                     >
+                                        <Text style={{
+                                            color: Theme.colos.primaryColor,
+                                            fontSize: 18
+                                        }}>GOOGLE</Text>
                                         <LottieView
                                             source={require("../../assets/downloadedIcons/google3.json")}
                                             style={{
@@ -296,33 +295,6 @@ const SignUpScreen = ({
                                             autoPlay={true}
                                             loop={true}
                                         />
-                                        <Text style={{
-                                            color: "#333"
-                                        }}>Google</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity style={{
-                                        borderWidth: 1,
-                                        padding: 2,
-                                        justifyContent: "center",
-                                        borderRadius: 7,
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        borderColor: Theme.colos.borderColor,
-                                        flex: 1
-                                    }}>
-                                        <LottieView
-                                            source={require("../../assets/downloadedIcons/Animation - 1745355829190.json")}
-                                            style={{
-                                                height: 40,
-                                                width: 40
-                                            }}
-                                            resizeMode="contain"
-                                            autoPlay={true}
-                                            loop={true}
-                                        />
-                                        <Text style={{
-                                            color: "#333"
-                                        }}>Facebook</Text>
                                     </TouchableOpacity>
                                 </View>
                                 <View style={{ flexDirection: 'row', gap: 6, alignSelf: "center" }}>
@@ -358,10 +330,10 @@ const styles = StyleSheet.create({
     continue_email_button: {
         backgroundColor: Theme.colos.primaryColor,
         flexDirection: "row",
-        justifyContent: "center",
+        justifyContent: "space-between",
         alignItems: "center",
         padding: 15,
-        borderRadius: 10,
+        borderRadius: 5,
         gap: 15
     },
     google_button_text: {
@@ -369,7 +341,7 @@ const styles = StyleSheet.create({
         fontWeight: "300"
     },
     email_button_text: {
-        fontSize: 18,
+        fontSize: 15,
         fontFamily: Theme.Montserrat_Font.Mont500,
         color: "white"
     },
@@ -379,14 +351,13 @@ const styles = StyleSheet.create({
         resizeMode: "contain"
     },
     textinput_container: {
-        backgroundColor: "white",
         flexDirection: "row",
-        borderRadius: 10,
+        borderRadius: 5,
         justifyContent: "center",
         alignItems: "center",
         paddingHorizontal: 10,
         borderWidth: 1,
-        borderColor: '#e0e0e0',
+        borderColor: Theme.colos.lightPrimary,
         position: 'relative',
     },
     textinput: {
@@ -418,7 +389,7 @@ const styles = StyleSheet.create({
     line: {
         flex: 1,
         height: 1,
-        backgroundColor: '#E0E0E0',
+        backgroundColor: Theme.colos.lightPrimary,
     },
     dividerText: {
         paddingHorizontal: 10,

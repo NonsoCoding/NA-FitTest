@@ -1,5 +1,5 @@
+import 'react-native-reanimated';
 import { StyleSheet, Text, View } from 'react-native';
-import AuthFlow from './Components/Authentication/AuthFlow';
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { PaperProvider } from 'react-native-paper';

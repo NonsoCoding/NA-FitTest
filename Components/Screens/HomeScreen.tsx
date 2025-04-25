@@ -72,132 +72,101 @@ const HomePage = ({
         <View style={{
             flex: 1
         }}>
-            <ImageBackground
-                source={require('../../assets/downloadedIcons/homeBg.png')}
-                style={{
-                    flex: 1
-                }}
-                resizeMode="cover"
-            >
-                <View style={styles.top_container}>
-                    {isLoading && (
-                        <View style={styles.loadingOverlay}>
-                            <LottieView
-                                source={require("../../assets/ExerciseGifs/Animation - 1745262738989.json")}
-                                style={{
-                                    height: 80,
-                                    width: 80
-                                }}
-                                resizeMode="contain"
-                                loop={true}
-                                autoPlay={true}
-                            />
-                            <Text style={{ color: "#fff", marginTop: 10, fontFamily: Theme.Montserrat_Font.Mont400 }}>Signing you in...</Text>
-                        </View>
-                    )}
-
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between"
-                    }}>
-                        <View style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 10
-                        }}>
-                            <Image source={require("../../assets/downloadedIcons/Frame.png")}
-                                style={{
-                                    width: 20,
-                                    height: 20,
-                                    resizeMode: "contain"
-                                }}
-                            />
-                            <Text style={{
-                                color: "white"
-                            }}>April, 17, 2025</Text>
-                        </View>
-                        <TouchableOpacity style={{
-                            backgroundColor: "white",
-                            borderRadius: 10
+            {isLoading && (
+                <View style={styles.loadingOverlay}>
+                    <LottieView
+                        source={require("../../assets/ExerciseGifs/Animation - 1745262738989.json")}
+                        style={{
+                            height: 80,
+                            width: 80
                         }}
-                            onPress={() => {
-                                setIsLogOutModalVisible(true);
-                            }}
-                        >
-                            <LottieView source={require("../../assets/downloadedIcons/Animation - 1745329041170.json")}
-                                style={{
-                                    width: 40,
-                                    height: 40,
-
-                                }}
-                                resizeMode="contain"
-                            />
-                        </TouchableOpacity>
-                    </View>
+                        resizeMode="contain"
+                        loop={true}
+                        autoPlay={true}
+                    />
+                    <Text style={{ color: "#fff", marginTop: 10, fontFamily: Theme.Montserrat_Font.Mont400 }}>Signing you in...</Text>
+                </View>
+            )}
+            <View style={styles.top_container}>
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between"
+                }}>
                     <View style={{
                         flexDirection: "row",
                         alignItems: "center",
                         gap: 10
                     }}>
-                        <View>
-                            <Image source={require("../../assets/downloadedIcons/profile.png")}
+                        <Image source={require("../../assets/downloadedIcons/Frame.png")}
+                            style={{
+                                width: 20,
+                                height: 20,
+                                resizeMode: "contain"
+                            }}
+                        />
+                        <Text style={{
+                            color: "white"
+                        }}>April, 17, 2025</Text>
+                    </View>
+                    <TouchableOpacity style={{
+                        backgroundColor: "white",
+                        borderRadius: 10
+                    }}
+                        // onPress={() => {
+                        //     setIsLogOutModalVisible(true);
+                        // }}
+                        onPress={() => navigation.openDrawer()}
+                    >
+                        <Image source={require("../../assets/downloadedIcons/notification.png")}
+                            style={{
+                                width: 30,
+                                height: 30
+                            }}
+                        />
+                    </TouchableOpacity>
+                </View>
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10
+                }}>
+                    <View>
+                        <Image source={require("../../assets/downloadedIcons/profile.png")}
+                            style={{
+                                width: 60,
+                                height: 60,
+                                resizeMode: "contain"
+                            }}
+                        />
+                    </View>
+                    <View style={{
+                    }}>
+                        <Text style={{
+                            color: "white",
+                            fontSize: 24,
+                            fontWeight: 600
+                        }}>Timothy Obi</Text>
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: "center"
+                        }}>
+                            <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
                                 style={{
-                                    width: 60,
-                                    height: 60,
-                                    resizeMode: "contain"
+                                    height: 20,
+                                    width: 20
                                 }}
                             />
-                        </View>
-                        <View style={{
-                        }}>
                             <Text style={{
-                                color: "white",
-                                fontSize: 24,
-                                fontFamily: Theme.MuseoModerno_Font.Muse900
-                            }}>Timothy Obi</Text>
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 5
-                            }}>
-                                <Image source={require("../../assets/downloadedIcons/sparkle.png")}
-                                    style={{
-                                        height: 14,
-                                        width: 14,
-                                        resizeMode: "contain"
-                                    }}
-                                />
-                                <Text style={{
-                                    color: "white"
-                                }}>99%</Text>
-                                <Text style={{
-                                    color: "white",
-                                }}>Healthy</Text>
-                                <Image source={require("../../assets/downloadedIcons/dotIcon.png")}
-                                    style={{
-                                        height: 5,
-                                        width: 5,
-                                        resizeMode: "contain"
-                                    }}
-                                />
-                                <Image source={require("../../assets/downloadedIcons/sparkle.png")}
-                                    style={{
-                                        height: 14,
-                                        width: 14,
-                                        resizeMode: "contain"
-                                    }}
-                                />
-                                <Text style={{
-                                    color: "white",
-                                }}>99%</Text>
-                                <Text style={{
-                                    color: "white"
-                                }}>Healthy</Text>
-                            </View>
+                                color: 'white'
+                            }}>109</Text>
                         </View>
                     </View>
                 </View>
+            </View>
+            <View style={{
+                flex: 3
+            }}>
                 <ScrollView
                     showsVerticalScrollIndicator={false}
                     style={{
@@ -206,11 +175,12 @@ const HomePage = ({
                 >
                     <View style={{
                         padding: 10,
-                        gap: 10
+                        gap: 10,
+
                     }}>
                         <View style={{
                             padding: 15,
-                            borderRadius: 25,
+                            borderRadius: 5,
                             backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
                             <TouchableOpacity style={styles.exercise_btn}
@@ -222,7 +192,7 @@ const HomePage = ({
                                     style={{
                                         height: 100,
                                         width: 100,
-                                        borderRadius: 20
+                                        borderRadius: 5
                                     }}
                                     player={pushUpsPlayer}
                                 />
@@ -231,7 +201,7 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontFamily: Theme.MuseoModerno_Font.Muse900,
+                                        fontWeight: 600,
                                         color: "white"
                                     }}>Push-Ups</Text>
                                     <Text style={{
@@ -258,7 +228,7 @@ const HomePage = ({
                         </View>
                         <View style={{
                             padding: 15,
-                            borderRadius: 25,
+                            borderRadius: 5,
                             backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
                             <TouchableOpacity style={styles.exercise_btn}
@@ -270,7 +240,7 @@ const HomePage = ({
                                     style={{
                                         height: 100,
                                         width: 100,
-                                        borderRadius: 20
+                                        borderRadius: 5
                                     }}
                                     player={sprintPlayer}
                                 />
@@ -279,7 +249,7 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontFamily: Theme.MuseoModerno_Font.Muse900,
+                                        fontWeight: 600,
                                         color: "white"
                                     }}>300 Meter Sprint</Text>
                                     <Text style={{
@@ -306,7 +276,7 @@ const HomePage = ({
                         </View>
                         <View style={{
                             padding: 15,
-                            borderRadius: 25,
+                            borderRadius: 5,
                             backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
                             <TouchableOpacity style={styles.exercise_btn}
@@ -318,7 +288,7 @@ const HomePage = ({
                                     style={{
                                         height: 82,
                                         width: 97,
-                                        borderRadius: 20
+                                        borderRadius: 5
                                     }}
                                     player={sitUpPlayer}
                                 />
@@ -327,7 +297,7 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontFamily: Theme.MuseoModerno_Font.Muse900,
+                                        fontWeight: 600,
                                         color: "white"
                                     }}>Sit-Ups</Text>
                                     <Text style={{
@@ -354,7 +324,7 @@ const HomePage = ({
                         </View>
                         <View style={{
                             padding: 15,
-                            borderRadius: 25,
+                            borderRadius: 5,
                             backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
                             <TouchableOpacity style={styles.exercise_btn}
@@ -366,7 +336,7 @@ const HomePage = ({
                                     style={{
                                         height: 100,
                                         width: 100,
-                                        borderRadius: 20
+                                        borderRadius: 5
                                     }}
                                     player={runningPlayer}
                                 />
@@ -375,7 +345,7 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontFamily: Theme.MuseoModerno_Font.Muse900,
+                                        fontWeight: 600,
                                         color: "white"
                                     }}>1.5 Mile Run</Text>
                                     <Text style={{
@@ -402,19 +372,19 @@ const HomePage = ({
                         </View>
                         <View style={{
                             padding: 15,
-                            borderRadius: 25,
+                            borderRadius: 5,
                             backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
                             <TouchableOpacity style={styles.exercise_btn}
                                 onPress={() => {
-                                    navigation.navigate("PullUpsScreen")
+                                    navigation.navigate("PullUpScreen")
                                 }}
                             >
                                 <VideoView
                                     style={{
                                         height: 100,
                                         width: 100,
-                                        borderRadius: 20
+                                        borderRadius: 5
                                     }}
                                     player={pullUpsPlayer}
                                 />
@@ -423,7 +393,7 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontFamily: Theme.MuseoModerno_Font.Muse900,
+                                        fontWeight: 600,
                                         color: "white"
                                     }}>Pull-Ups</Text>
                                     <Text style={{
@@ -450,65 +420,65 @@ const HomePage = ({
                         </View>
                     </View>
                 </ScrollView>
-                <Modal
-                    visible={isLogOutModalVisible}
-                    animationType="slide"
-                    transparent={true}
-                    onRequestClose={() => {
+            </View>
+            <Modal
+                visible={isLogOutModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => {
 
-                    }}
-                >
+                }}
+            >
+                <View style={{
+                    justifyContent: "flex-end",
+                    backgroundColor: "rgba(0, 0, 0, 0.6)",
+                    flex: 1,
+                }}>
                     <View style={{
-                        justifyContent: "flex-end",
-                        backgroundColor: "rgba(0, 0, 0, 0.6)",
-                        flex: 1,
+                        backgroundColor: "white",
+                        height: 250,
+                        borderRadius: 20,
+                        padding: 20,
+                        gap: 30,
+                        justifyContent: "center"
                     }}>
-                        <View style={{
-                            backgroundColor: "white",
-                            height: 250,
-                            borderRadius: 20,
-                            padding: 20,
-                            gap: 30,
-                            justifyContent: "center"
-                        }}>
-                            <TouchableOpacity style={{
-                                position: "absolute",
-                                top: 0,
-                                right: 0,
-                                padding: 13,
+                        <TouchableOpacity style={{
+                            position: "absolute",
+                            top: 0,
+                            right: 0,
+                            padding: 13,
+                        }}
+                            onPress={() => {
+                                setIsLogOutModalVisible(false);
                             }}
-                                onPress={() => {
-                                    setIsLogOutModalVisible(false);
-                                }}
-                            >
-                                <Text style={{
-                                    color: Theme.colos.primaryColor,
-                                    fontSize: 18
-                                }}>cancel</Text>
-                            </TouchableOpacity>
-                            <View style={{
-                                alignItems: 'center'
-                            }}>
-                                <Text style={{
-                                    fontFamily: Theme.Montserrat_Font.Mont600,
-                                    fontSize: 18
-                                }}>Are you sure you want to logout</Text>
-                                <Text style={{
-                                    fontFamily: Theme.Montserrat_Font.Mont600,
-                                    fontSize: 18
-                                }}>from your account?</Text>
-                            </View>
-                            <TouchableOpacity style={styles.logout_btn}
-                                onPress={() => {
-                                    signingOut("SignedOut");
-                                }}
-                            >
-                                <Text style={styles.logout_text}>Logout</Text>
-                            </TouchableOpacity>
+                        >
+                            <Text style={{
+                                color: Theme.colos.primaryColor,
+                                fontSize: 18
+                            }}>cancel</Text>
+                        </TouchableOpacity>
+                        <View style={{
+                            alignItems: 'center'
+                        }}>
+                            <Text style={{
+                                fontFamily: Theme.Montserrat_Font.Mont600,
+                                fontSize: 18
+                            }}>Are you sure you want to logout</Text>
+                            <Text style={{
+                                fontFamily: Theme.Montserrat_Font.Mont600,
+                                fontSize: 18
+                            }}>from your account?</Text>
                         </View>
+                        <TouchableOpacity style={styles.logout_btn}
+                            onPress={() => {
+                                signingOut("SignedOut");
+                            }}
+                        >
+                            <Text style={styles.logout_text}>Logout</Text>
+                        </TouchableOpacity>
                     </View>
-                </Modal>
-            </ImageBackground>
+                </View>
+            </Modal>
         </View>
     )
 }
@@ -517,13 +487,10 @@ export default HomePage;
 
 const styles = StyleSheet.create({
     container: {
-
     },
     top_container: {
-        height: "25%",
-        backgroundColor: "black",
-        borderBottomRightRadius: 30,
-        borderBottomLeftRadius: 30,
+        flex: 1,
+        backgroundColor: Theme.colos.primaryColor,
         padding: 20,
         justifyContent: "center",
         gap: 20,

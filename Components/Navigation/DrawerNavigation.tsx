@@ -1,0 +1,29 @@
+import { createDrawerNavigator } from '@react-navigation/drawer';
+import HomePage from '../Screens/HomeScreen';
+import { DrawerParamList } from '../nav/type';
+import CustomDrawerContent from './CustomDrawerContent';
+import Profile from '../Screens/Profile';
+import EditDetails from '../Screens/EditDetails';
+import History from '../Screens/History';
+
+const Drawer = createDrawerNavigator<DrawerParamList>();
+
+export const DrawerNavigator = () => {
+  return (
+    <Drawer.Navigator screenOptions={{
+      headerShown: false,
+      drawerType: 'front',
+      drawerStyle: {
+        flex: 1,
+        width: "75%"
+      }
+    }}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+    >
+      <Drawer.Screen name="HomePage" component={HomePage} />
+      <Drawer.Screen name="Profile" component={Profile} />
+      <Drawer.Screen name="EditDetails" component={EditDetails} />
+      <Drawer.Screen name="History" component={History} />
+    </Drawer.Navigator>
+  );
+};

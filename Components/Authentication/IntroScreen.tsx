@@ -1,144 +1,77 @@
 import { Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
-import { useNavigation } from "@react-navigation/native";
 
-interface IntroModalIprops {
-    isVisible: boolean;
-    onClose: () => void;
-    onSwitchToLogin: () => void;
-    onSwicthToSignUp: () => void;
+interface IntroIprops {
+    navigation?: any;
 }
 
-const IntroModal: React.FC<IntroModalIprops> = ({
-    isVisible,
-    onClose,
-    onSwitchToLogin,
-    onSwicthToSignUp
-}) => {
-
-
-    const navigation = useNavigation<any>();
+const IntroScreen = ({
+    navigation
+}: IntroIprops) => {
 
     return (
-        <Modal
-            visible={isVisible}
-            animationType="slide"
-            transparent={true}
-            onRequestClose={onClose}
-        >
+        <View style={{
+            flex: 1,
+            backgroundColor: Theme.colos.primaryColor
+        }}>
             <View style={{
-                justifyContent: "flex-end",
-                flex: 1
+                flex: 3,
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 20
             }}>
-                <View style={{
-                    gap: 20,
-                    backgroundColor: Theme.colos.primaryColor,
-                    height: "35%",
-                    padding: 30,
-                    justifyContent: 'center',
-                    borderTopRightRadius: 25,
-                    borderTopLeftRadius: 25,
-                    shadowColor: '#000',
-                    shadowOffset: {
-                        width: 0,
-                        height: -80,
-                    },
-                    shadowOpacity: 0.6,
-                    shadowRadius: 25,
-                    elevation: 10,
-                }}>
-                    <TouchableOpacity style={styles.continue_google_button}
-                    >
-                        <Image source={require("../../assets/Icons/Google_Icon.png")}
-                            style={styles.button_icon}
-                        />
-                        <Text style={styles.google_button_text}>Continue with Google</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.continue_email_button}
-                        onPress={() => {
-                            navigation.navigate("LoginScreen")
-                            onClose();
-                        }}
-                    >
-                        <Image source={require("../../assets/Icons/Email_Icon.png")}
-                            style={styles.button_icon}
-                        />
-                        <Text style={styles.email_button_text}>Continue with Email</Text>
-                    </TouchableOpacity>
-                    <View style={{ flexDirection: 'row', gap: 6, alignSelf: "center" }}>
-                        <Text style={{ color: 'white', fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Don't have an account?</Text>
-                        <TouchableOpacity
-                            onPress={() => {
-                                navigation.navigate("SignUpScreen");
-                                onClose();
-                            }}
-                        >
-                            <Text style={{ color: "#ADCC05", fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Sign Up</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                <Text style={{
+                    fontWeight: 600,
+                    fontSize: 45,
+                    color: "white"
+                }}>TacticalPT</Text>
+                <Text style={{
+                    fontWeight: 300,
+                    color: "white",
+                    fontSize: 18,
+                    maxWidth: 350,
+                    textAlign: "center"
+                }}>This is the official fitness app for the army of national defense</Text>
             </View>
-        </Modal>
+            <View style={{
+                height: "20%",
+                backgroundColor: "white",
+                padding: 30,
+                justifyContent: "center",
+            }}>
+                <TouchableOpacity style={
+                    styles.btn
+                }
+                    onPress={() => {
+                        navigation.navigate("LandingScreen")
+                    }}
+                >
+                    <Text style={styles.btn_text}>Get started</Text>
+                    <Image source={require("../../assets/downloadedIcons/fast.png")}
+                        style={{
+                            width: 20,
+                            height: 20,
+                            resizeMode: "contain"
+                        }}
+                    />
+                </TouchableOpacity>
+            </View>
+        </View>
     )
 }
 
-export default IntroModal;
+export default IntroScreen;
 
 const styles = StyleSheet.create({
-
-    continue_google_button: {
-        backgroundColor: "white",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 15,
-        borderRadius: 40,
-        gap: 15
-    },
-    continue_email_button: {
-        backgroundColor: "black",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 15,
-        borderRadius: 40,
-        gap: 15
-    },
-    google_button_text: {
-        fontSize: 16,
-        fontFamily: Theme.Montserrat_Font.Mont500
-    },
-    email_button_text: {
-        fontSize: 16,
-        fontFamily: Theme.Montserrat_Font.Mont500,
-        color: "white"
-    },
-    button_icon: {
-        height: 30,
-        width: 30,
-        resizeMode: "contain"
-    },
-    textinput_container: {
-        backgroundColor: "white",
-        flexDirection: "row",
-        borderRadius: 40,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingHorizontal: 20
-    },
-    textinput: {
-        flex: 1,
-        paddingVertical: 20,
-        paddingHorizontal: 10
-    },
-    otp_textinput: {
-        backgroundColor: "white",
-        borderRadius: 40,
+    btn: {
+        backgroundColor: Theme.colos.primaryColor,
         padding: 20,
+        borderRadius: 5,
+        flexDirection: "row",
+        justifyContent: "space-between"
     },
-    get_code_button: {
-        padding: 20,
-        backgroundColor: "#4D4D4D",
-        borderRadius: 40
+    btn_text: {
+        color: "white",
+        fontSize: 16
     }
 })

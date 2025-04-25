@@ -5,7 +5,11 @@ export const Theme = {
         white: "#FFFFF",
         primaryColor: "#4B5320",
         black: "#00000",
-        borderColor: "#D3D3D3"
+        borderColor: "#D3D3D3",
+        second_primary: "#1F1F1F",
+        backgroundColor: "#D9D9D9",
+        lightPrimary: "#4B532080",
+        mediumPrimary: "#4B5320"
     },
     Montserrat_Font: {
         Mont100: "Montserrat_100Thin",

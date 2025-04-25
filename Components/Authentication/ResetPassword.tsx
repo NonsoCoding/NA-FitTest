@@ -4,14 +4,14 @@ import { Formik } from "formik";
 import { FontAwesome6, Fontisto } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
 
-interface IForgottenPasswordProps {
+interface IResetPasswordProps {
     navigation: any;
 }
 
 
-const ForgottenPassword = ({
+const ResetPassword = ({
     navigation
-}: IForgottenPasswordProps) => {
+}: IResetPasswordProps) => {
 
     return (
         <View style={{
@@ -27,17 +27,17 @@ const ForgottenPassword = ({
                 <View>
                     <View>
                         <Text style={{
-                            fontSize: 30,
+                            fontSize: 40,
                             fontWeight: 700,
                             color: "white",
                             lineHeight: 45,
-                        }}>Forgotten Password</Text>
+                        }}>Reset password</Text>
                     </View>
                     <Text style={{
                         fontSize: 16,
                         fontWeight: 300,
                         color: "white"
-                    }}>Fill in your email to get a new password reset link</Text>
+                    }}>Type your new password to recover your account</Text>
                 </View>
             </View>
             <View style={{
@@ -54,7 +54,7 @@ const ForgottenPassword = ({
                         <View style={[styles.textinput_container, {
                             marginBottom: 5
                         }]}>
-                            <Image source={require("../../assets/downloadedIcons/mail-fill-black.png")}
+                            <Image source={require("../../assets/downloadedIcons/lock-2-fill.png")}
                                 style={{
                                     height: 20,
                                     width: 20
@@ -64,7 +64,23 @@ const ForgottenPassword = ({
                             <TextInput
                                 style={styles.textinput}
                                 placeholderTextColor={"#8c8c8e"}
-                                placeholder="tacticalpt@gmail.com"
+                                placeholder="password"
+                            />
+                        </View>
+                        <View style={[styles.textinput_container, {
+                            marginBottom: 5
+                        }]}>
+                            <Image source={require("../../assets/downloadedIcons/lock-2-fill.png")}
+                                style={{
+                                    height: 20,
+                                    width: 20
+                                }}
+                                resizeMode='contain'
+                            />
+                            <TextInput
+                                style={styles.textinput}
+                                placeholderTextColor={"#8c8c8e"}
+                                placeholder="confirm password"
                             />
                         </View>
                     </View>
@@ -106,7 +122,7 @@ const ForgottenPassword = ({
     )
 }
 
-export default ForgottenPassword;
+export default ResetPassword;
 
 const styles = StyleSheet.create({
     continue_google_button: {
