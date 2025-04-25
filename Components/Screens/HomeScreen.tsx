@@ -2,7 +2,6 @@ import { Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableO
 import { Theme } from "../Branding/Theme";
 import LottieView from "lottie-react-native";
 import { useVideoPlayer, VideoView } from "expo-video";
-import { useAuth } from "@clerk/clerk-react";
 import { useState } from "react";
 
 
@@ -21,29 +20,15 @@ const HomePage = ({
     navigation
 }: IHomePageProps) => {
 
-    const { signOut } = useAuth();
+    // const { signOut } = useAuth();
     const [isLogOutModalVisible, setIsLogOutModalVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
     const signingOut = async (sessionId: string) => {
-        setIsLoading(true);
-        await signOut({
-            sessionId,
-        })
-            .then(() => {
-                setIsLoading(false)
-                setIsLogOutModalVisible(false);
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: "Intro" }],
-                })
-                console.log("done");
-            })
-            .catch((e: Error) => {
-                setIsLoading(false);
-                setIsLogOutModalVisible(false);
-                console.log(e);
-            });
+        navigation.reset({
+            index: 0,
+            routes: [{ name: "Intro" }],
+        });
     };
 
 

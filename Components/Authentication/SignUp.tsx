@@ -1,6 +1,6 @@
-import { useSignUp, useAuth, useUser } from '@clerk/clerk-expo'
+// import { useSignUp, useAuth, useUser } from '@clerk/clerk-expo'
 import * as React from 'react'
-import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import { useState } from "react";
 import * as stream from "node:stream";
@@ -8,12 +8,48 @@ import * as yup from "yup";
 import LottieView from 'lottie-react-native';
 import { Formik } from 'formik';
 import { AntDesign, Feather, FontAwesome6, Fontisto } from '@expo/vector-icons';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from 'react-native-toast-message';
+// import Toast from "react-native-toast-message";
+
+const endPoint = process.env.EXPO_PUBLIC_API_URL;
 
 interface SignUpIprops {
     navigation?: any;
 }
 
+// Enhanced password rules regex
+const passwordRules = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 
+// Email domain whitelist (add more as needed)
+const allowedDomains = ['com', 'net', 'org', 'io', 'co', 'edu', 'gov'];
+
+// Validation schema
+const signUpValidation = yup.object().shape({
+    email: yup
+        .string()
+        .trim()
+        .email("Invalid email format")
+        .test(
+            'valid-domain',
+            'We only accept .com, .net, .org, .io, .co, .edu, or .gov emails',
+            (value) => {
+                if (!value) return false;
+                const domain = value.split('.').pop()?.toLowerCase();
+                return domain ? allowedDomains.includes(domain) : false;
+            }
+        )
+        .required("Email is required"),
+    password: yup
+        .string()
+        .matches(
+            passwordRules,
+            "Must contain: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special character"
+        )
+        .required("Password is required"),
+});
+
+// console.log("new")
 interface SignUpValues {
     email: string;
     password: string;
@@ -25,97 +61,72 @@ const SignUpScreen = ({
 }: SignUpIprops) => {
 
 
-    const signUpValidation = yup.object().shape({
-        email: yup.string().email("Invalid email").required("Email is a required field"),
-        password: yup.string().min(4, ("Too short!")).required("Password is required")
-    })
 
-    const { isLoaded, signUp, setActive } = useSignUp()
+    // const { isLoaded, signUp, setActive } = useSignUp()
 
-    const { signOut, sessionId, isSignedIn } = useAuth()
+    // const { signOut, sessionId, isSignedIn } = useAuth()
 
     const [isLoading, setIsLoading] = useState(false);
     const [pendingVerification, setPendingVerification] = useState(false)
     const [togglePasswordVisibility, setTogglePasswordVisibility] = useState(false);
     const [code, setCode] = useState('');
 
-    // Inside your component
-    const { user } = useUser();
 
-    React.useEffect(() => {
-        if (user) {
-            console.log("User ID:", user.id);
-        }
-    }, [user]);
 
     const onSignUpPress = async (emailAddress: string, password: string) => {
+        setIsLoading(true)
+        const emailId = await AsyncStorage.getItem("email");
+        const passwordId = await AsyncStorage.getItem("password");
 
-        if (!isLoaded) return
+        if (emailId?.toLowerCase() !== emailAddress.toLowerCase()) {
+            setIsLoading(true)
+            try {
+                const mainData = await fetch(`${endPoint}/signup`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: emailAddress.toLowerCase(),
+                        password: password,
+                    }),
+                });
+                const res = await mainData.json();
+                console.log(res.otp);
+                if (res.success) {
 
-        try {
-            await signUp.create({
-                emailAddress: emailAddress,
-                password: password,
-            })
+                    await AsyncStorage.setItem("otp", res.otp).then(() => {
+                        setIsLoading(false)
+                        Alert.alert("Sucess", `Your OTP code is ${res.otp}`, [{ text: "Ok" }])
+                    }).then(async () => {
+                        await AsyncStorage.setItem("email", emailAddress);
+                        await AsyncStorage.setItem("password", password);
+                        navigation.navigate("OTPScreen");
+                        Toast.show({
+                            type: 'success',
+                            text1: `Your otp code is ${res.otp}`,
+                            swipeable: true,
+                            visibilityTime: 1000
+                        });
+                    });
+                    console.log(res);
+                    console.log(password);
 
-            // Send user an email with verification code
-            await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
-
-            // Set 'pendingVerification' to true to display second form
-            // and capture OTP code
-            navigation.reset({
-                index: 0,
-                routes: [{ name: "OTPScreen" }]
-            })
-            setPendingVerification(true)
-        } catch (err) {
-            // See https://clerk.com/docs/custom-flows/error-handling
-            // for more info on error handling
-            console.error(JSON.stringify(err, null, 2));
-            console.log(err);
-        }
-    }
-    const onVerifyPress = async () => {
-        if (!isLoaded) return
-
-        try {
-            // Use the code the user provided to attempt verification
-            const signUpAttempt = await signUp.attemptEmailAddressVerification({
-                code,
-            })
-
-            // If verification was completed, set the session to active
-            // and redirect the user
-            if (signUpAttempt.status === 'complete') {
-                await setActive({ session: signUpAttempt.createdSessionId })
-                // router.replace('/')
-                console.log("You are successfully signed in, move to homescreen");
-                navigation.navigate("HomePage");
-            } else {
-                // If the status is not complete, check why. User may need to
-                // complete further steps.
-                console.error(JSON.stringify(signUpAttempt, null, 2))
+                } else {
+                    Alert.alert("Unsuccessful", "You have already been registered, please proceed to login.", [{ text: "Ok" }]);
+                }
+            } catch (err) {
+                setIsLoading(false)
+                console.log(err)
             }
-        } catch (err) {
-            // See https://clerk.com/docs/custom-flows/error-handling
-            // for more info on error handling
-            console.error(JSON.stringify(err, null, 2))
+
+        } else {
+            Alert.alert("Error", "You are already signed in, please proceed to login", [{ text: "Ok" }]);
         }
+
     }
 
-
-
-    const signingOut = async (sessionId: string) => {
-        await signOut({
-            sessionId,
-        })
-            .then(() => {
-                console.log("done");
-            })
-            .catch((e: Error) => {
-                console.log(e);
-            });
-    };
 
     return (
         <View style={{
@@ -139,8 +150,10 @@ const SignUpScreen = ({
             <Formik<SignUpValues>
                 initialValues={{ email: "", password: "" }}
                 validationSchema={signUpValidation}
-                onSubmit={(values, { setSubmitting }) => {
-                    onSignUpPress(values.email, values.password);
+                onSubmit={async (values) => {
+                    await onSignUpPress(values.email, values.password);
+                    // // setSubmitting(false);
+
                 }}
             >
                 {({ handleChange, handleBlur, handleSubmit, validateForm, values, errors, touched, setTouched }) => (
@@ -240,11 +253,15 @@ const SignUpScreen = ({
                                 </View>
                                 <TouchableOpacity
                                     onPress={async () => {
+                                        console.log("Submit button pressed"); // Add this
                                         const errors = await validateForm();
                                         setTouched({ email: true, password: true });
                                         if (!errors.email && !errors.password) {
+                                            console.log("Form is valid, submitting..."); // Add this
                                             handleSubmit();
-
+                                            // onSignUpPress(values.email, values.password);
+                                        } else {
+                                            console.log("Form errors:", errors); // Add this
                                         }
                                     }}
                                     style={[styles.continue_email_button, {
@@ -277,9 +294,9 @@ const SignUpScreen = ({
                                         flexDirection: "row",
                                         justifyContent: "center"
                                     }}
-                                        onPress={() => {
-                                            signingOut("done")
-                                        }}
+                                    // onPress={() => {
+                                    //     signingOut("done")
+                                    // }}
                                     >
                                         <Text style={{
                                             color: Theme.colos.primaryColor,

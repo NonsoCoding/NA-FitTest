@@ -1,13 +1,17 @@
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {Alert, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import { Theme } from "../Branding/Theme";
 import { useRef, useState } from "react";
-import OTPInputView from "@twotalltotems/react-native-otp-input";
+import OTPTextInput from 'react-native-otp-textinput';
 import { useSignUp } from "@clerk/clerk-react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 interface IOtpProps {
     navigation: any;
 }
+
+const endPoint = process.env.EXPO_PUBLIC_API_URL;
+
 
 const OTPScreen = ({
     navigation
@@ -22,35 +26,91 @@ const OTPScreen = ({
     }
 
     const onVerifyPress = async (codeFromInput?: string) => {
-        if (!isLoaded) return
+        const finalCode = codeFromInput ?? code;
+        const email =  await AsyncStorage.getItem("email");
 
         try {
+            const mainData = await fetch(`${endPoint}/verify-email`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    email: email?.toLowerCase(),
+                    otp: finalCode,
+                }),
+            });
 
-            const finalCode = codeFromInput ?? code;
-            // Use the code the user provided to attempt verification
-            const signUpAttempt = await signUp.attemptEmailAddressVerification({
-                code: finalCode
-            })
 
-            // If verification was completed, set the session to active
-            // and redirect the user
-            if (signUpAttempt.status === 'complete') {
-                await setActive({ session: signUpAttempt.createdSessionId })
-                // router.replace('/')
-                console.log("You are successfully signed in, move to homescreen");
+            const res = await mainData.json();
+
+            if (res.success) {
+
+                Alert.alert("Welcome", "Welcome to tacticalPT, what are we doing today?", [{text:"Ok"}]);
+
                 navigation.navigate("HomePage");
+                console.log(res);
             } else {
-                // If the status is not complete, check why. User may need to
-                // complete further steps.
-                console.error(JSON.stringify(signUpAttempt, null, 2))
+                Alert.alert("Unsuccessul", "Please input the correct OTP code sent to you!", [{text:"Ok"}]);
             }
-        } catch (err) {
-            // See https://clerk.com/docs/custom-flows/error-handling
-            // for more info on error handling
-            console.error(JSON.stringify(err, null, 2))
+
+        } catch (error) {
+            console.error("Signup error:", error);
         }
+
     }
 
+    const [isResendDisabled, setIsResendDisabled] = useState(false);
+    const [countdown, setCountdown] = useState(0);
+
+    const resendOtp = async () => {
+        if (isResendDisabled) {
+            Alert.alert("Please wait", `Try again in ${countdown} seconds`);
+            return;
+        }
+
+        const email = await AsyncStorage.getItem("email");
+        try {
+            setIsResendDisabled(true);
+            setCountdown(30); // Start 30-second countdown
+
+            // Start countdown timer
+            const timer = setInterval(() => {
+                setCountdown(prev => {
+                    if (prev <= 1) {
+                        clearInterval(timer);
+                        setIsResendDisabled(false);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+
+            const mainData = await fetch(`${endPoint}/resend-otp`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    email,
+                }),
+            });
+
+            const res = await mainData.json();
+
+            await AsyncStorage.setItem("otp", res.otp);
+            Alert.alert("Success", `Your OTP code is ${res.otp}`);
+            // console.log(res)
+
+        } catch (error) {
+            console.error("Resend OTP error:", error);
+            Alert.alert("Error", "Failed to resend OTP. Please try again later.");
+            setIsResendDisabled(false); // Re-enable if error occurs
+            setCountdown(0);
+        }
+    }
 
     return (
         <View style={styles.container}>
@@ -80,19 +140,15 @@ const OTPScreen = ({
                 <View style={{
                     gap: 10
                 }}>
-                    <OTPInputView
-                        ref={otpInput}
-                        style={styles.otpContainer}
-                        pinCount={6}
-                        autoFocusOnLoad
-                        codeInputFieldStyle={styles.underlineStyleBase}
-                        codeInputHighlightStyle={styles.underlineStyleHighLighted}
-                        onCodeFilled={(enteredCode: string) => {
-                            setCode(enteredCode);
-                            onVerifyPress(enteredCode);
-                        }}
-                        onCodeChanged={(code: string) => setCode(code)}
-
+                    <OTPTextInput
+                        // ref={otpInput}
+                        inputCount={4}
+                        handleTextChange={(text: string) => setCode(text)}
+                        containerStyle={styles.otpContainer}
+                        textInputStyle={styles.underlineStyleBase}
+                        tintColor={Theme.colos.primaryColor}
+                        offTintColor="#ccc"
+                        autoFocus
                     />
                     <View style={{
                         flexDirection: "row",
@@ -104,10 +160,7 @@ const OTPScreen = ({
                         <TouchableOpacity style={{
 
                         }}
-                            onPress={() => {
-                                console.log("Code resent");
-
-                            }}
+                            onPress={resendOtp}
                         >
                             <Text style={{
                                 color: Theme.colos.primaryColor

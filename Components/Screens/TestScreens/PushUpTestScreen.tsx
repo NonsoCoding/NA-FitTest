@@ -496,8 +496,7 @@ const PushUpsTestScreen = ({
                     justifyContent: "flex-end"
                 }}>
                     <View style={{
-                        height: 200,
-                        width: '50%',
+                        height: 300,
                         backgroundColor: Theme.colos.primaryColor,
                         alignItems: "center",
                         justifyContent: "center",
@@ -569,10 +568,13 @@ const PushUpsTestScreen = ({
             >
                 <View style={{
                     flex: 1,
-                    justifyContent: "center"
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0, 0, 0, 0.6)"
                 }}>
                     <View style={{
-                        height: 300,
+                        height: 200,
+                        width: "60%",
+                        alignSelf: "center",
                         backgroundColor: Theme.colos.primaryColor,
                         alignItems: "center",
                         justifyContent: "center",
