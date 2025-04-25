@@ -35,26 +35,41 @@ const LoginScreen = ({
     navigation,
 }: LoginIprops) => {
 
-    // Define password rules regex
-    const passwordRules = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
-// Define validation schema
+// Enhanced password rules regex
+    const passwordRules = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+
+// Email domain whitelist (add more as needed)
+    const allowedDomains = ['com', 'net', 'org', 'io', 'co', 'edu', 'gov'];
+
+// Validation schema
     const loginValidation = yup.object().shape({
         email: yup
             .string()
             .trim()
             .email("Invalid email format")
+            .test(
+                'valid-domain',
+                'We only accept .com, .net, .org, .io, .co, .edu, or .gov emails',
+                (value) => {
+                    if (!value) return false;
+                    const domain = value.split('.').pop()?.toLowerCase();
+                    return domain ? allowedDomains.includes(domain) : false;
+                }
+            )
             .required("Email is required"),
         password: yup
             .string()
-            // .matches(
-            //     passwordRules,
-            //     "Password must be at least 8 characters and include uppercase, lowercase, number, and special character"
-            // )
+            .matches(
+                passwordRules,
+                "Must contain: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special character"
+            )
             .required("Password is required"),
+        confirmPassword: yup
+            .string()
+            .oneOf([yup.ref('password')], "Passwords must match")
+            .required("Please confirm your password")
     });
-
-
     // const { signIn, setActive, isLoaded } = useSignIn()
     // const router = useRouter()
     const [isLoading, setIsLoading] = useState(false);
