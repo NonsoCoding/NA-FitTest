@@ -1,6 +1,6 @@
-import { useSignUp, useAuth, useUser } from '@clerk/clerk-expo'
+// import { useSignUp, useAuth, useUser } from '@clerk/clerk-expo'
 import * as React from 'react'
-import { Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {Alert, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
 import { Theme } from "../Branding/Theme";
 import { useState } from "react";
 import * as stream from "node:stream";
@@ -8,11 +8,33 @@ import * as yup from "yup";
 import LottieView from 'lottie-react-native';
 import { Formik } from 'formik';
 import { AntDesign, Feather, FontAwesome6, Fontisto } from '@expo/vector-icons';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const endPoint = process.env.EXPO_PUBLIC_API_URL;
 
 interface SignUpIprops {
     navigation?: any;
 }
 
+
+// Define password rules regex
+const passwordRules = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+
+// Define validation schema
+const signUpValidation = yup.object().shape({
+    email: yup
+        .string()
+        .trim()
+        .email("Invalid email format")
+        .required("Email is required"),
+    password: yup
+        .string()
+        // .matches(
+        //     passwordRules,
+        //     "Password must be at least 8 characters and include uppercase, lowercase, number, and special character"
+        // )
+        .required("Password is required"),
+});
 
 interface SignUpValues {
     email: string;
@@ -25,97 +47,69 @@ const SignUpScreen = ({
 }: SignUpIprops) => {
 
 
-    const signUpValidation = yup.object().shape({
-        email: yup.string().email("Invalid email").required("Email is a required field"),
-        password: yup.string().min(4, ("Too short!")).required("Password is required")
-    })
 
-    const { isLoaded, signUp, setActive } = useSignUp()
+    // const { isLoaded, signUp, setActive } = useSignUp()
 
-    const { signOut, sessionId, isSignedIn } = useAuth()
+    // const { signOut, sessionId, isSignedIn } = useAuth()
 
     const [isLoading, setIsLoading] = useState(false);
     const [pendingVerification, setPendingVerification] = useState(false)
     const [togglePasswordVisibility, setTogglePasswordVisibility] = useState(false);
     const [code, setCode] = useState('');
 
-    // Inside your component
-    const { user } = useUser();
 
-    React.useEffect(() => {
-        if (user) {
-            console.log("User ID:", user.id);
-        }
-    }, [user]);
 
     const onSignUpPress = async (emailAddress: string, password: string) => {
 
-        if (!isLoaded) return
+        const emailId = await AsyncStorage.getItem("email");
+        const passwordId = await AsyncStorage.getItem("password");
+
+        if (emailId?.toLowerCase() !== emailAddress.toLowerCase()) {
 
         try {
-            await signUp.create({
-                emailAddress: emailAddress,
-                password: password,
-            })
+            const mainData = await fetch(`${endPoint}/signup`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    email: emailAddress.toLowerCase(),
+                    password: password,
+                }),
+            });
+            const res = await mainData.json();
+            // console.log(res.otp);
+            if (res.success) {
 
-            // Send user an email with verification code
-            await signUp.prepareEmailAddressVerification({ strategy: 'email_code' })
+                await AsyncStorage.setItem("otp", res.otp).then(() => {
+                    Alert.alert("Sucess", `Your OTP code is ${res.otp}`, [{text: "Ok"}])
+                }).then(async () => {
+                    await AsyncStorage.setItem("email", emailAddress);
+                    await AsyncStorage.setItem("password", password);
+                    navigation.navigate("OTPScreen");
+                });
+                console.log(res);
+                console.log(password);
 
-            // Set 'pendingVerification' to true to display second form
-            // and capture OTP code
-            navigation.reset({
-                index: 0,
-                routes: [{ name: "OTPScreen" }]
-            })
-            setPendingVerification(true)
-        } catch (err) {
-            // See https://clerk.com/docs/custom-flows/error-handling
-            // for more info on error handling
-            console.error(JSON.stringify(err, null, 2));
-            console.log(err);
-        }
-    }
-    const onVerifyPress = async () => {
-        if (!isLoaded) return
-
-        try {
-            // Use the code the user provided to attempt verification
-            const signUpAttempt = await signUp.attemptEmailAddressVerification({
-                code,
-            })
-
-            // If verification was completed, set the session to active
-            // and redirect the user
-            if (signUpAttempt.status === 'complete') {
-                await setActive({ session: signUpAttempt.createdSessionId })
-                // router.replace('/')
-                console.log("You are successfully signed in, move to homescreen");
-                navigation.navigate("HomePage");
             } else {
-                // If the status is not complete, check why. User may need to
-                // complete further steps.
-                console.error(JSON.stringify(signUpAttempt, null, 2))
+                Alert.alert("Error", "Please try again later");
             }
         } catch (err) {
-            // See https://clerk.com/docs/custom-flows/error-handling
-            // for more info on error handling
-            console.error(JSON.stringify(err, null, 2))
+            console.log(err)
         }
+
+        } else {
+            Alert.alert("Error", "You are already signed in, please proceed to login", [{text: "Ok"}]);
+        }
+
     }
 
 
 
-    // const signingOut = async (sessionId: string) => {
-    //     await signOut({
-    //         sessionId,
-    //     })
-    //         .then(() => {
-    //             console.log("done");
-    //         })
-    //         .catch((e: Error) => {
-    //             console.log(e);
-    //         });
-    // };
+
+
+
 
 
     return (

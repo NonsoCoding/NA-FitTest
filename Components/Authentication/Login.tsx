@@ -1,4 +1,17 @@
-import { ActivityIndicator, Animated, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TextStyle, TouchableOpacity, View } from "react-native";
+import {
+    ActivityIndicator,
+    Alert,
+    Animated,
+    Image,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TextStyle,
+    TouchableOpacity,
+    View
+} from "react-native";
 import { Theme } from "../Branding/Theme";
 import { useAuth, useSignIn } from '@clerk/clerk-expo'
 import { useState } from "react";
@@ -6,10 +19,12 @@ import LottieView from "lottie-react-native";
 import { AntDesign, Feather, FontAwesome6, Fontisto } from "@expo/vector-icons";
 import * as yup from "yup"
 import { Formik } from "formik";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface LoginIprops {
     navigation?: any;
 }
+const endPoint = process.env.EXPO_PUBLIC_API_URL;
 
 interface LoginValues {
     email: string;
@@ -20,55 +35,65 @@ const LoginScreen = ({
     navigation,
 }: LoginIprops) => {
 
-    const loginValidation = yup.object().shape({
-        email: yup.string().email("Invalid email").required("Email is a required field"),
-        password: yup.string().min(4, ("Too short!")).required("Password is required")
-    })
+    // Define password rules regex
+    const passwordRules = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
 
-    const { signIn, setActive, isLoaded } = useSignIn()
+// Define validation schema
+    const loginValidation = yup.object().shape({
+        email: yup
+            .string()
+            .trim()
+            .email("Invalid email format")
+            .required("Email is required"),
+        password: yup
+            .string()
+            // .matches(
+            //     passwordRules,
+            //     "Password must be at least 8 characters and include uppercase, lowercase, number, and special character"
+            // )
+            .required("Password is required"),
+    });
+
+
+    // const { signIn, setActive, isLoaded } = useSignIn()
     // const router = useRouter()
     const [isLoading, setIsLoading] = useState(false);
     const [togglePasswordVisibility, setTogglePasswordVisibility] = useState(false);
 
-    // Handle the submission of the sign-in form
     const onSignInPress = async (emailAddress: string, password: string) => {
-        if (!isLoaded) return
-
-        setIsLoading(true);
-        // console.log(emailAddress, password)
         try {
-
-            const signInAttempt = await signIn.create({
-                identifier: emailAddress,
-                password: password,
-                strategy: "password",
+            const mainData = await fetch(`${endPoint}/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    email: emailAddress.toLowerCase(),
+                    password: password,
+                }),
             });
 
-            console.log("done");
+            const res = await mainData.json();
 
-            if (signInAttempt.status === "complete") {
-                // This is missing - you need to set the active session
-                await setActive({ session: signInAttempt.createdSessionId });
-
-                console.log("done");
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: "HomePage" }],
-                })
-
-                // You may also want to navigate or close the modal after successful login
-
-            } else {
-                console.log("Login failed. Please try again.");
-                // Add user feedback here
+            if (res.accessToken && res.accessToken.length > 10) {
+                await AsyncStorage.setItem("token", res.accessToken);
+                navigation.navigate("HomePage");
+            }  else if (res.statusCode === 403 && res.success === false) {
+                Alert.alert("Unsuccessful login attempt", "You have been blocked, please contact tacticalpt@gmail.com", [{text:"Ok"}]);
             }
+            else {
+                Alert.alert("Unsuccessful", "Incorrect email or password!", [{text:"Ok"}]);
+            }
+            // console.log(res);
+
         } catch (err) {
-            console.log(err)
-            // Add user feedback for errors
-        } finally {
-            setIsLoading(false);
+            console.log(err);
+            Alert.alert("Error", "Login failed. Please try again.", [{text:"Ok"}]);
         }
     }
+
+
 
     return (
         <View style={{
