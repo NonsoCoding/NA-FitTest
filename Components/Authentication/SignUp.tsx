@@ -9,6 +9,7 @@ import LottieView from 'lottie-react-native';
 import { Formik } from 'formik';
 import { AntDesign, Feather, FontAwesome6, Fontisto } from '@expo/vector-icons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+// import Toast from "react-native-toast-message";
 
 const endPoint = process.env.EXPO_PUBLIC_API_URL;
 
@@ -45,12 +46,9 @@ const signUpValidation = yup.object().shape({
             "Must contain: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special character"
         )
         .required("Password is required"),
-    confirmPassword: yup
-        .string()
-        .oneOf([yup.ref('password')], "Passwords must match")
-        .required("Please confirm your password")
 });
 
+// console.log("new")
 interface SignUpValues {
     email: string;
     password: string;
@@ -81,50 +79,50 @@ const SignUpScreen = ({
 
         if (emailId?.toLowerCase() !== emailAddress.toLowerCase()) {
 
-        try {
-            const mainData = await fetch(`${endPoint}/signup`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify({
-                    email: emailAddress.toLowerCase(),
-                    password: password,
-                }),
-            });
-            const res = await mainData.json();
-            // console.log(res.otp);
-            if (res.success) {
-
-                await AsyncStorage.setItem("otp", res.otp).then(() => {
-                    Alert.alert("Sucess", `Your OTP code is ${res.otp}`, [{text: "Ok"}])
-                }).then(async () => {
-                    await AsyncStorage.setItem("email", emailAddress);
-                    await AsyncStorage.setItem("password", password);
-                    navigation.navigate("OTPScreen");
+            try {
+                const mainData = await fetch(`${endPoint}/signup`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: emailAddress.toLowerCase(),
+                        password: password,
+                    }),
                 });
-                console.log(res);
-                console.log(password);
+                const res = await mainData.json();
+                // console.log(res.otp);
+                if (res.success) {
 
-            } else {
-                Alert.alert("Error", "Please try again later");
+                    await AsyncStorage.setItem("otp", res.otp).then(() => {
+                        Alert.alert("Sucess", `Your OTP code is ${res.otp}`, [{text: "Ok"}])
+                    }).then(async () => {
+                        await AsyncStorage.setItem("email", emailAddress);
+                        await AsyncStorage.setItem("password", password);
+                        navigation.navigate("OTPScreen");
+                        // Toast.show({
+                        //     type: 'success',
+                        //     text1: `Your otp code is ${res.otp}`,
+                        //     swipeable:true,
+                        //     visibilityTime: 1000
+                        // });
+                    });
+                    console.log(res);
+                    console.log(password);
+
+                } else {
+                    Alert.alert("Unsuccessful", "You have already been registered, please proceed to login.", [{text: "Ok"}]);
+                }
+            } catch (err) {
+                console.log(err)
             }
-        } catch (err) {
-            console.log(err)
-        }
 
         } else {
             Alert.alert("Error", "You are already signed in, please proceed to login", [{text: "Ok"}]);
         }
 
     }
-
-
-
-
-
-
 
 
     return (
@@ -149,8 +147,10 @@ const SignUpScreen = ({
             <Formik<SignUpValues>
                 initialValues={{ email: "", password: "" }}
                 validationSchema={signUpValidation}
-                onSubmit={(values, { setSubmitting }) => {
-                    onSignUpPress(values.email, values.password);
+                onSubmit={async (values) => {
+                    await onSignUpPress(values.email, values.password);
+                    // // setSubmitting(false);
+
                 }}
             >
                 {({ handleChange, handleBlur, handleSubmit, validateForm, values, errors, touched, setTouched }) => (
@@ -251,11 +251,15 @@ const SignUpScreen = ({
                                 </View>
                                 <TouchableOpacity
                                     onPress={async () => {
+                                        console.log("Submit button pressed"); // Add this
                                         const errors = await validateForm();
                                         setTouched({ email: true, password: true });
                                         if (!errors.email && !errors.password) {
+                                            console.log("Form is valid, submitting..."); // Add this
                                             handleSubmit();
-
+                                            // onSignUpPress(values.email, values.password);
+                                        } else {
+                                            console.log("Form errors:", errors); // Add this
                                         }
                                     }}
                                     style={[styles.continue_email_button, {

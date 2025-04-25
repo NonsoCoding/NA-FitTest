@@ -20,6 +20,7 @@ import { AntDesign, Feather, FontAwesome6, Fontisto } from "@expo/vector-icons";
 import * as yup from "yup"
 import { Formik } from "formik";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 
 interface LoginIprops {
     navigation?: any;
@@ -65,10 +66,6 @@ const LoginScreen = ({
                 "Must contain: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special character"
             )
             .required("Password is required"),
-        confirmPassword: yup
-            .string()
-            .oneOf([yup.ref('password')], "Passwords must match")
-            .required("Please confirm your password")
     });
     // const { signIn, setActive, isLoaded } = useSignIn()
     // const router = useRouter()
@@ -105,12 +102,14 @@ const LoginScreen = ({
         } catch (err) {
             console.log(err);
             Alert.alert("Error", "Login failed. Please try again.", [{text:"Ok"}]);
+
         }
     }
 
 
 
     return (
+
         <View style={{
             flex: 1
         }}>
