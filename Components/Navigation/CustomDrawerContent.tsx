@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Platform, StatusBar } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Platform, StatusBar, Modal } from 'react-native';
 import { DrawerContentComponentProps, DrawerNavigationProp } from '@react-navigation/drawer';
 import { useNavigation } from '@react-navigation/native';
 import { Theme } from '../Branding/Theme';
@@ -11,6 +11,16 @@ type CustomDrawerContentProps = DrawerContentComponentProps & {
 
 const CustomDrawerContent = (props: DrawerContentComponentProps) => {
     const navigation = props.navigation;
+
+    const [isLogOutModalVisible, setIsLogOutModalVisible] = useState(false);
+
+
+    const signingOut = async (sessionId: string) => {
+        navigation.reset({
+            index: 0,
+            routes: [{ name: "Intro" }],
+        });
+    };
 
     return (
         <View style={styles.container}>
@@ -156,7 +166,9 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                     borderColor: Theme.colos.second_primary
                 }}></View>
                 <TouchableOpacity
-                    onPress={() => props.navigation.navigate('')}
+                    onPress={() => {
+                        setIsLogOutModalVisible(true);
+                    }}
                     style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -179,6 +191,64 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                     borderColor: Theme.colos.second_primary
                 }}></View>
             </View>
+            <Modal
+                visible={isLogOutModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => {
+
+                }}
+            >
+                <View style={{
+                    justifyContent: "flex-end",
+                    backgroundColor: "rgba(0, 0, 0, 0.6)",
+                    flex: 1,
+                }}>
+                    <View style={{
+                        backgroundColor: "white",
+                        height: 250,
+                        borderRadius: 20,
+                        padding: 20,
+                        gap: 30,
+                        justifyContent: "center"
+                    }}>
+                        <TouchableOpacity style={{
+                            position: "absolute",
+                            top: 0,
+                            right: 0,
+                            padding: 13,
+                        }}
+                            onPress={() => {
+                                setIsLogOutModalVisible(false);
+                            }}
+                        >
+                            <Text style={{
+                                color: Theme.colos.primaryColor,
+                                fontSize: 18
+                            }}>cancel</Text>
+                        </TouchableOpacity>
+                        <View style={{
+                            alignItems: 'center'
+                        }}>
+                            <Text style={{
+                                fontFamily: Theme.Montserrat_Font.Mont600,
+                                fontSize: 18
+                            }}>Are you sure you want to logout</Text>
+                            <Text style={{
+                                fontFamily: Theme.Montserrat_Font.Mont600,
+                                fontSize: 18
+                            }}>from your account?</Text>
+                        </View>
+                        <TouchableOpacity style={styles.logout_btn}
+                            onPress={() => {
+                                signingOut("SignedOut");
+                            }}
+                        >
+                            <Text style={styles.logout_text}>Logout</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -197,6 +267,22 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         flexDirection: "row",
     },
+    logout_btn: {
+        backgroundColor: Theme.colos.primaryColor,
+        padding: 15,
+        borderRadius: 10,
+        alignItems: "center"
+    },
+    logout_text: {
+        color: "white",
+    },
+    loadingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999,
+    }
 });
 
 export default CustomDrawerContent;

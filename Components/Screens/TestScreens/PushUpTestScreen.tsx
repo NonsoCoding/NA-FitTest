@@ -431,7 +431,7 @@ const PushUpsTestScreen = ({
                                 fontSize: 25,
                                 fontFamily: Theme.Montserrat_Font.Mont700
                             }}>
-                                5
+                                38
                             </Text>
                             <Text style={{
                                 fontSize: 11,

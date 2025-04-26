@@ -21,7 +21,6 @@ const HomePage = ({
 }: IHomePageProps) => {
 
     // const { signOut } = useAuth();
-    const [isLogOutModalVisible, setIsLogOutModalVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
     const signingOut = async (sessionId: string) => {
@@ -173,14 +172,14 @@ const HomePage = ({
                                     navigation.navigate("PushUpsScreen")
                                 }}
                             >
-                                <VideoView
+                                {/* <VideoView
                                     style={{
                                         height: 100,
                                         width: 100,
                                         borderRadius: 5
                                     }}
                                     player={pushUpsPlayer}
-                                />
+                                /> */}
                                 <View style={{
                                     gap: 4
                                 }}>
@@ -221,14 +220,14 @@ const HomePage = ({
                                     navigation.navigate("SprintScreen")
                                 }}
                             >
-                                <VideoView
+                                {/* <VideoView
                                     style={{
                                         height: 100,
                                         width: 100,
                                         borderRadius: 5
                                     }}
                                     player={sprintPlayer}
-                                />
+                                /> */}
                                 <View style={{
                                     gap: 4
                                 }}>
@@ -269,14 +268,14 @@ const HomePage = ({
                                     navigation.navigate("SitUpScreen")
                                 }}
                             >
-                                <VideoView
+                                {/* <VideoView
                                     style={{
                                         height: 82,
                                         width: 97,
                                         borderRadius: 5
                                     }}
                                     player={sitUpPlayer}
-                                />
+                                /> */}
                                 <View style={{
                                     gap: 4
                                 }}>
@@ -317,14 +316,14 @@ const HomePage = ({
                                     navigation.navigate("RunningScreen")
                                 }}
                             >
-                                <VideoView
+                                {/* <VideoView
                                     style={{
                                         height: 100,
                                         width: 100,
                                         borderRadius: 5
                                     }}
                                     player={runningPlayer}
-                                />
+                                /> */}
                                 <View style={{
                                     gap: 4
                                 }}>
@@ -365,14 +364,14 @@ const HomePage = ({
                                     navigation.navigate("PullUpScreen")
                                 }}
                             >
-                                <VideoView
+                                {/* <VideoView
                                     style={{
                                         height: 100,
                                         width: 100,
                                         borderRadius: 5
                                     }}
                                     player={pullUpsPlayer}
-                                />
+                                /> */}
                                 <View style={{
                                     gap: 4
                                 }}>
@@ -406,64 +405,7 @@ const HomePage = ({
                     </View>
                 </ScrollView>
             </View>
-            <Modal
-                visible={isLogOutModalVisible}
-                animationType="slide"
-                transparent={true}
-                onRequestClose={() => {
 
-                }}
-            >
-                <View style={{
-                    justifyContent: "flex-end",
-                    backgroundColor: "rgba(0, 0, 0, 0.6)",
-                    flex: 1,
-                }}>
-                    <View style={{
-                        backgroundColor: "white",
-                        height: 250,
-                        borderRadius: 20,
-                        padding: 20,
-                        gap: 30,
-                        justifyContent: "center"
-                    }}>
-                        <TouchableOpacity style={{
-                            position: "absolute",
-                            top: 0,
-                            right: 0,
-                            padding: 13,
-                        }}
-                            onPress={() => {
-                                setIsLogOutModalVisible(false);
-                            }}
-                        >
-                            <Text style={{
-                                color: Theme.colos.primaryColor,
-                                fontSize: 18
-                            }}>cancel</Text>
-                        </TouchableOpacity>
-                        <View style={{
-                            alignItems: 'center'
-                        }}>
-                            <Text style={{
-                                fontFamily: Theme.Montserrat_Font.Mont600,
-                                fontSize: 18
-                            }}>Are you sure you want to logout</Text>
-                            <Text style={{
-                                fontFamily: Theme.Montserrat_Font.Mont600,
-                                fontSize: 18
-                            }}>from your account?</Text>
-                        </View>
-                        <TouchableOpacity style={styles.logout_btn}
-                            onPress={() => {
-                                signingOut("SignedOut");
-                            }}
-                        >
-                            <Text style={styles.logout_text}>Logout</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
         </View>
     )
 }

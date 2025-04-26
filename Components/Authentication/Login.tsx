@@ -92,7 +92,7 @@ const LoginScreen = ({
             if (res.accessToken && res.accessToken.length > 10) {
                 await AsyncStorage.setItem("token", res.accessToken);
                 setIsLoginCompleteModalVisible(true);
-                navigation.navigate("HomePage");
+                navigation.navigate("MainDrawer");
                 setIsLoading(false)
                 console.log("Logged In");
             } else if (res.statusCode === 403 && res.success === false) {

@@ -1,4 +1,4 @@
-import {Alert, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import { useRef, useState } from "react";
 import OTPTextInput from 'react-native-otp-textinput';
@@ -27,7 +27,7 @@ const OTPScreen = ({
 
     const onVerifyPress = async (codeFromInput?: string) => {
         const finalCode = codeFromInput ?? code;
-        const email =  await AsyncStorage.getItem("email");
+        const email = await AsyncStorage.getItem("email");
 
         try {
             const mainData = await fetch(`${endPoint}/verify-email`, {
@@ -47,12 +47,12 @@ const OTPScreen = ({
 
             if (res.success) {
 
-                Alert.alert("Welcome", "Welcome to tacticalPT, what are we doing today?", [{text:"Ok"}]);
+                Alert.alert("Welcome", "Welcome to tacticalPT, what are we doing today?", [{ text: "Ok" }]);
 
-                navigation.navigate("HomePage");
+                navigation.navigate("MainDrawer");
                 console.log(res);
             } else {
-                Alert.alert("Unsuccessul", "Please input the correct OTP code sent to you!", [{text:"Ok"}]);
+                Alert.alert("Unsuccessul", "Please input the correct OTP code sent to you!", [{ text: "Ok" }]);
             }
 
         } catch (error) {
