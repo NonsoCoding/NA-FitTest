@@ -14,14 +14,15 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nonsoobi.TacticalPT"
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to track push ups"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "com.nonsoobi.TacticalPT"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

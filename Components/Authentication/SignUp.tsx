@@ -81,6 +81,7 @@ const SignUpScreen = ({
         if (emailId?.toLowerCase() !== emailAddress.toLowerCase()) {
             setIsLoading(true)
             try {
+                console.log(`Attempting to connect to: ${endPoint}/signup`);
                 const mainData = await fetch(`${endPoint}/signup`, {
                     method: "POST",
                     headers: {
@@ -92,6 +93,7 @@ const SignUpScreen = ({
                         password: password,
                     }),
                 });
+                console.log("Response status:", mainData.status);
                 const res = await mainData.json();
                 console.log(res.otp);
                 if (res.success) {
@@ -116,9 +118,12 @@ const SignUpScreen = ({
                 } else {
                     Alert.alert("Unsuccessful", "You have already been registered, please proceed to login.", [{ text: "Ok" }]);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 setIsLoading(false)
-                console.log(err)
+                console.log("Network error details:", err);
+                console.log("Error message:", err.message);
+                console.log("Error name:", err.name);
+                Alert.alert("Connection Error", `Failed to connect: ${err.message}`);
             }
 
         } else {
@@ -172,7 +177,7 @@ const SignUpScreen = ({
                             }}>
                                 <View>
                                     <Text style={{
-                                        fontSize: 40,
+                                        fontSize: 35,
                                         fontWeight: 700,
                                         color: "white",
                                         lineHeight: 45,
