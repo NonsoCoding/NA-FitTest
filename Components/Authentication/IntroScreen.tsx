@@ -18,7 +18,8 @@ const IntroScreen = ({
                 flex: 3,
                 justifyContent: "center",
                 alignItems: "center",
-                gap: 20
+                gap: 20,
+                padding: 20
             }}>
                 <Text style={{
                     fontWeight: 600,
@@ -29,7 +30,6 @@ const IntroScreen = ({
                     fontWeight: 300,
                     color: "white",
                     fontSize: 18,
-                    maxWidth: 350,
                     textAlign: "center"
                 }}>This is the official fitness app for the army of national defense</Text>
             </View>

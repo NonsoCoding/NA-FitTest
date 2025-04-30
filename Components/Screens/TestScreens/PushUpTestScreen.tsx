@@ -1,6 +1,5 @@
-import { Image, ImageBackground, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../Branding/Theme";
-import { useVideoPlayer, VideoView } from "expo-video";
 import { useEffect, useRef, useState } from "react";
 import { Accelerometer } from "expo-sensors";
 import { Switch, ToggleButton } from "react-native-paper";
@@ -39,6 +38,8 @@ const PushUpsTestScreen = ({
     const [startTime, setStartTime] = useState(60);
     const [sensorData, setSensorData] = useState<SensorData>({});
     const [pushUpCount, setPushUpCount] = useState(0);
+    const [isAutoDetectEnabled, setIsAutoDetectEnabled] = useState(true);
+    const [showManualInputModal, setShowManualInputModal] = useState(false);
     const [pushupState, setPushupState] = useState<PushupState>(PushupState.READY);
     const [isFirstCalibration, setIsFirstCalibration] = useState(true);
     const [calibrationValues, setCalibrationValues] = useState({
@@ -75,10 +76,10 @@ const PushUpsTestScreen = ({
     const recentZValues = useRef<number[]>([]);
     const MAX_HISTORY = 5;
 
-    const pullUpsPlayer = useVideoPlayer(VideoSource, (player) => {
-        player.loop = true;
-        player.play();
-    });
+    // const pullUpsPlayer = useVideoPlayer(VideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
 
     // Function to get smoothed Z value
     const getSmoothedZ = () => {
@@ -101,6 +102,19 @@ const PushUpsTestScreen = ({
             setIsRunning(true);
         }
     };
+
+    const hanldleGetStarted = () => {
+        if (isAutoDetectEnabled) {
+            setIsModalVisible(true);
+        } else {
+            setIsPrepModalVisible(true);
+            startPrepCountdown();
+        }
+    }
+
+    const askForManualInputModal = () => {
+        setShowManualInputModal(true);
+    }
 
     // Start main countdown when modal is visible
     useEffect(() => {
@@ -154,7 +168,9 @@ const PushUpsTestScreen = ({
     useEffect(() => {
         if (isStartRunning && startTime > 0) {
             // Enable push-up counting when the timer starts
-            setIsCountingActive(true);
+            if (isAutoDetectEnabled) {
+                setIsAutoDetectEnabled(true);
+            }
 
             startIntervalRef.current = setInterval(() => {
                 setStartTime(prev => {
@@ -165,9 +181,12 @@ const PushUpsTestScreen = ({
 
                         // Disable push-up counting when the timer ends
                         setIsCountingActive(false);
-
                         setTimeout(() => {
-                            setIsResultModalVisible(true);
+                            if (isAutoDetectEnabled) {
+                                setIsResultModalVisible(true);
+                            } else {
+                                askForManualInputModal()
+                            }
                         }, 700);
                     }
                     return prev - 1;
@@ -178,7 +197,7 @@ const PushUpsTestScreen = ({
         return () => {
             if (startIntervalRef.current) clearInterval(startIntervalRef.current);
         };
-    }, [isStartRunning]);
+    }, [isStartRunning, startTime, isAutoDetectEnabled]);
     // Accelerometer setup
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
@@ -193,13 +212,13 @@ const PushUpsTestScreen = ({
 
     useEffect(() => {
         // Only process sensor data if counting is active
-        if (!isCountingActive || sensorData.z === undefined) return;
+        if (!isCountingActive || sensorData.z === undefined || !isAutoDetectEnabled) return;
 
         // Rest of your push-up detection code remains the same
         const now = Date.now();
         const z = sensorData.z;
         // ...
-    }, [sensorData, isCountingActive]);
+    }, [sensorData, isCountingActive, isAutoDetectEnabled]);
     // Push-up detection with state machine
     useEffect(() => {
         if (sensorData.z === undefined) return;
@@ -402,7 +421,7 @@ const PushUpsTestScreen = ({
                 }}>
                     <View style={{
                     }}>
-                        <VideoView
+                        {/* <VideoView
                             style={{
                                 width: 300,
                                 height: 300,
@@ -410,7 +429,7 @@ const PushUpsTestScreen = ({
                                 borderRadius: 5
                             }}
                             player={pullUpsPlayer}
-                        />
+                        /> */}
                     </View>
                     <Text style={{
                         color: Theme.colos.primaryColor,
@@ -458,6 +477,8 @@ const PushUpsTestScreen = ({
                         }}>
                             <Switch
                                 color={Theme.colos.primaryColor}
+                                value={isAutoDetectEnabled}
+                                onValueChange={(value) => setIsAutoDetectEnabled(value)}
                             />
                             <Text style={{
                                 fontSize: 10
@@ -467,13 +488,13 @@ const PushUpsTestScreen = ({
                 </View>
                 <TouchableOpacity style={styles.getStartedBtn}
                     onPress={() => {
-                        setIsModalVisible(true);
+                        hanldleGetStarted();
                     }}
                 >
                     <Text style={{
                         fontFamily: Theme.Montserrat_Font.Mont400,
                         color: "white"
-                    }}>Get started</Text>
+                    }}>GET STARTED</Text>
                     <Image source={require("../../../assets/downloadedIcons/fast.png")}
                         style={{
                             width: 25,
@@ -813,9 +834,86 @@ const PushUpsTestScreen = ({
                                 <Text style={{
                                     fontFamily: Theme.Montserrat_Font.Mont400,
                                     color: "white"
-                                }}>Continue</Text>
+                                }}>SUBMIT</Text>
                             </TouchableOpacity>
                         </View>
+                    </View>
+                </View>
+            </Modal>
+            <Modal
+                visible={showManualInputModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => {
+                    setShowManualInputModal(false);
+                }}
+            >
+                <View style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0, 0, 0, 0.6)",
+                    padding: 20
+                }}>
+                    <View style={{
+                        height: "40%",
+                        padding: 20,
+                        justifyContent: "center",
+                        backgroundColor: Theme.colos.backgroundColor,
+                        gap: 20
+                    }}>
+                        <View style={{
+                            gap: 10
+                        }}>
+                            <Text style={{
+                                textAlign: "center",
+                                fontWeight: "600"
+                            }}>TIME OVER!!!</Text>
+                            <View>
+                                <Text style={{
+                                    fontWeight: 200,
+                                    fontSize: 16,
+                                    textAlign: "center"
+                                }}>Input your push-up count</Text>
+                            </View>
+                        </View>
+                        <TextInput
+                            // value={pushUpCount}
+                            // onChangeText={setPushUpCount}
+                            keyboardType="numeric"
+                            placeholderTextColor="#aaa"
+                            style={{
+                                borderWidth: 1,
+                                borderColor: '#ccc',
+                                borderRadius: 10,
+                                alignSelf: "center",
+                                width: "30%",
+                                padding: 15,
+                                fontSize: 16,
+                                backgroundColor: '#f9f9f9',
+                                color: '#000',
+                            }}
+                        />
+                        <TouchableOpacity style={styles.getStartedBtn}
+                            onPress={() => {
+                                setShowManualInputModal(false);
+                                setPrepTime(5);
+                                setIsRunning(false);
+                                if (intervalRef.current) {
+                                    clearInterval(intervalRef.current);
+                                    intervalRef.current = null;
+                                }
+                            }}
+                        >
+                            <Text style={{
+                                color: "white"
+                            }}>SUBMIT</Text>
+                            <Image source={require("../../../assets/downloadedIcons/fast.png")}
+                                style={{
+                                    height: 24,
+                                    width: 24
+                                }}
+                            />
+                        </TouchableOpacity>
                     </View>
                 </View>
             </Modal>

@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity, Platform, StatusBar, M
 import { DrawerContentComponentProps, DrawerNavigationProp } from '@react-navigation/drawer';
 import { useNavigation } from '@react-navigation/native';
 import { Theme } from '../Branding/Theme';
+import LottieView from 'lottie-react-native';
 
 
 type CustomDrawerContentProps = DrawerContentComponentProps & {
@@ -13,17 +14,44 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
     const navigation = props.navigation;
 
     const [isLogOutModalVisible, setIsLogOutModalVisible] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
 
     const signingOut = async (sessionId: string) => {
-        navigation.reset({
-            index: 0,
-            routes: [{ name: "Intro" }],
-        });
+        setIsLoading(true);
+
+        setTimeout(() => {
+            setIsLoading(false);
+            navigation.reset({
+                index: 0,
+                routes: [{ name: "LandingScreen" }],
+            });
+        }, 5000);
     };
 
     return (
         <View style={styles.container}>
+            {isLoading && (
+                <Modal
+                    visible={true}
+                    transparent={true}
+                    animationType='fade'
+                >
+                    <View style={styles.loadingOverlay}>
+                        <LottieView
+                            source={require("../../assets/ExerciseGifs/Animation - 1745262738989.json")}
+                            style={{
+                                height: 80,
+                                width: 80
+                            }}
+                            resizeMode="contain"
+                            loop={true}
+                            autoPlay={true}
+                        />
+                        <Text style={{ color: "#fff", marginTop: 10, fontFamily: Theme.Montserrat_Font.Mont400 }}>Signing you in...</Text>
+                    </View>
+                </Modal>
+            )}
             <View style={styles.profileSection}>
                 <View style={{
                     flexDirection: "row",
@@ -74,7 +102,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                 gap: 10
             }}>
                 <TouchableOpacity
-                    onPress={() => props.navigation.navigate('')}
+                    onPress={() => props.navigation.navigate('AdminDashbaord')}
                     style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -207,7 +235,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                     <View style={{
                         backgroundColor: "white",
                         height: 250,
-                        borderRadius: 20,
+                        borderRadius: 5,
                         padding: 20,
                         gap: 30,
                         justifyContent: "center"
@@ -231,17 +259,20 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                             alignItems: 'center'
                         }}>
                             <Text style={{
-                                fontFamily: Theme.Montserrat_Font.Mont600,
-                                fontSize: 18
+                                fontSize: 18,
+                                fontWeight: 200
                             }}>Are you sure you want to logout</Text>
                             <Text style={{
-                                fontFamily: Theme.Montserrat_Font.Mont600,
-                                fontSize: 18
+                                fontSize: 18,
+                                fontWeight: 200
                             }}>from your account?</Text>
                         </View>
                         <TouchableOpacity style={styles.logout_btn}
                             onPress={() => {
-                                signingOut("SignedOut");
+                                setIsLogOutModalVisible(false);
+                                setTimeout(() => {
+                                    signingOut("SignedOut"); // show loading
+                                }, 700);
                             }}
                         >
                             <Text style={styles.logout_text}>Logout</Text>
@@ -270,7 +301,7 @@ const styles = StyleSheet.create({
     logout_btn: {
         backgroundColor: Theme.colos.primaryColor,
         padding: 15,
-        borderRadius: 10,
+        borderRadius: 5,
         alignItems: "center"
     },
     logout_text: {

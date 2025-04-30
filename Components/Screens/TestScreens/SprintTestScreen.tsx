@@ -589,7 +589,7 @@ const SprintTestScreen = ({
                             backgroundColor: Theme.colos.primaryColor,
                             alignItems: "center",
                             justifyContent: "center",
-                            borderRadius: 20
+                            borderRadius: 5
                         }}>
                             <View style={{
                                 alignItems: "center"
@@ -634,7 +634,7 @@ const SprintTestScreen = ({
                             backgroundColor: Theme.colos.primaryColor,
                             alignItems: "center",
                             justifyContent: "center",
-                            borderRadius: 20,
+                            borderRadius: 5,
                             gap: 10,
                         }}>
                             <View style={{
@@ -652,7 +652,6 @@ const SprintTestScreen = ({
                                     <Text style={{
                                         fontSize: 17,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>close</Text>
                                 </TouchableOpacity>
                             </View>
@@ -663,7 +662,7 @@ const SprintTestScreen = ({
                             <View style={{
                                 height: 230,
                                 width: '80%',
-                                borderRadius: 20,
+                                borderRadius: 5,
                                 alignItems: "center",
                                 justifyContent: "center",
                                 gap: 10,
@@ -679,8 +678,8 @@ const SprintTestScreen = ({
                                     }}>Distance: </Text>
                                     <Text style={{
                                         fontSize: 18,
+                                        fontWeight: "200",
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
                                     }}>{runMetrics.distance.toFixed(2)} meters</Text>
                                 </View>
                                 <View style={{
@@ -693,8 +692,8 @@ const SprintTestScreen = ({
                                     }}>Time: </Text>
                                     <Text style={{
                                         fontSize: 18,
+                                        fontWeight: "200",
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
                                     }}>{formatTime(runMetrics.elapsedTime)}</Text>
                                 </View>
                                 <View style={{
@@ -707,8 +706,8 @@ const SprintTestScreen = ({
                                     }}>Avg Speed: </Text>
                                     <Text style={{
                                         fontSize: 18,
+                                        fontWeight: 200,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
                                     }}>{formatPace(runMetrics.averageSpeed)}/mph</Text>
                                 </View>
                                 <View style={{
@@ -722,7 +721,7 @@ const SprintTestScreen = ({
                                     <Text style={{
                                         fontSize: 18,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
+                                        fontWeight: 200,
                                     }}>{runMetrics.distance >= TARGET_DISTANCE_METERS ? 'Completed' : 'Incomplete'}</Text>
                                 </View>
                                 <TouchableOpacity style={styles.getStartedBtn}
@@ -733,6 +732,10 @@ const SprintTestScreen = ({
                                         navigation.goBack();
                                     }}
                                 >
+                                    <Text style={{
+                                        fontFamily: Theme.Montserrat_Font.Mont400,
+                                        color: "white"
+                                    }}>SUBMIT </Text>
                                     <Image source={require("../../../assets/downloadedIcons/fast.png")}
                                         style={{
                                             width: 25,
@@ -740,10 +743,6 @@ const SprintTestScreen = ({
                                             resizeMode: "contain"
                                         }}
                                     />
-                                    <Text style={{
-                                        fontFamily: Theme.Montserrat_Font.Mont400,
-                                        color: "white"
-                                    }}>Continue</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -853,8 +852,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingVertical: 15,
         paddingHorizontal: 30,
-        borderRadius: 30,
-        width: '80%',
+        borderRadius: 5,
+        width: '100%',
     },
     startButton: {
         backgroundColor: Theme.colos.primaryColor,
@@ -872,10 +871,10 @@ const styles = StyleSheet.create({
         padding: 10,
         backgroundColor: "black",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "space-between",
         width: "70%",
         alignSelf: "center",
-        borderRadius: 20,
+        borderRadius: 5,
         gap: 10,
         flexDirection: "row"
     }

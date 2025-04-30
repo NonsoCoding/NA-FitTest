@@ -10,9 +10,10 @@ import { Formik } from 'formik';
 import { AntDesign, Feather, FontAwesome6, Fontisto } from '@expo/vector-icons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from 'react-native-toast-message';
+import Constants from 'expo-constants';
 // import Toast from "react-native-toast-message";
 
-const endPoint = process.env.EXPO_PUBLIC_API_URL;
+const endPoint = "http://test-dev.hasob.app:9550/api/v1/auth";
 
 interface SignUpIprops {
     navigation?: any;
@@ -69,6 +70,7 @@ const SignUpScreen = ({
     const [isLoading, setIsLoading] = useState(false);
     const [pendingVerification, setPendingVerification] = useState(false)
     const [togglePasswordVisibility, setTogglePasswordVisibility] = useState(false);
+    const [isLoginCompleteModalVisible, setIsLoginCompleteModalVisible] = useState(false)
     const [code, setCode] = useState('');
 
 
@@ -104,7 +106,7 @@ const SignUpScreen = ({
                     }).then(async () => {
                         await AsyncStorage.setItem("email", emailAddress);
                         await AsyncStorage.setItem("password", password);
-                        navigation.navigate("OTPScreen");
+                        navigation.navigate("OTPScreen", { isLoginCompleteModalVisible: true });
                         Toast.show({
                             type: 'success',
                             text1: `Your otp code is ${res.otp}`,
@@ -173,11 +175,11 @@ const SignUpScreen = ({
                             justifyContent: "flex-end"
                         }}>
                             <View style={{
-                                gap: 10
+                                gap: 5
                             }}>
                                 <View>
                                     <Text style={{
-                                        fontSize: 35,
+                                        fontSize: 30,
                                         fontWeight: 700,
                                         color: "white",
                                         lineHeight: 45,
@@ -300,7 +302,7 @@ const SignUpScreen = ({
                                         justifyContent: "center"
                                     }}
                                     // onPress={() => {
-                                    //     signingOut("done")
+                                    //     navigation.navigate("MainDrawer");
                                     // }}
                                     >
                                         <Text style={{

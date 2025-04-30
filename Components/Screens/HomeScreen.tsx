@@ -1,7 +1,6 @@
 import { Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import LottieView from "lottie-react-native";
-import { useVideoPlayer, VideoView } from "expo-video";
 import { useState } from "react";
 
 
@@ -31,26 +30,26 @@ const HomePage = ({
     };
 
 
-    const pushUpsPlayer = useVideoPlayer(pushUpsVideoSource, (player) => {
-        player.loop = true;
-        player.play();
-    });
-    const pullUpsPlayer = useVideoPlayer(pullUpVideoSource, (player) => {
-        player.loop = true;
-        player.play();
-    });
-    const sprintPlayer = useVideoPlayer(sprintVideoSource, (player) => {
-        player.loop = true;
-        player.play();
-    });
-    const sitUpPlayer = useVideoPlayer(sitUpVideoSource, (player) => {
-        player.loop = true;
-        player.play();
-    });
-    const runningPlayer = useVideoPlayer(runningVideoSource, (player) => {
-        player.loop = true;
-        player.play();
-    });
+    // const pushUpsPlayer = useVideoPlayer(pushUpsVideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
+    // const pullUpsPlayer = useVideoPlayer(pullUpVideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
+    // const sprintPlayer = useVideoPlayer(sprintVideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
+    // const sitUpPlayer = useVideoPlayer(sitUpVideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
+    // const runningPlayer = useVideoPlayer(runningVideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
 
     return (
         <View style={{

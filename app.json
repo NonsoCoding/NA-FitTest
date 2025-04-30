@@ -6,21 +6,24 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#4B5320"
     },
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "This app uses the camera to track push ups"
+        "NSCameraUsageDescription": "This app uses the camera to track push ups",
+        "NSAppTransportSecurity": {
+        "NSAllowsArbitraryLoads": true
       }
+      }
+
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       }
     },
@@ -29,7 +32,13 @@
     },
     "plugins": [
       "expo-font",
-      "expo-video"
-    ]
+      "expo-secure-store"
+    ],
+    "extra": {
+      "EXPO_PUBLIC_API_URL": "http://test-dev.hasob.app:9550/api/v1/auth",
+      "eas": {
+        "projectId": "32aaec0f-06b7-4751-8c0a-7326e4bfe426"
+      }
+    }
   }
 }

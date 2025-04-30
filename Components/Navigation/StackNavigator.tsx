@@ -20,6 +20,7 @@ import ResetPassword from "../Authentication/ResetPassword";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { DrawerNavigator } from "./DrawerNavigation";
 import Profile from "../Screens/Profile";
+import PersonalInfo from "../Screens/PersonalInfo";
 
 const Stack = createStackNavigator();
 
@@ -65,6 +66,7 @@ const StackNavigation: React.FC = () => {
                         <Stack.Screen name="SprintScreen" component={SprintTestScreen} />
                         <Stack.Screen name="SitUpScreen" component={SitUpTestScreen} />
                         <Stack.Screen name="RunningScreen" component={RunningTestScreen} />
+                        <Stack.Screen name="PersonalInfo" component={PersonalInfo} />
                     </Stack.Navigator>
                 </NavigationContainer>
             </ClerkProvider>

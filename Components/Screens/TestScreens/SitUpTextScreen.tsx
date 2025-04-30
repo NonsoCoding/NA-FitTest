@@ -1,8 +1,8 @@
-import { Image, ImageBackground, Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../Branding/Theme";
-import { useVideoPlayer, VideoView } from "expo-video";
 import { useEffect, useRef, useState } from "react";
 import { Accelerometer } from "expo-sensors";
+import { Switch } from "react-native-paper";
 
 
 interface ITestProps {
@@ -36,6 +36,8 @@ const SitUpTestScreen = ({
     const [prepTime, setPrepTime] = useState(5);
     const [isStartRunning, setIsStartRunning] = useState(false);
     const [startTime, setStartTime] = useState(60);
+    const [isAutoDetectEnabled, setIsAutoDetectEnabled] = useState(true);
+    const [showManualInputModal, setShowManualInputModal] = useState(false);
     const [sensorData, setSensorData] = useState<SensorData>({});
     const [sitUpCount, setSitUpCount] = useState(0);
     const [situpState, setSitupState] = useState<SitupState>(SitupState.READY);
@@ -74,10 +76,10 @@ const SitUpTestScreen = ({
     const recentZValues = useRef<number[]>([]);
     const MAX_HISTORY = 5;
 
-    const sitUpsPlayer = useVideoPlayer(VideoSource, (player) => {
-        player.loop = true;
-        player.play();
-    });
+    // const sitUpsPlayer = useVideoPlayer(VideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
 
     // Function to get smoothed Z value
     const getSmoothedZ = () => {
@@ -100,6 +102,20 @@ const SitUpTestScreen = ({
             setIsRunning(true);
         }
     };
+
+
+    const hanldleGetStarted = () => {
+        if (isAutoDetectEnabled) {
+            setIsModalVisible(true);
+        } else {
+            setIsPrepModalVisible(true);
+            startPrepCountdown();
+        }
+    }
+
+    const askForManualInputModal = () => {
+        setShowManualInputModal(true);
+    }
 
     // Start main countdown when modal is visible
     useEffect(() => {
@@ -153,7 +169,9 @@ const SitUpTestScreen = ({
     useEffect(() => {
         if (isStartRunning && startTime > 0) {
             // Enable push-up counting when the timer starts
-            setIsCountingActive(true);
+            if (isAutoDetectEnabled) {
+                setIsAutoDetectEnabled(true);
+            }
 
             startIntervalRef.current = setInterval(() => {
                 setStartTime(prev => {
@@ -166,7 +184,11 @@ const SitUpTestScreen = ({
                         setIsCountingActive(false);
 
                         setTimeout(() => {
-                            setIsResultModalVisible(true);
+                            if (isAutoDetectEnabled) {
+                                setIsResultModalVisible(true);
+                            } else {
+                                askForManualInputModal()
+                            }
                         }, 700);
                     }
                     return prev - 1;
@@ -177,7 +199,7 @@ const SitUpTestScreen = ({
         return () => {
             if (startIntervalRef.current) clearInterval(startIntervalRef.current);
         };
-    }, [isStartRunning]);
+    }, [isStartRunning, startTime, isAutoDetectEnabled]);
     // Accelerometer setup
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
@@ -191,7 +213,7 @@ const SitUpTestScreen = ({
 
 
     useEffect(() => {
-        if (!isCountingActive || sensorData.z === undefined) return;
+        if (!isCountingActive || sensorData.z === undefined || !isAutoDetectEnabled) return;
 
         const now = Date.now();
         const z = sensorData.z;
@@ -322,49 +344,52 @@ const SitUpTestScreen = ({
         <View style={{
             flex: 1,
         }}>
-            <ImageBackground source={require("../../../assets/downloadedIcons/homeBg.png")}
-                style={{
-                    flex: 1
-                }}
-            >
+            <View style={{
+                backgroundColor: Theme.colos.primaryColor,
+                justifyContent: "flex-end",
+                gap: 20,
+                padding: 20,
+                height: "14%"
+            }}>
                 <View style={{
-                    backgroundColor: "black",
-                    justifyContent: "center",
-                    gap: 20,
-                    padding: 20,
-                    height: "50%",
-                    borderBottomRightRadius: 20,
-                    borderBottomLeftRadius: 20
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between"
                 }}>
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between"
-                    }}>
-                        <TouchableOpacity
-                            onPress={() => {
-                                navigation.goBack();
-                            }}
-                        >
-                            <Image source={require("../../../assets/downloadedIcons/back 1.png")}
-                                style={{
-                                    width: 20,
-                                    height: 20
-                                }}
-                            />
-                        </TouchableOpacity>
-                        <Text style={{
-                            color: "white"
-                        }}>PUSH-UPS (TEST MODE)</Text>
-                        <Image source={require("../../../assets/downloadedIcons/notification.png")}
+                    <TouchableOpacity
+                        onPress={() => {
+                            navigation.goBack();
+                        }}
+                    >
+                        <Image source={require("../../../assets/downloadedIcons/back 1.png")}
                             style={{
-                                height: 40,
-                                width: 40,
-                                resizeMode: "contain"
+                                width: 20,
+                                height: 20
                             }}
                         />
-                    </View>
-                    <VideoView
+                    </TouchableOpacity>
+                    <Text style={{
+                        color: "white"
+                    }}>SIT-UPS (TEST MODE)</Text>
+                    <Image source={require("../../../assets/downloadedIcons/notification.png")}
+                        style={{
+                            height: 30,
+                            width: 30,
+                            resizeMode: "contain"
+                        }}
+                    />
+                </View>
+            </View>
+            <View style={{
+                padding: 20,
+                flex: 1,
+                paddingBottom: 50,
+                justifyContent: "space-between"
+            }}>
+                <View style={{
+                    gap: 20
+                }}>
+                    {/* <VideoView
                         style={{
                             alignSelf: "center",
                             width: 280,
@@ -372,270 +397,256 @@ const SitUpTestScreen = ({
                             borderRadius: 20
                         }}
                         player={sitUpsPlayer}
-                    />
-                </View>
-                <View style={{
-                    padding: 20,
-                    gap: 20
-                }}>
+                    /> */}
                     <Text style={{
-                        color: "white",
                         alignSelf: "center",
                         fontWeight: 200
                     }}>
-                        Maximum number of push-ups in one minute
+                        Maximum number of sit-ups in one minute
                     </Text>
                     <View style={{
-                        padding: 15,
-                        paddingHorizontal: 45,
+                        paddingHorizontal: 30,
                         alignItems: "center",
                         borderRadius: 25,
                         flexDirection: "row",
                         justifyContent: "space-between",
-                        backgroundColor: "rgba(0, 0, 0, 0.3)"
                     }}>
                         <View style={{
                             alignItems: "center"
                         }}>
                             <Text style={{
-                                color: "white",
                                 fontSize: 25,
                                 fontFamily: Theme.Montserrat_Font.Mont700
                             }}>
-                                5
+                                38
                             </Text>
                             <Text style={{
-                                color: "white",
+                                fontSize: 10,
                                 fontWeight: 200
-                            }}>Min</Text>
+                            }}>MINIMUM</Text>
                         </View>
                         <View style={{
+                            left: 10,
                             alignItems: "center"
                         }}>
                             <Text style={{
-                                color: "white",
                                 fontSize: 25,
-                                fontFamily: Theme.Montserrat_Font.Mont700
                             }}>
                                 01:00
                             </Text>
+                            <Text style={{
+                                fontSize: 10
+                            }}>MINUTE</Text>
                         </View>
                         <View style={{
                             alignItems: "center"
                         }}>
+                            <Switch
+                                color={Theme.colos.primaryColor}
+                                value={isAutoDetectEnabled}
+                                onValueChange={(value) => setIsAutoDetectEnabled(value)}
+                            />
                             <Text style={{
-                                color: "white",
-                                fontSize: 25,
-                                fontFamily: Theme.Montserrat_Font.Mont700
-                            }}>
-                                50
-                            </Text>
-                            <Text style={{
-                                color: "white",
+                                fontSize: 10,
                                 fontWeight: 200
-                            }}>Max</Text>
+                            }}>AUTO DETECT</Text>
                         </View>
                     </View>
-                    <TouchableOpacity style={styles.getStartedBtn}
-                        onPress={() => {
-                            setIsModalVisible(true);
-                        }}
-                    >
-                        <Image source={require("../../../assets/downloadedIcons/fast.png")}
-                            style={{
-                                width: 25,
-                                height: 25,
-                                resizeMode: "contain"
-                            }}
-                        />
-                        <Text style={{
-                            fontFamily: Theme.Montserrat_Font.Mont400,
-                            color: "white"
-                        }}>GET STARTED</Text>
-                    </TouchableOpacity>
                 </View>
-                <Modal
-                    visible={isModalVisible}
-                    animationType="slide"
-                    transparent={true}
-                    onRequestClose={() => {
-                        setIsModalVisible(false);
+                <TouchableOpacity style={styles.getStartedBtn}
+                    onPress={() => {
+                        hanldleGetStarted();
                     }}
                 >
+                    <Text style={{
+                        fontFamily: Theme.Montserrat_Font.Mont400,
+                        color: "white"
+                    }}>GET STARTED</Text>
+                    <Image source={require("../../../assets/downloadedIcons/fast.png")}
+                        style={{
+                            width: 25,
+                            height: 25,
+                            resizeMode: "contain"
+                        }}
+                    />
+                </TouchableOpacity>
+            </View>
+            <Modal
+                visible={isModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => {
+                    setIsModalVisible(false);
+                }}
+            >
+                <View style={{
+                    flex: 1,
+                    justifyContent: "flex-end"
+                }}>
                     <View style={{
-                        flex: 1,
-                        justifyContent: "flex-end"
+                        height: 300,
+                        backgroundColor: Theme.colos.primaryColor,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 5
                     }}>
                         <View style={{
-                            height: 300,
-                            backgroundColor: Theme.colos.primaryColor,
+                            position: "absolute",
+                            top: 0,
+                            right: 0,
+                            padding: 20
+                        }}>
+                            <TouchableOpacity style={{
+
+                            }}
+                                onPress={() => {
+                                    setIsModalVisible(false)
+                                }}
+                            >
+                                <Text style={{
+                                    fontSize: 17,
+                                    color: "white",
+                                }}>close</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{
+                            height: 150,
+                            width: '70%',
+                            borderRadius: 5,
                             alignItems: "center",
                             justifyContent: "center",
-                            borderRadius: 20
+                            gap: 10,
+                            backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
                             <View style={{
-                                position: "absolute",
-                                top: 0,
-                                right: 0,
-                                padding: 20
+                                flexDirection: "row",
+                                alignItems: "flex-end",
                             }}>
-                                <TouchableOpacity style={{
-
+                                <Text style={{
+                                    fontSize: 60,
+                                    color: "white",
+                                }}>01:00</Text>
+                                <Text style={{
+                                    fontSize: 17,
+                                    bottom: 10,
+                                    color: "white",
+                                }}>min</Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    modalToPrepModal();
                                 }}
-                                    onPress={() => {
-                                        setIsModalVisible(false)
-                                    }}
-                                >
-                                    <Text style={{
-                                        fontSize: 17,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
-                                    }}>close</Text>
-                                </TouchableOpacity>
-                            </View>
-                            <View style={{
-                                height: 150,
-                                width: '70%',
-                                borderRadius: 20,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 10,
-                                backgroundColor: "rgba(0, 0, 0, 0.3)"
-                            }}>
-                                <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "flex-end",
-                                }}>
-                                    <Text style={{
-                                        fontSize: 60,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
-                                    }}>01:00</Text>
-                                    <Text style={{
-                                        fontSize: 17,
-                                        bottom: 10,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
-                                    }}>min</Text>
-                                </View>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        modalToPrepModal();
-                                    }}
-                                >
-                                    <Text style={{
-                                        fontFamily: Theme.MuseoModerno_Font.Muse600,
-                                        color: "white"
-                                    }}>Start</Text>
-                                </TouchableOpacity>
-                            </View>
+                            >
+                                <Text style={{
+                                    color: "white"
+                                }}>Start</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
-                </Modal>
-                <Modal
-                    visible={isPrepModalVisible}
-                    animationType="slide"
-                    transparent={true}
-                    onRequestClose={() => {
-                        setIsModalVisible(false);
-                    }}
-                >
+                </View>
+            </Modal>
+            <Modal
+                visible={isPrepModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => {
+                    setIsModalVisible(false);
+                }}
+            >
+                <View style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0, 0, 0, 0.6)"
+                }}>
                     <View style={{
-                        flex: 1,
-                        justifyContent: "flex-end"
+                        height: 200,
+                        width: "60%",
+                        alignSelf: "center",
+                        backgroundColor: Theme.colos.primaryColor,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 5
                     }}>
                         <View style={{
-                            height: 300,
-                            backgroundColor: Theme.colos.primaryColor,
+                            position: "absolute",
+                            top: 0,
+                            right: 0,
+                            padding: 20
+                        }}>
+                            <TouchableOpacity style={{
+
+                            }}
+                                onPress={() => {
+                                    setIsPrepModalVisible(false);
+                                    setPrepTime(5);
+                                    setIsRunning(false);
+                                    if (intervalRef.current) {
+                                        clearInterval(intervalRef.current);
+                                        intervalRef.current = null;
+                                    }
+                                }}
+                            >
+                                <Text style={{
+                                    fontSize: 17,
+                                    color: "white",
+                                }}>close</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{
+                            height: 150,
+                            width: '70%',
+                            borderRadius: 5,
                             alignItems: "center",
                             justifyContent: "center",
-                            borderRadius: 20
+                            gap: 10,
                         }}>
                             <View style={{
-                                position: "absolute",
-                                top: 0,
-                                right: 0,
-                                padding: 20
+                                flexDirection: "row",
+                                alignItems: "flex-end",
                             }}>
-                                <TouchableOpacity style={{
+                                <Text style={{
+                                    fontSize: 60,
+                                    color: "white",
+                                }}>{prepTime}</Text>
+                                <Text style={{
+                                    fontSize: 17,
+                                    bottom: 10,
+                                    color: "white",
+                                }}>sec</Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => {
 
                                 }}
-                                    onPress={() => {
-                                        setIsPrepModalVisible(false);
-                                        setPrepTime(5);
-                                        setIsRunning(false);
-                                        if (intervalRef.current) {
-                                            clearInterval(intervalRef.current);
-                                            intervalRef.current = null;
-                                        }
-                                    }}
-                                >
-                                    <Text style={{
-                                        fontSize: 17,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
-                                    }}>close</Text>
-                                </TouchableOpacity>
-                            </View>
-                            <View style={{
-                                height: 150,
-                                width: '70%',
-                                borderRadius: 20,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 10,
-                                backgroundColor: "rgba(0, 0, 0, 0.3)"
-                            }}>
-                                <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "flex-end",
-                                }}>
-                                    <Text style={{
-                                        fontSize: 60,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
-                                    }}>{prepTime}</Text>
-                                    <Text style={{
-                                        fontSize: 17,
-                                        bottom: 10,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
-                                    }}>sec</Text>
-                                </View>
-                                <TouchableOpacity
-                                    onPress={() => {
-
-                                    }}
-                                >
-                                    <Text style={{
-                                        fontFamily: Theme.MuseoModerno_Font.Muse600,
-                                        color: "white"
-                                    }}>GET READY</Text>
-                                </TouchableOpacity>
-                            </View>
+                            >
+                                <Text style={{
+                                    color: "white"
+                                }}>GET READY</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
-                </Modal>
-                <Modal
-                    visible={isStartModalVisible}
-                    animationType="slide"
-                    transparent={true}
-                    onRequestClose={() => {
-                        setIsModalVisible(false);
-                    }}
-                >
+                </View>
+            </Modal>
+            <Modal
+                visible={isStartModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => {
+                    setIsModalVisible(false);
+                }}
+            >
+                <View style={{
+                    flex: 1,
+                    justifyContent: "flex-end"
+                }}>
                     <View style={{
-                        flex: 1,
-                        justifyContent: "flex-end"
+                        height: 300,
+                        backgroundColor: Theme.colos.primaryColor,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 5
                     }}>
-                        <View style={{
-                            height: 300,
-                            backgroundColor: Theme.colos.primaryColor,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderRadius: 20
-                        }}>
-                            {/* <View style={{
+                        {/* <View style={{
                                 position: "absolute",
                                 top: 0,
                                 right: 0,
@@ -655,154 +666,225 @@ const SitUpTestScreen = ({
                                     }}>close</Text>
                                 </TouchableOpacity>
                             </View> */}
-                            <View style={{
-                                height: 150,
-                                width: '70%',
-                                borderRadius: 20,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 10,
-                                backgroundColor: "rgba(0, 0, 0, 0.3)"
-                            }}>
-                                <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "flex-end",
-                                }}>
-                                    <Text style={{
-                                        fontSize: 60,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
-                                    }}>{startTime}</Text>
-                                    <Text style={{
-                                        fontSize: 17,
-                                        bottom: 10,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
-                                    }}>sec</Text>
-                                </View>
-                                <TouchableOpacity
-                                    onPress={() => {
-
-                                    }}
-                                >
-                                    <Text style={{
-                                        fontFamily: Theme.MuseoModerno_Font.Muse600,
-                                        color: "white"
-                                    }}>G000000!!!</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
-                <Modal
-                    visible={isResultModalVisible}
-                    animationType="slide"
-                    transparent={true}
-                    onRequestClose={() => {
-                        setIsModalVisible(false);
-                    }}
-                >
-                    <View style={{
-                        flex: 1,
-                        justifyContent: "flex-end"
-                    }}>
                         <View style={{
-                            height: 360,
-                            backgroundColor: Theme.colos.primaryColor,
+                            height: 150,
+                            width: '70%',
+                            borderRadius: 5,
                             alignItems: "center",
                             justifyContent: "center",
-                            borderRadius: 20
+                            gap: 10,
+                            backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
                             <View style={{
-                                position: "absolute",
-                                top: 0,
-                                right: 0,
-                                padding: 20
+                                flexDirection: "row",
+                                alignItems: "flex-end",
                             }}>
-                                <TouchableOpacity style={{
+                                <Text style={{
+                                    fontSize: 60,
+                                    color: "white",
+                                }}>{startTime}</Text>
+                                <Text style={{
+                                    fontSize: 17,
+                                    bottom: 10,
+                                    color: "white",
+                                }}>sec</Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => {
 
                                 }}
-                                    onPress={() => {
-                                        setIsResultModalVisible(false);
-                                        setPrepTime(5);
-                                        setIsRunning(false);
-                                        if (intervalRef.current) {
-                                            clearInterval(intervalRef.current);
-                                            intervalRef.current = null;
-                                        }
-                                        setStartTime(60);
-                                        setIsStartRunning(false);
-                                        if (startIntervalRef.current) {
-                                            clearInterval(startIntervalRef.current);
-                                            startIntervalRef.current = null;
-                                        }
-                                    }}
-                                >
-                                    <Text style={{
-                                        fontSize: 17,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
-                                    }}>close</Text>
-                                </TouchableOpacity>
-                            </View>
+                            >
+                                <Text style={{
+                                    color: "white"
+                                }}>G000000!!!</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            <Modal
+                visible={isResultModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => {
+                    setIsModalVisible(false);
+                }}
+            >
+                <View style={{
+                    flex: 1,
+                    justifyContent: "flex-end"
+                }}>
+                    <View style={{
+                        height: 360,
+                        backgroundColor: Theme.colos.primaryColor,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 5
+                    }}>
+                        <View style={{
+                            position: "absolute",
+                            top: 0,
+                            right: 0,
+                            padding: 20
+                        }}>
+                            <TouchableOpacity style={{
+
+                            }}
+                                onPress={() => {
+                                    setIsResultModalVisible(false);
+                                    setPrepTime(5);
+                                    setIsRunning(false);
+                                    if (intervalRef.current) {
+                                        clearInterval(intervalRef.current);
+                                        intervalRef.current = null;
+                                    }
+                                    setStartTime(60);
+                                    setIsStartRunning(false);
+                                    if (startIntervalRef.current) {
+                                        clearInterval(startIntervalRef.current);
+                                        startIntervalRef.current = null;
+                                    }
+                                }}
+                            >
+                                <Text style={{
+                                    fontSize: 17,
+                                    color: "white",
+                                }}>close</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{
+                            height: 200,
+                            width: '70%',
+                            borderRadius: 5,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 10,
+                            backgroundColor: "rgba(0, 0, 0, 0.3)"
+                        }}>
                             <View style={{
-                                height: 200,
-                                width: '70%',
-                                borderRadius: 20,
-                                alignItems: "center",
-                                justifyContent: "center",
-                                gap: 10,
-                                backgroundColor: "rgba(0, 0, 0, 0.3)"
+                                flexDirection: "row",
+                                alignItems: "flex-end",
                             }}>
-                                <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "flex-end",
-                                }}>
-                                    <Text style={{
-                                        fontSize: 60,
-                                        color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
-                                    }}>{sitUpCount}</Text>
-                                    {/* <Text style={{
+                                <Text style={{
+                                    fontSize: 60,
+                                    color: "white",
+                                }}>{sitUpCount}</Text>
+                                {/* <Text style={{
                                         fontSize: 17,
                                         bottom: 10,
                                         color: "white",
                                         fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>min</Text> */}
-                                </View>
-                                <View
-                                >
-                                    <Text style={{
-                                        fontFamily: Theme.MuseoModerno_Font.Muse600,
-                                        color: "white"
-                                    }}>Correct Push Ups</Text>
-                                </View>
-                                <TouchableOpacity style={styles.getStartedBtn}
-                                    onPress={() => {
-                                        setIsResultModalVisible(false);
-                                        navigation.goBack();
-                                    }}
-                                >
-                                    <Image source={require("../../../assets/downloadedIcons/fast.png")}
-                                        style={{
-                                            width: 25,
-                                            height: 25,
-                                            resizeMode: "contain"
-                                        }}
-                                    />
-                                    <Text style={{
-                                        fontFamily: Theme.Montserrat_Font.Mont400,
-                                        color: "white"
-                                    }}>Continue</Text>
-                                </TouchableOpacity>
                             </View>
+                            <View
+                            >
+                                <Text style={{
+                                    color: "white"
+                                }}>Correct Push Ups</Text>
+                            </View>
+                            <TouchableOpacity style={[styles.getStartedBtn, {
+                                width: "70%"
+                            }]}
+                                onPress={() => {
+                                    setIsResultModalVisible(false);
+                                    navigation.goBack();
+                                }}
+                            >
+                                <Text style={{
+                                    fontFamily: Theme.Montserrat_Font.Mont400,
+                                    color: "white"
+                                }}>Continue</Text>
+                                <Image source={require("../../../assets/downloadedIcons/fast.png")}
+                                    style={{
+                                        width: 25,
+                                        height: 25,
+                                        resizeMode: "contain"
+                                    }}
+                                />
+                            </TouchableOpacity>
                         </View>
                     </View>
-                </Modal>
-                <Text>Push-Up Count: {sitUpCount}</Text>
-                <Text>Sensor Z: {sensorData.z?.toFixed(2)}</Text>
-
-            </ImageBackground>
+                </View>
+            </Modal>
+            <Modal
+                visible={showManualInputModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => {
+                    setShowManualInputModal(false);
+                }}
+            >
+                <View style={{
+                    flex: 1,
+                    justifyContent: "center",
+                    backgroundColor: "rgba(0, 0, 0, 0.6)",
+                    padding: 20,
+                }}>
+                    <View style={{
+                        height: "30%",
+                        padding: 20,
+                        justifyContent: "center",
+                        backgroundColor: Theme.colos.backgroundColor,
+                        gap: 20
+                    }}>
+                        <View style={{
+                            gap: 10
+                        }}>
+                            <Text style={{
+                                textAlign: "center",
+                                fontWeight: "600"
+                            }}>TIME OVER!!!</Text>
+                            <View>
+                                <Text style={{
+                                    fontWeight: 200,
+                                    fontSize: 16,
+                                    textAlign: "center"
+                                }}>Input your push-up count</Text>
+                            </View>
+                        </View>
+                        <TextInput
+                            // value={pushUpCount}
+                            // onChangeText={setPushUpCount}
+                            keyboardType="numeric"
+                            placeholderTextColor="#aaa"
+                            style={{
+                                borderWidth: 1,
+                                borderColor: '#ccc',
+                                borderRadius: 10,
+                                alignSelf: "center",
+                                width: "30%",
+                                padding: 15,
+                                fontSize: 16,
+                                backgroundColor: '#f9f9f9',
+                                color: '#000',
+                            }}
+                        />
+                        <TouchableOpacity style={styles.getStartedBtn}
+                            onPress={() => {
+                                setShowManualInputModal(false);
+                                setPrepTime(5);
+                                setIsRunning(false);
+                                if (intervalRef.current) {
+                                    clearInterval(intervalRef.current);
+                                    intervalRef.current = null;
+                                }
+                            }}
+                        >
+                            <Text style={{
+                                color: "white"
+                            }}>SUBMIT</Text>
+                            <Image source={require("../../../assets/downloadedIcons/fast.png")}
+                                style={{
+                                    height: 24,
+                                    width: 24
+                                }}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+            {/* <Text>Push-Up Count: {sitUpCount}</Text>
+            <Text>Sensor Z: {sensorData.z?.toFixed(2)}</Text> */}
         </View>
     )
 }
@@ -813,13 +895,13 @@ const styles = StyleSheet.create({
     container: {
     },
     getStartedBtn: {
-        padding: 10,
-        backgroundColor: "black",
+        padding: 15,
+        backgroundColor: Theme.colos.primaryColor,
         alignItems: "center",
-        justifyContent: "center",
-        width: "70%",
+        justifyContent: "space-between",
+        width: "100%",
         alignSelf: "center",
-        borderRadius: 20,
+        borderRadius: 5,
         gap: 10,
         flexDirection: "row"
     }

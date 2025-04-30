@@ -1,25 +1,44 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import OTPTextInput from 'react-native-otp-textinput';
 import { useSignUp } from "@clerk/clerk-react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRoute } from "@react-navigation/native";
+import SuccessModal from "../Modals/SuccessModal";
+import ResultModal from "../Modals/FailedModal";
+import LottieView from "lottie-react-native";
 
 
 interface IOtpProps {
     navigation: any;
+    route: any;
 }
 
 const endPoint = process.env.EXPO_PUBLIC_API_URL;
 
 
 const OTPScreen = ({
-    navigation
+    navigation,
+    route
 }: IOtpProps) => {
 
+    const [modalMessage, setModalMessage] = useState("");
+    const [isSuccessModalVisible, setSuccessModalVisible] = useState(false);
+    const [isFailedModalVisible, setFailedModalVisible] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const { setActive, isLoaded, signUp } = useSignUp();
     const [code, setCode] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const otpInput = useRef<any>();
+    const { isLoginCompleteModalVisible } = route.params || {};
+    const [showModal, setShowModal] = useState(false);
+
+    useEffect(() => {
+        if (isLoginCompleteModalVisible) {
+            setShowModal(true);
+        }
+    }, [isLoginCompleteModalVisible]);
 
     const handleCodeFilled = (code: string) => {
         console.log('OTP ENTERED: ', code);
@@ -30,6 +49,7 @@ const OTPScreen = ({
         const email = await AsyncStorage.getItem("email");
 
         try {
+            setIsLoading(true);
             const mainData = await fetch(`${endPoint}/verify-email`, {
                 method: "POST",
                 headers: {
@@ -46,17 +66,29 @@ const OTPScreen = ({
             const res = await mainData.json();
 
             if (res.success) {
+                setIsLoading(false);
+                setModalMessage("Welcome to TacticalPT! what are we doing today?")
+                setSuccessModalVisible(true);
 
-                Alert.alert("Welcome", "Welcome to tacticalPT, what are we doing today?", [{ text: "Ok" }]);
-
-                navigation.navigate("MainDrawer");
+                setTimeout(() => {
+                    setSuccessModalVisible(false);
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: "MainDrawer" }]
+                    })
+                }, 500);
                 console.log(res);
             } else {
-                Alert.alert("Unsuccessul", "Please input the correct OTP code sent to you!", [{ text: "Ok" }]);
+                setIsLoading(false);
+                setModalMessage("Unsuccessful. Invalid OTP!");
+                setFailedModalVisible(true);
             }
 
         } catch (error) {
+            setIsLoading(false);
             console.error("Signup error:", error);
+            setModalMessage("An error occurred. Please try again later.");
+            setFailedModalVisible(true);
         }
 
     }
@@ -114,6 +146,21 @@ const OTPScreen = ({
 
     return (
         <View style={styles.container}>
+            {isLoading && (
+                <View style={styles.loadingOverlay}>
+                    <LottieView
+                        source={require("../../assets/ExerciseGifs/Animation - 1745262738989.json")}
+                        style={{
+                            height: 80,
+                            width: 80
+                        }}
+                        resizeMode="contain"
+                        loop={true}
+                        autoPlay={true}
+                    />
+                    <Text style={{ color: "#fff", marginTop: 10, fontFamily: Theme.Montserrat_Font.Mont400 }}>Signing you in...</Text>
+                </View>
+            )}
             <View style={{
                 height: "30%",
                 backgroundColor: Theme.colos.primaryColor,
@@ -129,8 +176,11 @@ const OTPScreen = ({
                         fontWeight: 500
                     }}>Verify OTP code</Text>
                     <Text style={{
-                        color: "white"
-                    }}>Please enter the verification code we sent to your email.</Text>
+                        color: "white",
+                        fontWeight: 300
+                    }}>
+                        A 4 digit code has been sent to the email connected to your account
+                    </Text>
                 </View>
             </View>
             <View style={{
@@ -176,10 +226,37 @@ const OTPScreen = ({
                     >
                         <Text style={{
                             color: 'white',
-                        }}>Verify</Text>
+                        }}>VERIFY</Text>
+                        <Image source={require("../../assets/downloadedIcons/fast.png")}
+                            style={{
+                                height: 24,
+                                width: 24
+                            }}
+                        />
                     </TouchableOpacity>
                 </View>
             </View>
+            <SuccessModal
+                visible={showModal}
+                onClose={() => setShowModal(false)}
+            />
+            <>
+                {/* Success Modal */}
+                <ResultModal
+                    isVisible={isSuccessModalVisible}
+                    onClose={() => setSuccessModalVisible(false)}
+                    type="success"
+                    message={modalMessage}
+                />
+
+                {/* Failed Modal */}
+                <ResultModal
+                    isVisible={isFailedModalVisible}
+                    onClose={() => setFailedModalVisible(false)}
+                    type="failure"
+                    message={modalMessage}
+                />
+            </>
         </View>
     )
 }
@@ -212,7 +289,15 @@ const styles = StyleSheet.create({
         backgroundColor: Theme.colos.primaryColor,
         padding: 15,
         alignItems: "center",
-        justifyContent: "center",
+        flexDirection: "row",
+        justifyContent: "space-between",
         borderRadius: 5
-    }
+    },
+    loadingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999,
+    },
 })

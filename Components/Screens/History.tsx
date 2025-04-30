@@ -3,7 +3,6 @@ import { Theme } from "../Branding/Theme";
 import { useNavigation } from "@react-navigation/native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { DrawerParamList } from "../nav/type";
-import { useVideoPlayer, VideoView } from "expo-video";
 
 interface IHistoryProps {
 
@@ -17,10 +16,10 @@ const History = ({
 
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
 
-    const pushUpsPlayer = useVideoPlayer(pushUpsVideoSource, (player) => {
-        player.loop = true;
-        player.play();
-    });
+    // const pushUpsPlayer = useVideoPlayer(pushUpsVideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
 
     return (
         <View style={styles.container}>
@@ -29,7 +28,7 @@ const History = ({
                 backgroundColor: Theme.colos.primaryColor,
                 padding: 20,
                 paddingTop: 60,
-                justifyContent: "space-between",
+                justifyContent: "center",
                 gap: 40
             }}>
                 <View style={{
@@ -88,14 +87,14 @@ const History = ({
                     padding: 10,
                     justifyContent: "space-between"
                 }}>
-                    <VideoView
+                    {/* <VideoView
                         style={{
                             height: 70,
                             width: 70,
                             borderRadius: 5
                         }}
                         player={pushUpsPlayer}
-                    />
+                    /> */}
                     <View style={{
                         flexDirection: "row",
                         gap: 30
@@ -146,14 +145,14 @@ const History = ({
                     padding: 10,
                     justifyContent: "space-between"
                 }}>
-                    <VideoView
+                    {/* <VideoView
                         style={{
                             height: 70,
                             width: 70,
                             borderRadius: 5
                         }}
                         player={pushUpsPlayer}
-                    />
+                    /> */}
                     <View style={{
                         flexDirection: "row",
                         gap: 30

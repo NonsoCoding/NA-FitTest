@@ -19,7 +19,8 @@ const LandingScreen = ({
                 flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                gap: 20
+                gap: 20,
+                padding: 20,
             }}>
                 <Text style={{
                     fontWeight: 600,
@@ -30,7 +31,6 @@ const LandingScreen = ({
                     fontWeight: 300,
                     color: "white",
                     fontSize: 18,
-                    maxWidth: 380,
                     textAlign: "center"
                 }}>Proceed to your account or create a new one by signing up if you do not have an account.</Text>
             </View>
@@ -71,7 +71,11 @@ const LandingScreen = ({
                     flexDirection: "row",
                     gap: 20,
                     justifyContent: "center"
-                }}>
+                }}
+                // onPress={() => {
+                //     navigation.navigate("MainDrawer")
+                // }}
+                >
                     <Text style={{
                         color: Theme.colos.primaryColor,
                         fontSize: 18,

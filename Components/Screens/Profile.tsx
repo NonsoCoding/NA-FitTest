@@ -28,8 +28,8 @@ const Profile = ({
                 backgroundColor: Theme.colos.primaryColor,
                 padding: 20,
                 paddingTop: 60,
-                justifyContent: "space-between",
-                gap: 40
+                justifyContent: "center",
+                gap: 30
             }}>
                 <View style={{
                     flexDirection: "row",

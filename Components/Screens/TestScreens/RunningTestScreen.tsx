@@ -566,12 +566,12 @@ const RunningTestScreen = ({
                         backgroundColor: "rgba(0, 0, 0, 0.5)"
                     }}>
                         <View style={{
-                            height: 250,
+                            height: 200,
                             width: "70%",
                             backgroundColor: Theme.colos.primaryColor,
                             alignItems: "center",
                             justifyContent: "center",
-                            borderRadius: 20
+                            borderRadius: 5
                         }}>
                             <View style={{
                                 alignItems: "center"
@@ -583,13 +583,11 @@ const RunningTestScreen = ({
                                     <Text style={{
                                         fontSize: 60,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
                                     }}>0{prepTime}</Text>
                                     <Text style={{
                                         fontSize: 17,
                                         bottom: 10,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>sec</Text>
                                 </View>
                                 <Text style={{
@@ -616,7 +614,7 @@ const RunningTestScreen = ({
                             backgroundColor: Theme.colos.primaryColor,
                             alignItems: "center",
                             justifyContent: "center",
-                            borderRadius: 20,
+                            borderRadius: 5,
                             gap: 10,
                         }}>
                             <View style={{
@@ -633,7 +631,6 @@ const RunningTestScreen = ({
                                     <Text style={{
                                         fontSize: 17,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>close</Text>
                                 </TouchableOpacity>
                             </View>
@@ -644,7 +641,7 @@ const RunningTestScreen = ({
                             <View style={{
                                 height: 230,
                                 width: '80%',
-                                borderRadius: 20,
+                                borderRadius: 5,
                                 alignItems: "center",
                                 justifyContent: "center",
                                 gap: 10,
@@ -661,7 +658,7 @@ const RunningTestScreen = ({
                                     <Text style={{
                                         fontSize: 18,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
+                                        fontWeight: 200
                                     }}>{(runMetrics.distance / 1609.34).toFixed(2)} miles</Text>
                                 </View>
                                 <View style={{
@@ -675,7 +672,7 @@ const RunningTestScreen = ({
                                     <Text style={{
                                         fontSize: 18,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
+                                        fontWeight: 200
                                     }}>{formatTime(runMetrics.elapsedTime)}</Text>
                                 </View>
                                 <View style={{
@@ -689,7 +686,7 @@ const RunningTestScreen = ({
                                     <Text style={{
                                         fontSize: 18,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
+                                        fontWeight: 200,
                                     }}>{formatPace(runMetrics.averageSpeed)}/miles</Text>
                                 </View>
                                 <View style={{
@@ -703,7 +700,7 @@ const RunningTestScreen = ({
                                     <Text style={{
                                         fontSize: 18,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
+                                        fontWeight: "200"
                                     }}>{runMetrics.distance >= TARGET_DISTANCE_METERS ? 'Completed' : 'Incomplete'}</Text>
                                 </View>
                                 <TouchableOpacity style={styles.getStartedBtn}
@@ -713,6 +710,10 @@ const RunningTestScreen = ({
                                         navigation.goBack();
                                     }}
                                 >
+                                    <Text style={{
+                                        fontFamily: Theme.Montserrat_Font.Mont400,
+                                        color: "white"
+                                    }}>Continue</Text>
                                     <Image source={require("../../../assets/downloadedIcons/fast.png")}
                                         style={{
                                             width: 25,
@@ -720,10 +721,6 @@ const RunningTestScreen = ({
                                             resizeMode: "contain"
                                         }}
                                     />
-                                    <Text style={{
-                                        fontFamily: Theme.Montserrat_Font.Mont400,
-                                        color: "white"
-                                    }}>Continue</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -833,8 +830,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingVertical: 15,
         paddingHorizontal: 30,
-        borderRadius: 30,
-        width: '80%',
+        borderRadius: 5,
+        width: '100%',
     },
     startButton: {
         backgroundColor: Theme.colos.primaryColor,
@@ -852,10 +849,10 @@ const styles = StyleSheet.create({
         padding: 10,
         backgroundColor: "black",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "space-between",
         width: "70%",
         alignSelf: "center",
-        borderRadius: 20,
+        borderRadius: 5,
         gap: 10,
         flexDirection: "row"
     }

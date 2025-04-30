@@ -73,9 +73,9 @@ const ForgottenPassword = ({
                     }}>
                     </View>
                     <TouchableOpacity
-                        onPress={() => {
-                            navigation.navigate("PasswordOTPScreen")
-                        }}
+                        // onPress={() => {
+                        //     navigation.navigate("PasswordOTPScreen")
+                        // }}
                         style={[styles.continue_email_button, {
                             padding: 20
                         }]}>

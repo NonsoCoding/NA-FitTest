@@ -14,16 +14,18 @@ import {
 } from "react-native";
 import { Theme } from "../Branding/Theme";
 import { useAuth, useSignIn } from '@clerk/clerk-expo'
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LottieView from "lottie-react-native";
 import { AntDesign, Feather, FontAwesome6, Fontisto } from "@expo/vector-icons";
 import * as yup from "yup"
 import { Formik } from "formik";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+import ResultModal from "../Modals/FailedModal";
+import { useNavigation } from "@react-navigation/native";
 
 interface LoginIprops {
-    navigation?: any;
+
 }
 const endPoint = process.env.EXPO_PUBLIC_API_URL;
 
@@ -33,7 +35,7 @@ interface LoginValues {
 }
 
 const LoginScreen = ({
-    navigation,
+
 }: LoginIprops) => {
 
     const [isLoginCompleteModalVisible, setIsLoginCompleteModalVisible] = useState(false);
@@ -71,6 +73,18 @@ const LoginScreen = ({
     // const router = useRouter()
     const [isLoading, setIsLoading] = useState(false);
     const [togglePasswordVisibility, setTogglePasswordVisibility] = useState(false);
+    const [isSuccessModalVisible, setSuccessModalVisible] = useState(false);
+    const [isFailedModalVisible, setFailedModalVisible] = useState(false);
+    const [modalMessage, setModalMessage] = useState("");
+
+    const navigation = useNavigation<any>();
+
+    useEffect(() => {
+        if (isLoginCompleteModalVisible) {
+            setIsLoginCompleteModalVisible(true)
+        }
+    }, [isLoginCompleteModalVisible]);
+
 
     const onSignInPress = async (emailAddress: string, password: string) => {
         try {
@@ -91,9 +105,16 @@ const LoginScreen = ({
 
             if (res.accessToken && res.accessToken.length > 10) {
                 await AsyncStorage.setItem("token", res.accessToken);
-                setIsLoginCompleteModalVisible(true);
-                navigation.navigate("MainDrawer");
-                setIsLoading(false)
+                setSuccessModalVisible(true);
+
+                setTimeout(() => {
+                    setSuccessModalVisible(false);
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: "MainDrawer" }]
+                    })
+                }, 500);
+                setIsLoading(false);
                 console.log("Logged In");
             } else if (res.statusCode === 403 && res.success === false) {
                 setIsLoading(false)
@@ -154,7 +175,7 @@ const LoginScreen = ({
                             <View>
                                 <View>
                                     <Text style={{
-                                        fontSize: 40,
+                                        fontSize: 30,
                                         fontWeight: 700,
                                         color: "white",
                                         lineHeight: 45,
@@ -296,9 +317,9 @@ const LoginScreen = ({
                                         flexDirection: "row",
                                         justifyContent: "center"
                                     }}
-                                        onPress={() => {
-                                            setIsLoginCompleteModalVisible(true)
-                                        }}
+                                    // onPress={() => {
+                                    //     navigation.navigate("PersonalInfo");
+                                    // }}
                                     >
                                         <Text style={{
                                             color: Theme.colos.primaryColor,
@@ -384,6 +405,23 @@ const LoginScreen = ({
                     </View>
                 </View>
             </Modal>
+            <>
+                {/* Success Modal */}
+                <ResultModal
+                    isVisible={isSuccessModalVisible}
+                    onClose={() => setSuccessModalVisible(false)}
+                    type="success"
+                    message={modalMessage}
+                />
+
+                {/* Failed Modal */}
+                <ResultModal
+                    isVisible={isFailedModalVisible}
+                    onClose={() => setFailedModalVisible(false)}
+                    type="failure"
+                    message={modalMessage}
+                />
+            </>
         </View>
     )
 }
