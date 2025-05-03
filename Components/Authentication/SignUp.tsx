@@ -13,7 +13,7 @@ import Toast from 'react-native-toast-message';
 import Constants from 'expo-constants';
 // import Toast from "react-native-toast-message";
 
-const endPoint = "http://test-dev.hasob.app:9550/api/v1/auth";
+const endPoint = process.env.EXPO_PUBLIC_API_URL;
 
 interface SignUpIprops {
     navigation?: any;

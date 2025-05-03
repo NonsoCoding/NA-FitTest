@@ -63,13 +63,9 @@ const LoginScreen = ({
             .required("Email is required"),
         password: yup
             .string()
-            .matches(
-                passwordRules,
-                "Must contain: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special character"
-            )
             .required("Password is required"),
     });
-    // const { signIn, setActive, isLoaded } = useSignIn()
+    // const { signIn, setActive, isLoaded } = useSignIn();
     // const router = useRouter()
     const [isLoading, setIsLoading] = useState(false);
     const [togglePasswordVisibility, setTogglePasswordVisibility] = useState(false);
@@ -101,7 +97,10 @@ const LoginScreen = ({
                 }),
             });
 
-            const res = await mainData.json();
+            const text = await mainData.text();
+            console.log("Response Text:", text);
+
+            const res = JSON.parse(text); // or only call .json() if the content-type is JSO
 
             if (res.accessToken && res.accessToken.length > 10) {
                 await AsyncStorage.setItem("token", res.accessToken);
