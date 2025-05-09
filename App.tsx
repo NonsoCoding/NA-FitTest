@@ -54,12 +54,19 @@ export default function App() {
         prepare();
     }, []);
 
+    // ✅ Hide the splash screen after fonts are loaded and view is ready
+    const onLayoutRootView = useCallback(async () => {
+        if (appIsReady) {
+            await SplashScreen.hideAsync();
+        }
+    }, [appIsReady]);
+
     if (!appIsReady) {
         return null;
     }
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
             <PaperProvider>
                 <StackNavigation />
             </PaperProvider>
