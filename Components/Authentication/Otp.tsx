@@ -2,9 +2,6 @@ import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-na
 import { Theme } from "../Branding/Theme";
 import { useEffect, useRef, useState } from "react";
 import OTPTextInput from 'react-native-otp-textinput';
-import { useSignUp } from "@clerk/clerk-react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRoute } from "@react-navigation/native";
 import SuccessModal from "../Modals/SuccessModal";
 import ResultModal from "../Modals/FailedModal";
 import LottieView from "lottie-react-native";
@@ -15,9 +12,6 @@ interface IOtpProps {
     route: any;
 }
 
-const endPoint = process.env.EXPO_PUBLIC_API_URL;
-
-
 const OTPScreen = ({
     navigation,
     route
@@ -26,11 +20,7 @@ const OTPScreen = ({
     const [modalMessage, setModalMessage] = useState("");
     const [isSuccessModalVisible, setSuccessModalVisible] = useState(false);
     const [isFailedModalVisible, setFailedModalVisible] = useState(false);
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const { setActive, isLoaded, signUp } = useSignUp();
-    const [code, setCode] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const otpInput = useRef<any>();
     const { isLoginCompleteModalVisible } = route.params || {};
     const [showModal, setShowModal] = useState(false);
 
@@ -40,109 +30,6 @@ const OTPScreen = ({
         }
     }, [isLoginCompleteModalVisible]);
 
-    const handleCodeFilled = (code: string) => {
-        console.log('OTP ENTERED: ', code);
-    }
-
-    const onVerifyPress = async (codeFromInput?: string) => {
-        const finalCode = codeFromInput ?? code;
-        const email = await AsyncStorage.getItem("email");
-
-        try {
-            setIsLoading(true);
-            const mainData = await fetch(`${endPoint}/verify-email`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify({
-                    email: email?.toLowerCase(),
-                    otp: finalCode,
-                }),
-            });
-
-
-            const res = await mainData.json();
-
-            if (res.success) {
-                setIsLoading(false);
-                setModalMessage("Welcome to TacticalPT! what are we doing today?")
-                setSuccessModalVisible(true);
-
-                setTimeout(() => {
-                    setSuccessModalVisible(false);
-                    navigation.reset({
-                        index: 0,
-                        routes: [{ name: "MainDrawer" }]
-                    })
-                }, 500);
-                console.log(res);
-            } else {
-                setIsLoading(false);
-                setModalMessage("Unsuccessful. Invalid OTP!");
-                setFailedModalVisible(true);
-            }
-
-        } catch (error) {
-            setIsLoading(false);
-            console.error("Signup error:", error);
-            setModalMessage("An error occurred. Please try again later.");
-            setFailedModalVisible(true);
-        }
-
-    }
-
-    const [isResendDisabled, setIsResendDisabled] = useState(false);
-    const [countdown, setCountdown] = useState(0);
-
-    const resendOtp = async () => {
-        if (isResendDisabled) {
-            Alert.alert("Please wait", `Try again in ${countdown} seconds`);
-            return;
-        }
-
-        const email = await AsyncStorage.getItem("email");
-        try {
-            setIsResendDisabled(true);
-            setCountdown(30); // Start 30-second countdown
-
-            // Start countdown timer
-            const timer = setInterval(() => {
-                setCountdown(prev => {
-                    if (prev <= 1) {
-                        clearInterval(timer);
-                        setIsResendDisabled(false);
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-
-            const mainData = await fetch(`${endPoint}/resend-otp`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify({
-                    email,
-                }),
-            });
-
-            const res = await mainData.json();
-
-            await AsyncStorage.setItem("otp", res.otp);
-            Alert.alert("Success", `Your OTP code is ${res.otp}`);
-            // console.log(res)
-
-        } catch (error) {
-            console.error("Resend OTP error:", error);
-            Alert.alert("Error", "Failed to resend OTP. Please try again later.");
-            setIsResendDisabled(false); // Re-enable if error occurs
-            setCountdown(0);
-        }
-    }
 
     return (
         <View style={styles.container}>
@@ -193,7 +80,6 @@ const OTPScreen = ({
                     <OTPTextInput
                         // ref={otpInput}
                         inputCount={4}
-                        handleTextChange={(text: string) => setCode(text)}
                         containerStyle={styles.otpContainer}
                         textInputStyle={styles.underlineStyleBase}
                         tintColor={Theme.colos.primaryColor}
@@ -210,7 +96,7 @@ const OTPScreen = ({
                         <TouchableOpacity style={{
 
                         }}
-                            onPress={resendOtp}
+
                         >
                             <Text style={{
                                 color: Theme.colos.primaryColor
@@ -221,7 +107,7 @@ const OTPScreen = ({
                 <View>
                     <TouchableOpacity style={styles.btn}
                         onPress={() => {
-                            onVerifyPress();
+
                         }}
                     >
                         <Text style={{

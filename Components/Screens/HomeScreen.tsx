@@ -1,7 +1,9 @@
 import { Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import LottieView from "lottie-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { auth, db } from "../../Firebase/Settings";
+import { doc, getDoc } from "firebase/firestore";
 
 
 interface IHomePageProps {
@@ -19,15 +21,84 @@ const HomePage = ({
     navigation
 }: IHomePageProps) => {
 
-    // const { signOut } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
+    const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; serviceNumber: string; TacticalPoints: string; } | null>(null);
+    const [personalBests, setPersonalBests] = useState({
+        pushUps: 0,
+        sitUps: 0,
+        pullUps: 0,
+        runTime: 0,
+        sprintTime: 0
+    })
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
 
-    const signingOut = async (sessionId: string) => {
-        navigation.reset({
-            index: 0,
-            routes: [{ name: "Intro" }],
-        });
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     };
+
+    const fetchUserInfo = async () => {
+
+        const user = auth.currentUser;
+        if (!user) return;
+
+        try {
+            const docRef = doc(db, "UserDetails", user.uid);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                console.log("User Data: ", data);
+
+                setUserInfo({
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    serviceNumber: data.serviceNumber,
+                    TacticalPoints: data.TacticalPoints
+                });
+            } else {
+                console.log("So such document");
+            }
+        } catch (error) {
+            console.log("Error fetching user data: ", error);
+        }
+    }
+
+    useEffect(() => {
+        fetchUserInfo();
+    }, [])
+
+    useEffect(() => {
+        const fetchPersonalBests = async () => {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const userDetailsRef = doc(db, "UserDetails", user.uid);
+            const docSnap = await getDoc(userDetailsRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data().personalBests || {};
+                console.log("Fetched personalBests: ", data);
+
+                setPersonalBests({
+                    pushUps: data.pushUps || 0,
+                    sitUps: data.sitUps || 0,
+                    pullUps: data.pullUps || 0,
+                    runTime: data.runTime || "none",
+                    sprintTime: data.sprintTime || "none"
+                });
+            }
+        };
+
+        fetchPersonalBests();
+    }, []);
 
 
     // const pushUpsPlayer = useVideoPlayer(pushUpsVideoSource, (player) => {
@@ -90,7 +161,7 @@ const HomePage = ({
                         />
                         <Text style={{
                             color: "white"
-                        }}>April, 17, 2025</Text>
+                        }}>{formattedDate}</Text>
                     </View>
                     <TouchableOpacity style={{
                         backgroundColor: "white",
@@ -127,9 +198,13 @@ const HomePage = ({
                     }}>
                         <Text style={{
                             color: "white",
-                            fontSize: 24,
+                            fontSize: 20,
                             fontWeight: 600
-                        }}>Timothy Obi</Text>
+                        }}>{userInfo?.firstName} {userInfo?.lastName}</Text>
+                        <Text style={{
+                            color: "white",
+                            fontSize: 12
+                        }}>SN: {userInfo?.serviceNumber}</Text>
                         <View style={{
                             flexDirection: 'row',
                             alignItems: "center"
@@ -142,7 +217,7 @@ const HomePage = ({
                             />
                             <Text style={{
                                 color: 'white'
-                            }}>109</Text>
+                            }}>{userInfo?.TacticalPoints ?? 0}</Text>
                         </View>
                     </View>
                 </View>
@@ -162,7 +237,7 @@ const HomePage = ({
 
                     }}>
                         <View style={{
-                            padding: 15,
+                            padding: 20,
                             borderRadius: 5,
                             backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
@@ -189,7 +264,7 @@ const HomePage = ({
                                     }}>Push-Ups</Text>
                                     <Text style={{
                                         color: "white"
-                                    }}>Minimum Requirement: 50</Text>
+                                    }}>Minimum Requirement: 38</Text>
                                     <View style={{
                                         flexDirection: "row",
                                         alignItems: "center",
@@ -204,13 +279,13 @@ const HomePage = ({
                                         <Text style={{
                                             color: "white",
 
-                                        }}>Person Best: 100</Text>
+                                        }}>Personal Best: {personalBests.pushUps}</Text>
                                     </View>
                                 </View>
                             </TouchableOpacity>
                         </View>
                         <View style={{
-                            padding: 15,
+                            padding: 20,
                             borderRadius: 5,
                             backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
@@ -237,7 +312,7 @@ const HomePage = ({
                                     }}>300 Meter Sprint</Text>
                                     <Text style={{
                                         color: "white"
-                                    }}>Minimum Requirement: 50</Text>
+                                    }}>Minimum Requirement: 60s</Text>
                                     <View style={{
                                         flexDirection: "row",
                                         alignItems: "center",
@@ -251,14 +326,13 @@ const HomePage = ({
                                         />
                                         <Text style={{
                                             color: "white",
-
-                                        }}>Person Best: 100</Text>
+                                        }}>Personal Best: {formatTime(personalBests.sprintTime)}</Text>
                                     </View>
                                 </View>
                             </TouchableOpacity>
                         </View>
                         <View style={{
-                            padding: 15,
+                            padding: 20,
                             borderRadius: 5,
                             backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
@@ -285,7 +359,7 @@ const HomePage = ({
                                     }}>Sit-Ups</Text>
                                     <Text style={{
                                         color: "white"
-                                    }}>Minimum Requirement: 50</Text>
+                                    }}>Minimum Requirement: 38</Text>
                                     <View style={{
                                         flexDirection: "row",
                                         alignItems: "center",
@@ -300,13 +374,13 @@ const HomePage = ({
                                         <Text style={{
                                             color: "white",
 
-                                        }}>Person Best: 100</Text>
+                                        }}>Personal Best: {personalBests.sitUps}</Text>
                                     </View>
                                 </View>
                             </TouchableOpacity>
                         </View>
                         <View style={{
-                            padding: 15,
+                            padding: 20,
                             borderRadius: 5,
                             backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
@@ -333,7 +407,7 @@ const HomePage = ({
                                     }}>1.5 Mile Run</Text>
                                     <Text style={{
                                         color: "white"
-                                    }}>Minimum Requirement: 50</Text>
+                                    }}>Minimum Requirement: 10:00 min</Text>
                                     <View style={{
                                         flexDirection: "row",
                                         alignItems: "center",
@@ -348,13 +422,13 @@ const HomePage = ({
                                         <Text style={{
                                             color: "white",
 
-                                        }}>Person Best: 100</Text>
+                                        }}>Personal Best: {formatTime(personalBests.runTime)}</Text>
                                     </View>
                                 </View>
                             </TouchableOpacity>
                         </View>
                         <View style={{
-                            padding: 15,
+                            padding: 20,
                             borderRadius: 5,
                             backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
@@ -381,7 +455,7 @@ const HomePage = ({
                                     }}>Pull-Ups</Text>
                                     <Text style={{
                                         color: "white"
-                                    }}>Minimum Requirement: 50</Text>
+                                    }}>Minimum Requirement: 38</Text>
                                     <View style={{
                                         flexDirection: "row",
                                         alignItems: "center",
@@ -396,7 +470,7 @@ const HomePage = ({
                                         <Text style={{
                                             color: "white",
 
-                                        }}>Person Best: 100</Text>
+                                        }}>Personal Best: {personalBests.pullUps}</Text>
                                     </View>
                                 </View>
                             </TouchableOpacity>
@@ -415,10 +489,11 @@ const styles = StyleSheet.create({
     container: {
     },
     top_container: {
-        flex: 1,
+        height: "25%",
         backgroundColor: Theme.colos.primaryColor,
         padding: 20,
-        justifyContent: "center",
+        paddingTop: 60,
+        justifyContent: "space-between",
         gap: 20,
     },
     exercise_btn: {

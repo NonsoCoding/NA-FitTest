@@ -3,6 +3,8 @@ import { Theme } from "../../Branding/Theme";
 import { useEffect, useRef, useState } from "react";
 import { Accelerometer } from "expo-sensors";
 import { Switch } from "react-native-paper";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db } from "../../../Firebase/Settings";
 
 
 interface ITestProps {
@@ -76,6 +78,59 @@ const SitUpTestScreen = ({
     const recentZValues = useRef<number[]>([]);
     const MAX_HISTORY = 5;
 
+
+    const saveRunResultToFirestore = async () => {
+        const user = auth.currentUser;
+
+        if (!user) {
+            console.warn("No user signed in");
+            return;
+        }
+
+        const userDetailsRef = doc(db, "UserDetails", user.uid);
+        const pushUpDocRef = doc(db, `UserDetails/${user.uid}/SitUps/${Date.now()}`);
+        console.log("Attempting to save run to path:", pushUpDocRef);
+
+        const TacticalPoints = sitUpCount >= 38 ? 5 : 0;
+
+        const runData = {
+            uid: user.uid,
+            sitUpCount: sitUpCount,
+            startTime: startTime,
+            timestamp: new Date().toISOString(),
+            TacticalPoints: TacticalPoints,
+        };
+
+        try {
+            await setDoc(pushUpDocRef, runData);
+
+            // 2. Fetch current personal best
+            const userDoc = await getDoc(userDetailsRef);
+            const existingData = userDoc.exists() ? userDoc.data().personalBests || {} : {};
+            const currentPushUpBest = existingData.sitUps || 0;
+            const userData = userDoc.exists() ? userDoc.data() : {};
+            const currentTotal = userData.TacticalPoints || 0;
+
+            await setDoc(userDetailsRef, {
+                TacticalPoints: currentTotal + TacticalPoints
+            }, { merge: true });
+
+            // Update personal bests if new value is higher
+            if (sitUpCount > currentPushUpBest) {
+                await setDoc(userDetailsRef, {
+                    personalBests: {
+                        ...existingData,
+                        sitUps: sitUpCount // Only update pullUps, keep others unchanged
+                    }
+                }, { merge: true });
+            }
+
+            console.log("Run data saved to Firestore:", runData);
+        } catch (error) {
+            console.error("Error saving run data to Firestore:", error);
+        }
+    };
+
     // const sitUpsPlayer = useVideoPlayer(VideoSource, (player) => {
     //     player.loop = true;
     //     player.play();
@@ -131,6 +186,9 @@ const SitUpTestScreen = ({
     const startMainCountdown = () => {
         if (startTime > 0 && !isStartRunning) {
             setIsStartRunning(true);
+            if (isAutoDetectEnabled) {
+                setIsCountingActive(true);
+            }
         }
     };
 
@@ -338,7 +396,9 @@ const SitUpTestScreen = ({
     }, []);
 
 
-
+    const stopTracking = async (): Promise<void> => {
+        await saveRunResultToFirestore();
+    };
 
     return (
         <View style={{
@@ -371,13 +431,19 @@ const SitUpTestScreen = ({
                     <Text style={{
                         color: "white"
                     }}>SIT-UPS (TEST MODE)</Text>
-                    <Image source={require("../../../assets/downloadedIcons/notification.png")}
-                        style={{
-                            height: 30,
-                            width: 30,
-                            resizeMode: "contain"
+                    <TouchableOpacity
+                        onPress={() => {
+                            navigation.navigate("SitUpHistory")
                         }}
-                    />
+                    >
+                        <Image source={require("../../../assets/downloadedIcons/notification.png")}
+                            style={{
+                                height: 30,
+                                width: 30,
+                                resizeMode: "contain"
+                            }}
+                        />
+                    </TouchableOpacity>
                 </View>
             </View>
             <View style={{
@@ -780,7 +846,7 @@ const SitUpTestScreen = ({
                             >
                                 <Text style={{
                                     color: "white"
-                                }}>Correct Push Ups</Text>
+                                }}>Correct Sit Ups</Text>
                             </View>
                             <TouchableOpacity style={[styles.getStartedBtn, {
                                 width: "70%"
@@ -788,12 +854,13 @@ const SitUpTestScreen = ({
                                 onPress={() => {
                                     setIsResultModalVisible(false);
                                     navigation.goBack();
+                                    stopTracking()
                                 }}
                             >
                                 <Text style={{
                                     fontFamily: Theme.Montserrat_Font.Mont400,
                                     color: "white"
-                                }}>Continue</Text>
+                                }}>SUBMIT</Text>
                                 <Image source={require("../../../assets/downloadedIcons/fast.png")}
                                     style={{
                                         width: 25,
@@ -843,8 +910,8 @@ const SitUpTestScreen = ({
                             </View>
                         </View>
                         <TextInput
-                            // value={pushUpCount}
-                            // onChangeText={setPushUpCount}
+                            value={sitUpCount.toString()}
+                            onChangeText={(text) => setSitUpCount(Number(text))}
                             keyboardType="numeric"
                             placeholderTextColor="#aaa"
                             style={{
@@ -863,6 +930,8 @@ const SitUpTestScreen = ({
                             onPress={() => {
                                 setShowManualInputModal(false);
                                 setPrepTime(5);
+                                saveRunResultToFirestore();
+                                stopTracking();
                                 setIsRunning(false);
                                 if (intervalRef.current) {
                                     clearInterval(intervalRef.current);

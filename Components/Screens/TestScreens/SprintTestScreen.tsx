@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, Modal, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, Modal, Image, Animated } from 'react-native';
 import * as Location from 'expo-location';
 import { Accelerometer, Gyroscope, Pedometer } from 'expo-sensors';
 import { MaterialIcons, FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
 import MapView, { Polyline, Region } from 'react-native-maps';
 import * as geolib from 'geolib';
 import { Theme } from '../../Branding/Theme';
+import { auth, db } from '../../../Firebase/Settings';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import LottieView from 'lottie-react-native';
 
 interface RunningTrackIprops {
     navigation: any;
@@ -71,6 +74,7 @@ const SprintTestScreen = ({
     const [isPrepModalVisible, setIsPrepModalVisible] = useState(false);
     const [isResultModalVisible, setIsResultModalVisible] = useState(false)
     const [prepTime, setPrepTime] = useState(5);
+    const animatedProgress = useRef(new Animated.Value(0)).current;
     // Constants
     const TARGET_DISTANCE_METERS: number = 300; // Miles to meters
     const MIN_RUNNING_SPEED: number = 3.0; // m/s (about 4.5 mph)
@@ -85,6 +89,61 @@ const SprintTestScreen = ({
         accelerometerMagnitude: 0,
         recentAccelerometerReadings: []
     });
+
+    const saveRunResultToFirestore = async () => {
+        const user = auth.currentUser;
+
+        if (!user) {
+            console.warn("No user signed in");
+            return;
+        }
+
+        const userDetailsRef = doc(db, "UserDetails", user.uid);
+        const pushUpDocRef = doc(db, `UserDetails/${user.uid}/Sprint/${Date.now()}`);
+        console.log("Attempting to save run to path:", pushUpDocRef);
+
+        const TacticalPoints = runMetrics.elapsedTime <= 600 ? 5 : 0;
+
+        const runData = {
+            uid: user.uid,
+            distance: runMetrics.distance,
+            elapsedTime: runMetrics.elapsedTime,
+            averageSpeed: runMetrics.averageSpeed,
+            stepsPerMinute: runMetrics.stepsPerMinute,
+            isRunning: runMetrics.isRunning,
+            timestamp: new Date().toISOString(),
+            TacticalPoints: TacticalPoints,
+        };
+
+        try {
+            await setDoc(pushUpDocRef, runData);
+
+            // 2. Fetch current personal best
+            const userDoc = await getDoc(userDetailsRef);
+            const existingData = userDoc.exists() ? userDoc.data().personalBests || {} : {};
+            const currentPushUpBest = existingData.elapsedTime || 0;
+            const userData = userDoc.exists() ? userDoc.data() : {};
+            const currentTotal = userData.TacticalPoints || 0;
+
+            await setDoc(userDetailsRef, {
+                TacticalPoints: currentTotal + TacticalPoints
+            }, { merge: true });
+
+            if (runMetrics.elapsedTime > currentPushUpBest) {
+                await setDoc(userDetailsRef, {
+                    personalBests: {
+                        ...existingData,
+                        sprintTime: runMetrics.elapsedTime // Only update pullUps, keep others unchanged
+                    }
+                }, { merge: true });
+            }
+
+            console.log("Run data saved to Firestore:", runData);
+        } catch (error) {
+            console.error("Error saving run data to Firestore:", error);
+        }
+    };
+
 
     const startPrepCountdown = () => {
         if (prepTime > 0 && !isRunning) {
@@ -185,6 +244,7 @@ const SprintTestScreen = ({
 
     const stopTracking = async (): Promise<void> => {
         stopAllTracking();
+        await saveRunResultToFirestore();
         setIsResultModalVisible(true);
     };
 
@@ -450,37 +510,60 @@ const SprintTestScreen = ({
         <SafeAreaView style={styles.container}>
             {/* Map View */}
             <View style={styles.mapContainer}>
-                <TouchableOpacity
-                    onPress={() => {
-                        navigation.goBack();
+                <View style={{
+                    flexDirection: "row",
+                    justifyContent: 'space-between',
+                    alignItems: "center",
+                    padding: 20
+                }}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            navigation.goBack();
+                        }}
+                        style={{
+                            zIndex: 999,
+                        }}
+                    >
+                        <FontAwesome6 name="arrow-left-long" size={30} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{
+
                     }}
-                    style={{
-                        zIndex: 999,
-                        padding: 20
-                    }}
-                >
-                    <FontAwesome6 name="arrow-left-long" size={30} />
-                </TouchableOpacity>
-                <MapView
-                    ref={mapRef}
-                    style={styles.map}
-                    showsUserLocation
-                    followsUserLocation
-                    initialRegion={{
-                        latitude: 37.78825,
-                        longitude: -122.4324,
-                        latitudeDelta: 0.015,
-                        longitudeDelta: 0.0121,
-                    }}
-                >
-                    {runMetrics.coordinates.length > 0 && (
-                        <Polyline
-                            coordinates={runMetrics.coordinates}
-                            strokeWidth={4}
-                            strokeColor="#3F51B5"
+                        onPress={() => {
+                            navigation.navigate("SprintHistory")
+                        }}
+                    >
+                        <Image source={require("../../../assets/downloadedIcons/notification.png")}
+                            style={{
+                                height: 30,
+                                width: 30,
+                                resizeMode: "contain"
+                            }}
                         />
-                    )}
-                </MapView>
+                    </TouchableOpacity>
+                </View>
+                <View style={{ alignSelf: "center", width: 10, height: "70%", backgroundColor: '#ccc', marginTop: 20 }}>
+                    <Animated.View
+                        style={{
+                            position: 'absolute',
+                            left: -15, // centers the knob
+                            bottom: animatedProgress.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: ['0%', '100%'],
+                            }),
+                            width: 20,
+                            height: 20,
+                        }}
+                    >
+                        <LottieView
+                            source={require("../../../assets/downloadedIcons/Animation - 1746723631367.json")}
+                            style={{
+                                height: 40,
+                                width: 40
+                            }}
+                        />
+                    </Animated.View>
+                </View>
             </View>
 
             {/* Metrics Display */}

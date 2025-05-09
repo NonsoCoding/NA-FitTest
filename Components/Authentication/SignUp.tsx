@@ -1,4 +1,4 @@
-// import { useSignUp, useAuth, useUser } from '@clerk/clerk-expo'
+
 import * as React from 'react'
 import { Alert, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
@@ -11,6 +11,10 @@ import { AntDesign, Feather, FontAwesome6, Fontisto } from '@expo/vector-icons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from 'react-native-toast-message';
 import Constants from 'expo-constants';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { auth } from '../../Firebase/Settings';
+import emailjs from 'emailjs-com';
+
 // import Toast from "react-native-toast-message";
 
 const endPoint = process.env.EXPO_PUBLIC_API_URL;
@@ -18,6 +22,7 @@ const endPoint = process.env.EXPO_PUBLIC_API_URL;
 interface SignUpIprops {
     navigation?: any;
 }
+
 
 // Enhanced password rules regex
 const passwordRules = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
@@ -54,6 +59,7 @@ const signUpValidation = yup.object().shape({
 interface SignUpValues {
     email: string;
     password: string;
+    auth?: any;
 }
 
 
@@ -73,67 +79,43 @@ const SignUpScreen = ({
     const [isLoginCompleteModalVisible, setIsLoginCompleteModalVisible] = useState(false)
     const [code, setCode] = useState('');
 
+    const sendOTPEmail = async (email: string, otp: string) => {
+        const templateParams = {
+            to_email: email,
+            otp_code: otp,
+        };
 
-
-    const onSignUpPress = async (emailAddress: string, password: string) => {
-        setIsLoading(true)
-        const emailId = await AsyncStorage.getItem("email");
-        const passwordId = await AsyncStorage.getItem("password");
-
-        if (emailId?.toLowerCase() !== emailAddress.toLowerCase()) {
-            setIsLoading(true)
-            try {
-                console.log(`Attempting to connect to: ${endPoint}/signup`);
-                const mainData = await fetch(`${endPoint}/signup`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify({
-                        email: emailAddress.toLowerCase(),
-                        password: password,
-                    }),
-                });
-                console.log("Response status:", mainData.status);
-                const res = await mainData.json();
-                console.log(res.otp);
-                if (res.success) {
-
-                    await AsyncStorage.setItem("otp", res.otp).then(() => {
-                        setIsLoading(false)
-                        Alert.alert("Sucess", `Your OTP code is ${res.otp}`, [{ text: "Ok" }])
-                    }).then(async () => {
-                        await AsyncStorage.setItem("email", emailAddress);
-                        await AsyncStorage.setItem("password", password);
-                        navigation.navigate("OTPScreen", { isLoginCompleteModalVisible: true });
-                        Toast.show({
-                            type: 'success',
-                            text1: `Your otp code is ${res.otp}`,
-                            swipeable: true,
-                            visibilityTime: 1000
-                        });
-                    });
-                    console.log(res);
-                    console.log(password);
-
-                } else {
-                    Alert.alert("Unsuccessful", "You have already been registered, please proceed to login.", [{ text: "Ok" }]);
-                }
-            } catch (err: any) {
-                setIsLoading(false)
-                console.log("Network error details:", err);
-                console.log("Error message:", err.message);
-                console.log("Error name:", err.name);
-                Alert.alert("Connection Error", `Failed to connect: ${err.message}`);
-            }
-
-        } else {
-            Alert.alert("Error", "You are already signed in, please proceed to login", [{ text: "Ok" }]);
+        try {
+            await emailjs.send(
+                'service_n2v3cw3',
+                'template_9chhhuj',
+                templateParams,
+                'CD-sZTEWWramPdl9H'
+            );
+            console.log('OTP sent to email!');
+        } catch (error) {
+            console.error('Error sending OTP:', error);
         }
+    };
 
+
+    const SignUp = async (values: SignUpValues) => {
+        setIsLoading(true);
+        try {
+            const userCredentials = await createUserWithEmailAndPassword(auth, values.email, values.password);
+            const user = userCredentials.user;
+            console.log('User created: ', user);
+
+            await sendEmailVerification(user);
+            Alert.alert('Success', 'A verification link has been sent to your email.');
+
+            navigation.navigate('VerificationScreen');
+        } catch (error: any) {
+            Alert.alert('Error', error.message)
+        } finally {
+            setIsLoading(false);
+        }
     }
-
 
     return (
         <View style={{
@@ -157,11 +139,7 @@ const SignUpScreen = ({
             <Formik<SignUpValues>
                 initialValues={{ email: "", password: "" }}
                 validationSchema={signUpValidation}
-                onSubmit={async (values) => {
-                    await onSignUpPress(values.email, values.password);
-                    // // setSubmitting(false);
-
-                }}
+                onSubmit={SignUp}
             >
                 {({ handleChange, handleBlur, handleSubmit, validateForm, values, errors, touched, setTouched }) => (
                     <View style={{

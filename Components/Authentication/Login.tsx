@@ -13,7 +13,6 @@ import {
     View
 } from "react-native";
 import { Theme } from "../Branding/Theme";
-import { useAuth, useSignIn } from '@clerk/clerk-expo'
 import { useEffect, useState } from "react";
 import LottieView from "lottie-react-native";
 import { AntDesign, Feather, FontAwesome6, Fontisto } from "@expo/vector-icons";
@@ -23,6 +22,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import ResultModal from "../Modals/FailedModal";
 import { useNavigation } from "@react-navigation/native";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../../Firebase/Settings";
 
 interface LoginIprops {
 
@@ -51,15 +52,6 @@ const LoginScreen = ({
             .string()
             .trim()
             .email("Invalid email format")
-            .test(
-                'valid-domain',
-                'We only accept .com, .net, .org, .io, .co, .edu, or .gov emails',
-                (value) => {
-                    if (!value) return false;
-                    const domain = value.split('.').pop()?.toLowerCase();
-                    return domain ? allowedDomains.includes(domain) : false;
-                }
-            )
             .required("Email is required"),
         password: yup
             .string()
@@ -81,57 +73,27 @@ const LoginScreen = ({
         }
     }, [isLoginCompleteModalVisible]);
 
-
-    const onSignInPress = async (emailAddress: string, password: string) => {
+    const loginWithEmail = async (values: { email: string, password: string }) => {
+        setIsLoading(true);
         try {
-            setIsLoading(true)
-            const mainData = await fetch(`${endPoint}/login`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify({
-                    email: emailAddress.toLowerCase(),
-                    password: password,
-                }),
-            });
-
-            const text = await mainData.text();
-            console.log("Response Text:", text);
-
-            const res = JSON.parse(text); // or only call .json() if the content-type is JSO
-
-            if (res.accessToken && res.accessToken.length > 10) {
-                await AsyncStorage.setItem("token", res.accessToken);
-                setSuccessModalVisible(true);
-
-                setTimeout(() => {
-                    setSuccessModalVisible(false);
-                    navigation.reset({
-                        index: 0,
-                        routes: [{ name: "MainDrawer" }]
-                    })
-                }, 500);
-                setIsLoading(false);
-                console.log("Logged In");
-            } else if (res.statusCode === 403 && res.success === false) {
-                setIsLoading(false)
-                Alert.alert("Unsuccessful login attempt", "You have been blocked, please contact tacticalpt@gmail.com", [{ text: "Ok" }]);
-            }
-            else {
-                Alert.alert("Unsuccessful", "Incorrect email or password!", [{ text: "Ok" }]);
-            }
-            // console.log(res);
-
-        } catch (err) {
+            const userCredentials = await signInWithEmailAndPassword(auth, values.email, values.password);
+            const user = userCredentials.user;
             setIsLoading(false);
-            console.log(err);
-            Alert.alert("Error", "Login failed. Please try again.", [{ text: "Ok" }]);
+            console.log("User signed in:", user.email);
+            console.log("Email verified: ", user.emailVerified);
+            navigation.reset({
+                index: 1,
+                routes: [{ name: "MainDrawer" }]
+            })
+            return user;
+        } catch (error: any) {
+            setIsLoading(false);
+            console.error("Login error: ", error.message);
+            throw error;
+        } finally {
+            setIsLoading(false)
         }
     }
-
-
 
     return (
 
@@ -156,9 +118,7 @@ const LoginScreen = ({
             <Formik<LoginValues>
                 initialValues={{ email: "", password: "" }}
                 validationSchema={loginValidation}
-                onSubmit={(values, { setSubmitting }) => {
-                    onSignInPress(values.email, values.password);
-                }}
+                onSubmit={(values) => loginWithEmail(values)}
             >
                 {({ handleChange, handleBlur, handleSubmit, validateForm, values, errors, touched, setTouched }) => (
                     <View style={{

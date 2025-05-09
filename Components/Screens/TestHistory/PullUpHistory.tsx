@@ -1,20 +1,18 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Theme } from "../Branding/Theme";
 import { useNavigation } from "@react-navigation/native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
-import { DrawerParamList } from "../nav/type";
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { auth, db } from "../../Firebase/Settings";
 import { FlatList } from "react-native-gesture-handler";
+import { DrawerParamList } from "../../nav/type";
+import { auth, db } from "../../../Firebase/Settings";
+import { Theme } from "../../Branding/Theme";
 
 interface IHistoryProps {
 
 }
 
-const pushUpsVideoSource = require('../../assets/ExerciseGifs/pushUps.mp4');
-
-const History = ({
+const PullUpHistory = ({
 
 }: IHistoryProps) => {
 
@@ -27,7 +25,7 @@ const History = ({
         if (!user) return;
 
         try {
-            const querySnapshot = await getDocs(collection(db, `UserDetails/${user.uid}/SitUps`));
+            const querySnapshot = await getDocs(collection(db, `UserDetails/${user.uid}/PullUps`));
             const results: any[] = [];
             querySnapshot.forEach((doc) => {
                 results.push({ id: doc.id, ...doc.data() });
@@ -61,38 +59,38 @@ const History = ({
                 justifyContent: "center",
                 alignItems: "center"
             }}>
-                <Image source={require("../../assets/downloadedIcons/shield-line.png")}
+                <Image source={require("../../../assets/downloadedIcons/shield-line.png")}
                     style={{
                         height: 20,
                         width: 20,
                     }}
                 />
-                <Text>{item.pushUpCount || 0}</Text>
+                <Text>{item.pullUpCount || 0}</Text>
             </View>
             <View style={{
                 gap: 10,
                 justifyContent: "center",
                 alignItems: "center"
             }}>
-                <Image source={require("../../assets/downloadedIcons/timer-line.png")}
+                <Image source={require("../../../assets/downloadedIcons/timer-line.png")}
                     style={{
                         height: 20,
                         width: 20,
                     }}
                 />
-                <Text>{item.startTime}</Text>
+                <Text>60s</Text>
             </View>
             <View style={{
                 gap: 10,
                 alignItems: 'center'
             }}>
-                <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
+                <Image source={require("../../../assets/downloadedIcons/medalIcon.png")}
                     style={{
                         height: 20,
                         width: 20,
                     }}
                 />
-                <Text>125</Text>
+                <Text>{item.TacticalPoints}</Text>
             </View>
         </View>
         // <View style={{ padding: 10, borderBottomWidth: 1, borderColor: "#ccc" }}>
@@ -127,7 +125,7 @@ const History = ({
                             navigation.goBack();
                         }}
                     >
-                        <Image source={require("../../assets/downloadedIcons/fast.png")}
+                        <Image source={require("../../../assets/downloadedIcons/fast.png")}
                             style={{
                                 width: 20,
                                 height: 20
@@ -137,23 +135,13 @@ const History = ({
                             color: "white"
                         }}>Back</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => navigation.openDrawer()}
-                    >
-                        <Image source={require("../../assets/downloadedIcons/notification.png")}
-                            style={{
-                                height: 30,
-                                width: 30
-                            }}
-                        />
-                    </TouchableOpacity>
                 </View>
                 <View>
                     <Text style={{
                         fontWeight: 700,
-                        fontSize: 40,
+                        fontSize: 25,
                         color: "white"
-                    }}>HISTORY</Text>
+                    }}>PULL UPS HISTORY</Text>
                 </View>
             </View>
             <View style={{
@@ -171,7 +159,7 @@ const History = ({
     )
 }
 
-export default History;
+export default PullUpHistory;
 
 const styles = StyleSheet.create({
     container: {

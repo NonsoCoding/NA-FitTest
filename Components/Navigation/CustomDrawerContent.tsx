@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Platform, StatusBar, Modal } from 'react-native';
 import { DrawerContentComponentProps, DrawerNavigationProp } from '@react-navigation/drawer';
 import { useNavigation } from '@react-navigation/native';
 import { Theme } from '../Branding/Theme';
 import LottieView from 'lottie-react-native';
+import { auth, db } from '../../Firebase/Settings';
+import { doc, getDoc } from 'firebase/firestore';
 
 
 type CustomDrawerContentProps = DrawerContentComponentProps & {
@@ -15,7 +17,38 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 
     const [isLogOutModalVisible, setIsLogOutModalVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; serviceNumber: string; TacticalPoints: string } | null>(null);
 
+    const fetchUserInfo = async () => {
+
+        const user = auth.currentUser;
+        if (!user) return;
+
+        try {
+            const docRef = doc(db, "UserDetails", user.uid);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                console.log("User Data: ", data);
+
+                setUserInfo({
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    serviceNumber: data.serviceNumber,
+                    TacticalPoints: data.TacticalPoints
+                });
+            } else {
+                console.log("So such document");
+            }
+        } catch (error) {
+            console.log("Error fetching user data: ", error);
+        }
+    }
+
+    useEffect(() => {
+        fetchUserInfo();
+    }, [])
 
     const signingOut = async (sessionId: string) => {
         setIsLoading(true);
@@ -68,9 +101,12 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                     />
                     <View>
                         <Text style={{
-                            fontSize: 22,
+                            fontSize: 15,
                             fontWeight: 600
-                        }}>Timothy Obi</Text>
+                        }}>{userInfo?.firstName} {userInfo?.lastName}</Text>
+                        <Text style={{
+                            fontSize: 12
+                        }}>SN: {userInfo?.serviceNumber}</Text>
                         <View style={{
                             flexDirection: 'row',
                             alignItems: "center"
@@ -81,7 +117,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                                     width: 20
                                 }}
                             />
-                            <Text>109</Text>
+                            <Text>{userInfo?.TacticalPoints}</Text>
                         </View>
                     </View>
                 </View>
@@ -291,10 +327,10 @@ const styles = StyleSheet.create({
         marginTop: Platform.OS === "android" ? StatusBar.currentHeight : null,
     },
     profileSection: {
-        alignItems: 'center',
+        alignItems: 'flex-start',
         padding: 20,
         gap: 10,
-        paddingTop: 60,
+        paddingTop: 80,
         justifyContent: "space-between",
         flexDirection: "row",
     },

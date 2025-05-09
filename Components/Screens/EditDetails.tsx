@@ -1,9 +1,12 @@
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { DrawerParamList } from "../nav/type";
 import { useNavigation } from "@react-navigation/native";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "../../Firebase/Settings";
+import LottieView from "lottie-react-native";
 
 interface IProfileProps {
 
@@ -14,15 +17,92 @@ const EditDetails = ({
 
 }: IProfileProps) => {
 
-    const [isHeightEditing, setIsHeightEditing] = useState(false);
-    const [isWeightEditing, setIsWeightEditing] = useState(false);
-    const [isDateOfBirthEditing, setIsDateOfBirthEditing] = useState(false);
+    const [isFirstNameEditing, setIsFirstNameEditing] = useState(false);
+    const [isLastNameEditing, setIsLastNameEditing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isEmailEditing, setIsEmailEditing] = useState(false);
+    const [isPasswordEditing, setIsPasswordEditing] = useState(false);
     const [isFullNameEditing, setIsFullNameEditing] = useState(false);
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; } | null>(null);
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
+
+    const fetchUserInfo = async () => {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        try {
+            const docRef = doc(db, "UserDetails", user.uid);
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                console.log("User Data: ", data);
+
+                setUserInfo({
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                });
+                if (data.firstName) setFirstName(data.firstName);
+                if (data.lastName) setLastName(data.lastName)
+            } else {
+                console.log("So such document")
+            }
+        } catch (error) {
+            console.log("Error fetching user data: ", error);
+        }
+    }
+
+    useEffect(() => {
+        const user = auth.currentUser;
+        if (user) {
+            setEmail(user.email || '');
+        }
+        fetchUserInfo();
+    }, []);
+
+    const updateProfileDetails = async (values: { firstName: string; lastName: string; }) => {
+        setIsLoading(true)
+        const user = auth.currentUser;
+        if (!user) return;
+
+        try {
+            const userDocRef = doc(db, "UserDetails", user.uid);
+            await updateDoc(userDocRef, {
+                firstName: values.firstName,
+                lastName: values.lastName,
+            })
+            setIsLoading(false);
+            console.log("Profile updated successfully");
+            Alert.alert("success", "Profile updated successfully")
+        } catch (error) {
+            setIsLoading(false)
+            console.log("Error updating profile: ", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
 
     return (
         <View style={styles.container}>
+            {isLoading && (
+                <View style={styles.loadingOverlay}>
+                    <LottieView
+                        source={require("../../assets/ExerciseGifs/Animation - 1745262738989.json")}
+                        style={{
+                            height: 80,
+                            width: 80
+                        }}
+                        resizeMode="contain"
+                        loop={true}
+                        autoPlay={true}
+                    />
+                    <Text style={{ color: "#fff", marginTop: 10, fontFamily: Theme.Montserrat_Font.Mont400 }}>Signing you in...</Text>
+                </View>
+            )}
             <View style={{
                 height: "22%",
                 backgroundColor: Theme.colos.primaryColor,
@@ -87,15 +167,17 @@ const EditDetails = ({
                     }}>
                         <Text style={{
                             color: Theme.colos.mediumPrimary
-                        }}>Full name</Text>
+                        }}>FirstName</Text>
                         <View style={styles.textinput_container}>
                             <TextInput
-                                placeholder="Timothy Obi"
+                                placeholder={userInfo?.firstName || "FirstName"}
                                 placeholderTextColor={Theme.colos.second_primary}
                                 style={styles.textinput}
-                                editable={isHeightEditing}
+                                value={firstName}
+                                onChangeText={setFirstName}
+                                editable={isFirstNameEditing}
                             />
-                            <TouchableOpacity onPress={() => setIsHeightEditing(prev => !prev)}>
+                            <TouchableOpacity onPress={() => setIsFirstNameEditing(prev => !prev)}>
                                 <Image source={require("../../assets/downloadedIcons/edit-line.png")}
                                     style={{
                                         height: 25,
@@ -110,15 +192,40 @@ const EditDetails = ({
                     }}>
                         <Text style={{
                             color: Theme.colos.mediumPrimary
-                        }}>email</Text>
+                        }}>LastName</Text>
                         <View style={styles.textinput_container}>
                             <TextInput
-                                placeholder="timothyobi494@gmail.com"
+                                placeholder={userInfo?.lastName || "LastName"}
                                 placeholderTextColor={Theme.colos.second_primary}
                                 style={styles.textinput}
-                                editable={isWeightEditing}
+                                value={lastName}
+                                onChangeText={setLastName}
+                                editable={isLastNameEditing}
                             />
-                            <TouchableOpacity onPress={() => setIsWeightEditing(prev => !prev)}>
+                            <TouchableOpacity onPress={() => setIsLastNameEditing(prev => !prev)}>
+                                <Image source={require("../../assets/downloadedIcons/edit-line.png")}
+                                    style={{
+                                        height: 25,
+                                        width: 25
+                                    }}
+                                />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                    <View style={{
+                        gap: 5
+                    }}>
+                        <Text style={{
+                            color: Theme.colos.mediumPrimary
+                        }}>Email</Text>
+                        <View style={styles.textinput_container}>
+                            <TextInput
+                                placeholder={email}
+                                placeholderTextColor={Theme.colos.second_primary}
+                                style={styles.textinput}
+                                editable={isEmailEditing}
+                            />
+                            <TouchableOpacity onPress={() => setIsEmailEditing(prev => !prev)}>
                                 <Image source={require("../../assets/downloadedIcons/edit-line.png")}
                                     style={{
                                         height: 25,
@@ -139,9 +246,9 @@ const EditDetails = ({
                                 placeholder="************"
                                 placeholderTextColor={Theme.colos.second_primary}
                                 style={styles.textinput}
-                                editable={isDateOfBirthEditing}
+                                editable={isPasswordEditing}
                             />
-                            <TouchableOpacity onPress={() => setIsDateOfBirthEditing(prev => !prev)}>
+                            <TouchableOpacity onPress={() => setIsPasswordEditing(prev => !prev)}>
                                 <Image source={require("../../assets/downloadedIcons/edit-line.png")}
                                     style={{
                                         height: 25,
@@ -154,7 +261,10 @@ const EditDetails = ({
                 </View>
                 <TouchableOpacity
                     onPress={() => {
-
+                        updateProfileDetails({
+                            firstName: firstName,
+                            lastName: lastName
+                        })
                     }}
                     style={[styles.continue_email_button, {
                         padding: 20
@@ -203,5 +313,12 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontFamily: Theme.Montserrat_Font.Mont500,
         color: "white"
+    },
+    loadingOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 9999,
     },
 })

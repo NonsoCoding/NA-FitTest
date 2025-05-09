@@ -3,6 +3,8 @@ import { Theme } from "../../Branding/Theme";
 import { useEffect, useRef, useState } from "react";
 import { Accelerometer } from "expo-sensors";
 import { Switch, ToggleButton } from "react-native-paper";
+import { auth, db } from "../../../Firebase/Settings";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 
 interface ITestProps {
@@ -42,6 +44,7 @@ const PushUpsTestScreen = ({
     const [showManualInputModal, setShowManualInputModal] = useState(false);
     const [pushupState, setPushupState] = useState<PushupState>(PushupState.READY);
     const [isFirstCalibration, setIsFirstCalibration] = useState(true);
+    const [personalBest, setPersonalBest] = useState(0);
     const [calibrationValues, setCalibrationValues] = useState({
         downThreshold: -0.4,
         upThreshold: -0.1,
@@ -80,6 +83,61 @@ const PushUpsTestScreen = ({
     //     player.loop = true;
     //     player.play();
     // });
+
+
+    const saveRunResultToFirestore = async () => {
+        const user = auth.currentUser;
+
+        if (!user) {
+            console.warn("No user signed in");
+            return;
+        }
+
+        const userDetailsRef = doc(db, "UserDetails", user.uid);
+        const pushUpDocRef = doc(db, `UserDetails/${user.uid}/PushUps/${Date.now()}`);
+        console.log("Attempting to save run to path:", pushUpDocRef);
+
+        const TacticalPoints = pushUpCount >= 38 ? 5 : 0;
+
+        const runData = {
+            uid: user.uid,
+            pushUpCount: pushUpCount,
+            startTime: startTime,
+            timestamp: new Date().toISOString(),
+            TacticalPoints: TacticalPoints,
+        };
+
+        try {
+            await setDoc(pushUpDocRef, runData);
+
+            // 2. Fetch current personal best
+            const userDoc = await getDoc(userDetailsRef);
+            const existingData = userDoc.exists() ? userDoc.data().personalBests || {} : {};
+            const currentPushUpBest = existingData.pushUps || 0;
+            const userData = userDoc.exists() ? userDoc.data() : {};
+            const currentTotal = userData.TacticalPoints || 0;
+
+            await setDoc(userDetailsRef, {
+                TacticalPoints: currentTotal + TacticalPoints
+            }, { merge: true });
+
+            // Update personal bests if new value is higher
+            if (pushUpCount > currentPushUpBest) {
+                await setDoc(userDetailsRef, {
+                    personalBests: {
+                        ...existingData,
+                        pushUps: pushUpCount // Only update pushUps, keep others unchanged
+                    },
+                }, { merge: true });
+            }
+
+            console.log('Updating total TacticalPoints: ', currentTotal + TacticalPoints);
+            console.log("Run data saved to Firestore:", runData);
+        } catch (error) {
+            console.error("Error saving run data to Firestore:", error);
+        }
+    };
+
 
     // Function to get smoothed Z value
     const getSmoothedZ = () => {
@@ -130,6 +188,9 @@ const PushUpsTestScreen = ({
     const startMainCountdown = () => {
         if (startTime > 0 && !isStartRunning) {
             setIsStartRunning(true);
+            if (isAutoDetectEnabled) {
+                setIsCountingActive(true);
+            }
         }
     };
 
@@ -181,6 +242,7 @@ const PushUpsTestScreen = ({
 
                         // Disable push-up counting when the timer ends
                         setIsCountingActive(false);
+
                         setTimeout(() => {
                             if (isAutoDetectEnabled) {
                                 setIsResultModalVisible(true);
@@ -197,7 +259,7 @@ const PushUpsTestScreen = ({
         return () => {
             if (startIntervalRef.current) clearInterval(startIntervalRef.current);
         };
-    }, [isStartRunning, startTime, isAutoDetectEnabled]);
+    }, [isStartRunning]);
     // Accelerometer setup
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
@@ -211,114 +273,64 @@ const PushUpsTestScreen = ({
 
 
     useEffect(() => {
-        // Only process sensor data if counting is active
         if (!isCountingActive || sensorData.z === undefined || !isAutoDetectEnabled) return;
 
-        // Rest of your push-up detection code remains the same
-        const now = Date.now();
-        const z = sensorData.z;
-        // ...
-    }, [sensorData, isCountingActive, isAutoDetectEnabled]);
-    // Push-up detection with state machine
-    useEffect(() => {
-        if (sensorData.z === undefined) return;
-
         const now = Date.now();
         const z = sensorData.z;
 
-        // Add to recent values for smoothing
         addZValue(z);
         const smoothedZ = getSmoothedZ();
 
-        // Auto-calibration for first few push-ups
-        if (isFirstCalibration && pushUpCount === 3) {
-            setIsFirstCalibration(false);
-            console.log("Calibration complete");
-        }
-
-        // State machine for push-up detection
         switch (pushupState) {
             case PushupState.READY:
-                // Starting position, looking for downward movement
                 if (smoothedZ < calibrationValues.midThreshold) {
-                    setPushupState(PushupState.GOING_DOWN);
+                    setPushupState(PushupState.GOING_DOWN); // Pulling down
                     setStateTimestamps(prev => ({ ...prev, downStart: now }));
-                    console.log("Started going down");
+                    console.log("Pulling down");
                 }
                 break;
 
             case PushupState.GOING_DOWN:
-                // Transitioning downward
                 if (smoothedZ < calibrationValues.downThreshold) {
                     setPushupState(PushupState.DOWN);
                     setStateTimestamps(prev => ({ ...prev, downEnd: now }));
-                    console.log("Reached down position");
-                } else if (smoothedZ > calibrationValues.midThreshold) {
-                    // False start, reset to ready
-                    setPushupState(PushupState.READY);
-                    console.log("False start - reset");
+                    console.log("Reached bottom");
                 }
                 break;
 
             case PushupState.DOWN:
-                // In down position, looking for upward movement
                 if (smoothedZ > calibrationValues.midThreshold) {
                     setPushupState(PushupState.GOING_UP);
                     setStateTimestamps(prev => ({ ...prev, upStart: now }));
-                    console.log("Started going up");
+                    console.log("Pulling up");
                 }
                 break;
 
             case PushupState.GOING_UP:
-                // Transitioning upward
                 if (smoothedZ > calibrationValues.upThreshold) {
-                    const pushupDuration = now - stateTimestamps.downStart;
+                    const duration = now - stateTimestamps.downEnd;
 
-                    // Verify this is a valid push-up with time constraints
-                    if (pushupDuration >= MIN_PUSHUP_TIME &&
-                        pushupDuration <= MAX_PUSHUP_TIME &&
+                    if (duration >= MIN_PUSHUP_TIME &&
+                        duration <= MAX_PUSHUP_TIME &&
                         now - lastCountTime > COOLDOWN_MS) {
 
-                        // Count a valid push-up
-                        setPushUpCount(prevCount => {
-                            const newCount = prevCount + 1;
-
-                            // Adjust thresholds based on actual movements for first few push-ups
-                            if (isFirstCalibration && newCount <= 3) {
-                                setCalibrationValues(prev => ({
-                                    downThreshold: (prev.downThreshold * 0.7) + (smoothedZ * 0.3),
-                                    upThreshold: Math.max(prev.upThreshold, smoothedZ * 0.8),
-                                    midThreshold: (prev.downThreshold + prev.upThreshold) / 2
-                                }));
-                            }
-
-                            return newCount;
-                        });
-
+                        setPushUpCount(prev => prev + 1);
                         setLastCountTime(now);
-                        console.log("Push-up counted! Duration:", pushupDuration);
-                    } else {
-                        console.log("Invalid push-up - time constraints not met");
+                        console.log("Pull-up counted!", duration);
                     }
 
-                    // Reset to ready state
                     setPushupState(PushupState.UP);
                     setStateTimestamps(prev => ({ ...prev, upEnd: now }));
-                } else if (smoothedZ < calibrationValues.downThreshold) {
-                    // Went back down, reset to DOWN state
-                    setPushupState(PushupState.DOWN);
-                    console.log("Went back down");
                 }
                 break;
 
             case PushupState.UP:
-                // Reset after brief pause
                 if (now - stateTimestamps.upEnd > 300) {
                     setPushupState(PushupState.READY);
                 }
                 break;
         }
-    }, [sensorData]);
+    }, [sensorData, isCountingActive, isAutoDetectEnabled]);
 
 
     // const pullUpsPlayer = useVideoPlayer(VideoSource, (player) => {
@@ -363,7 +375,9 @@ const PushUpsTestScreen = ({
         return () => subscription.remove();
     }, []);
 
-
+    const stopTracking = async (): Promise<void> => {
+        await saveRunResultToFirestore();
+    };
 
 
     return (
@@ -398,13 +412,19 @@ const PushUpsTestScreen = ({
                     <Text style={{
                         color: "white"
                     }}>PUSH-UPS (TEST MODE)</Text>
-                    <Image source={require("../../../assets/downloadedIcons/notification.png")}
-                        style={{
-                            height: 30,
-                            width: 30,
-                            resizeMode: "contain"
+                    <TouchableOpacity
+                        onPress={() => {
+                            navigation.navigate("PushUpHistory")
                         }}
-                    />
+                    >
+                        <Image source={require("../../../assets/downloadedIcons/notification.png")}
+                            style={{
+                                height: 30,
+                                width: 30,
+                                resizeMode: "contain"
+                            }}
+                        />
+                    </TouchableOpacity>
                 </View>
             </View>
 
@@ -448,7 +468,6 @@ const PushUpsTestScreen = ({
                         }}>
                             <Text style={{
                                 fontSize: 25,
-                                fontFamily: Theme.Montserrat_Font.Mont700
                             }}>
                                 38
                             </Text>
@@ -463,7 +482,6 @@ const PushUpsTestScreen = ({
                         }}>
                             <Text style={{
                                 fontSize: 25,
-                                fontFamily: Theme.Montserrat_Font.Mont700
                             }}>
                                 01:00
                             </Text>
@@ -492,7 +510,6 @@ const PushUpsTestScreen = ({
                     }}
                 >
                     <Text style={{
-                        fontFamily: Theme.Montserrat_Font.Mont400,
                         color: "white"
                     }}>GET STARTED</Text>
                     <Image source={require("../../../assets/downloadedIcons/fast.png")}
@@ -827,6 +844,7 @@ const PushUpsTestScreen = ({
                             </View>
                             <TouchableOpacity
                                 onPress={() => {
+                                    stopTracking();
                                     setIsResultModalVisible(false);
                                     navigation.goBack();
                                 }}
@@ -877,8 +895,8 @@ const PushUpsTestScreen = ({
                             </View>
                         </View>
                         <TextInput
-                            // value={pushUpCount}
-                            // onChangeText={setPushUpCount}
+                            value={pushUpCount.toString()}
+                            onChangeText={(text) => setPushUpCount(Number(text))}
                             keyboardType="numeric"
                             placeholderTextColor="#aaa"
                             style={{
@@ -897,6 +915,7 @@ const PushUpsTestScreen = ({
                             onPress={() => {
                                 setShowManualInputModal(false);
                                 setPrepTime(5);
+                                saveRunResultToFirestore();
                                 setIsRunning(false);
                                 if (intervalRef.current) {
                                     clearInterval(intervalRef.current);
