@@ -13,11 +13,6 @@ import Toast from 'react-native-toast-message';
 import Constants from 'expo-constants';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../../Firebase/Settings';
-import emailjs from 'emailjs-com';
-
-// import Toast from "react-native-toast-message";
-
-const endPoint = process.env.EXPO_PUBLIC_API_URL;
 
 interface SignUpIprops {
     navigation?: any;
@@ -78,25 +73,6 @@ const SignUpScreen = ({
     const [togglePasswordVisibility, setTogglePasswordVisibility] = useState(false);
     const [isLoginCompleteModalVisible, setIsLoginCompleteModalVisible] = useState(false)
     const [code, setCode] = useState('');
-
-    const sendOTPEmail = async (email: string, otp: string) => {
-        const templateParams = {
-            to_email: email,
-            otp_code: otp,
-        };
-
-        try {
-            await emailjs.send(
-                'service_n2v3cw3',
-                'template_9chhhuj',
-                templateParams,
-                'CD-sZTEWWramPdl9H'
-            );
-            console.log('OTP sent to email!');
-        } catch (error) {
-            console.error('Error sending OTP:', error);
-        }
-    };
 
 
     const SignUp = async (values: SignUpValues) => {

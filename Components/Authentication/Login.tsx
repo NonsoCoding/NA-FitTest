@@ -28,7 +28,6 @@ import { auth } from "../../Firebase/Settings";
 interface LoginIprops {
 
 }
-const endPoint = process.env.EXPO_PUBLIC_API_URL;
 
 interface LoginValues {
     email: string;
@@ -96,7 +95,6 @@ const LoginScreen = ({
     }
 
     return (
-
         <View style={{
             flex: 1
         }}>

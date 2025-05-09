@@ -72,7 +72,7 @@ const Profile = ({
                     setDateOfBirth(data.dateOfBirth.toDate());
                 }
             } else {
-                console.log("So such document")
+                console.log("So such document");
             }
         } catch (error) {
             console.log("Error fetching user data: ", error);
