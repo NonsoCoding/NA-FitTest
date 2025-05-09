@@ -42,9 +42,7 @@ const IntroScreen = ({
                 <TouchableOpacity style={
                     styles.btn
                 }
-                    onPress={() => {
-                        navigation.navigate("LandingScreen")
-                    }}
+
                 >
                     <Text style={styles.btn_text}>Get started</Text>
                     <Image source={require("../../assets/downloadedIcons/fast.png")}
