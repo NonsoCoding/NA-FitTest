@@ -28,14 +28,14 @@ const ForgottenPassword = ({
                     <View>
                         <Text style={{
                             fontSize: 30,
-                            fontWeight: 700,
+                            fontWeight: "700",
                             color: "white",
                             lineHeight: 45,
                         }}>Forgotten Password</Text>
                     </View>
                     <Text style={{
                         fontSize: 16,
-                        fontWeight: 300,
+                        fontWeight: "300",
                         color: "white"
                     }}>Fill in your email to get a new password reset link</Text>
                 </View>

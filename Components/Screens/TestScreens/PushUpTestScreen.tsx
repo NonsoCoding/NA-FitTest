@@ -454,7 +454,7 @@ const PushUpsTestScreen = ({
                     <Text style={{
                         color: Theme.colors.primaryColor,
                         alignSelf: "center",
-                        fontWeight: 200
+                        fontWeight: "200"
                     }}>
                         Maximum number of push-ups in one minute
                     </Text>
@@ -473,7 +473,7 @@ const PushUpsTestScreen = ({
                             </Text>
                             <Text style={{
                                 fontSize: 11,
-                                fontWeight: 200
+                                fontWeight: "200"
                             }}>MINIMUM</Text>
                         </View>
                         <View style={{
@@ -888,7 +888,7 @@ const PushUpsTestScreen = ({
                             }}>TIME OVER!!!</Text>
                             <View>
                                 <Text style={{
-                                    fontWeight: 200,
+                                    fontWeight: "200",
                                     fontSize: 16,
                                     textAlign: "center"
                                 }}>Input your push-up count</Text>

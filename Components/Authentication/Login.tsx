@@ -133,14 +133,14 @@ const LoginScreen = ({
                                 <View>
                                     <Text style={{
                                         fontSize: 30,
-                                        fontWeight: 700,
+                                        fontWeight: "700",
                                         color: "white",
                                         lineHeight: 45,
                                     }}>Sign into your account</Text>
                                 </View>
                                 <Text style={{
                                     fontSize: 16,
-                                    fontWeight: 200,
+                                    fontWeight: "200",
                                     color: "white"
                                 }}>Get started by providing your credentials</Text>
                             </View>
@@ -231,7 +231,7 @@ const LoginScreen = ({
                                     >
                                         <Text style={{
                                             color: Theme.colors.primaryColor,
-                                            fontWeight: 200
+                                            fontWeight: "200"
                                         }}>Forgot Password?</Text>
                                     </TouchableOpacity>
                                 </View>

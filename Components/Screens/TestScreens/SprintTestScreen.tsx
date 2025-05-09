@@ -789,7 +789,7 @@ const SprintTestScreen = ({
                                     }}>Avg Speed: </Text>
                                     <Text style={{
                                         fontSize: 18,
-                                        fontWeight: 200,
+                                        fontWeight: "200",
                                         color: "white",
                                     }}>{formatPace(runMetrics.averageSpeed)}/mph</Text>
                                 </View>
@@ -804,7 +804,7 @@ const SprintTestScreen = ({
                                     <Text style={{
                                         fontSize: 18,
                                         color: "white",
-                                        fontWeight: 200,
+                                        fontWeight: "200",
                                     }}>{runMetrics.distance >= TARGET_DISTANCE_METERS ? 'Completed' : 'Incomplete'}</Text>
                                 </View>
                                 <TouchableOpacity style={styles.getStartedBtn}

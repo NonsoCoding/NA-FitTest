@@ -199,7 +199,7 @@ const HomePage = ({
                         <Text style={{
                             color: "white",
                             fontSize: 20,
-                            fontWeight: 600
+                            fontWeight: "600"
                         }}>{userInfo?.firstName} {userInfo?.lastName}</Text>
                         <Text style={{
                             color: "white",
@@ -259,7 +259,7 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontWeight: 600,
+                                        fontWeight: "600",
                                         color: "white"
                                     }}>Push-Ups</Text>
                                     <Text style={{
@@ -307,7 +307,7 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontWeight: 600,
+                                        fontWeight: "600",
                                         color: "white"
                                     }}>300 Meter Sprint</Text>
                                     <Text style={{
@@ -354,7 +354,7 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontWeight: 600,
+                                        fontWeight: "600",
                                         color: "white"
                                     }}>Sit-Ups</Text>
                                     <Text style={{
@@ -402,7 +402,7 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontWeight: 600,
+                                        fontWeight: "600",
                                         color: "white"
                                     }}>1.5 Mile Run</Text>
                                     <Text style={{
@@ -450,7 +450,7 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontWeight: 600,
+                                        fontWeight: "600",
                                         color: "white"
                                     }}>Pull-Ups</Text>
                                     <Text style={{

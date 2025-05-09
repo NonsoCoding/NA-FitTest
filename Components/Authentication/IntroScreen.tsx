@@ -22,12 +22,12 @@ const IntroScreen = ({
                 padding: 20
             }}>
                 <Text style={{
-                    fontWeight: 600,
+                    fontWeight: "600",
                     fontSize: 45,
                     color: "white"
                 }}>TacticalPT</Text>
                 <Text style={{
-                    fontWeight: 300,
+                    fontWeight: "300",
                     color: "white",
                     fontSize: 18,
                     textAlign: "center"
@@ -45,13 +45,13 @@ const IntroScreen = ({
 
                 >
                     <Text style={styles.btn_text}>Get started</Text>
-                    <Image source={require("../../assets/downloadedIcons/fast.png")}
+                    {/* <Image source={require("../../assets/downloadedIcons/fast.png")}
                         style={{
                             width: 20,
                             height: 20,
                             resizeMode: "contain"
                         }}
-                    />
+                    /> */}
                 </TouchableOpacity>
             </View>
         </View>

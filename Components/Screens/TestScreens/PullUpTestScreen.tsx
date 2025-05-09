@@ -445,7 +445,7 @@ const PullUpTestScreen = ({
                     <Text style={{
                         color: "black",
                         alignSelf: "center",
-                        fontWeight: 200
+                        fontWeight: "200"
                     }}>
                         Maximum number of pull-ups in one minute
                     </Text>
@@ -466,7 +466,7 @@ const PullUpTestScreen = ({
                             </Text>
                             <Text style={{
                                 fontSize: 10,
-                                fontWeight: 200
+                                fontWeight: "200"
                             }}>MINIMUM</Text>
                         </View>
                         <View style={{
@@ -492,7 +492,7 @@ const PullUpTestScreen = ({
                             />
                             <Text style={{
                                 fontSize: 10,
-                                fontWeight: 200
+                                fontWeight: "200"
                             }}>AUTO DETECT</Text>
                         </View>
                     </View>
@@ -883,7 +883,7 @@ const PullUpTestScreen = ({
                             }}>TIME OVER!!!</Text>
                             <View>
                                 <Text style={{
-                                    fontWeight: 200,
+                                    fontWeight: "200",
                                     fontSize: 16,
                                     textAlign: "center"
                                 }}>Input your sit-up count</Text>

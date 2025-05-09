@@ -30,7 +30,7 @@ const PasswordOTPScreen = ({
                     <Text style={{
                         fontSize: 30,
                         color: "white",
-                        fontWeight: 500
+                        fontWeight: "500"
                     }}>Verify OTP code</Text>
                     <Text style={{
                         color: "white"

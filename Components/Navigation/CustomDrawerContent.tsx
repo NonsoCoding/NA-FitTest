@@ -102,7 +102,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                     <View>
                         <Text style={{
                             fontSize: 15,
-                            fontWeight: 600
+                            fontWeight: "600"
                         }}>{userInfo?.firstName} {userInfo?.lastName}</Text>
                         <Text style={{
                             fontSize: 12
@@ -296,11 +296,11 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                         }}>
                             <Text style={{
                                 fontSize: 18,
-                                fontWeight: 200
+                                fontWeight: "200"
                             }}>Are you sure you want to logout</Text>
                             <Text style={{
                                 fontSize: 18,
-                                fontWeight: 200
+                                fontWeight: "200"
                             }}>from your account?</Text>
                         </View>
                         <TouchableOpacity style={styles.logout_btn}

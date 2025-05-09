@@ -134,14 +134,14 @@ const SignUpScreen = ({
                                 <View>
                                     <Text style={{
                                         fontSize: 30,
-                                        fontWeight: 700,
+                                        fontWeight: "700",
                                         color: "white",
                                         lineHeight: 45,
                                     }}>Sign up to create your account</Text>
                                 </View>
                                 <Text style={{
                                     fontSize: 16,
-                                    fontWeight: 200,
+                                    fontWeight: "200",
                                     color: "white"
                                 }}>Let us create an account for you</Text>
                             </View>

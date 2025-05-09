@@ -172,7 +172,7 @@ const Profile = ({
                 </View>
                 <View>
                     <Text style={{
-                        fontWeight: 700,
+                        fontWeight: "700",
                         fontSize: 40,
                         color: "white"
                     }}>MY PROFILE</Text>
@@ -204,7 +204,7 @@ const Profile = ({
                         />
                         <View>
                             <Text style={{
-                                fontWeight: 700,
+                                fontWeight: "700",
                                 fontSize: 17,
                                 color: "white"
                             }}>{userInfo?.firstName} {userInfo?.lastName}</Text>
@@ -214,7 +214,7 @@ const Profile = ({
                             }}>SN: {userInfo?.serviceNumber}</Text>
                             <Text style={{
                                 color: "white",
-                                fontWeight: 200
+                                fontWeight: "200"
                             }}>{email}</Text>
                         </View>
                     </View>

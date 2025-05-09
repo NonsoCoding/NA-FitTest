@@ -138,7 +138,7 @@ const PushUpHistory = ({
                 </View>
                 <View>
                     <Text style={{
-                        fontWeight: 700,
+                        fontWeight: "700",
                         fontSize: 25,
                         color: "white"
                     }}>PUSH UPS HISTORY</Text>

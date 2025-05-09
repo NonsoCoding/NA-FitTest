@@ -753,7 +753,7 @@ const RunningTestScreen = ({
                                     <Text style={{
                                         fontSize: 18,
                                         color: "white",
-                                        fontWeight: 200
+                                        fontWeight: "200"
                                     }}>{(runMetrics.distance / 1609.34).toFixed(2)} miles</Text>
                                 </View>
                                 <View style={{
@@ -767,7 +767,7 @@ const RunningTestScreen = ({
                                     <Text style={{
                                         fontSize: 18,
                                         color: "white",
-                                        fontWeight: 200
+                                        fontWeight: "200"
                                     }}>{formatTime(runMetrics.elapsedTime)}</Text>
                                 </View>
                                 <View style={{
@@ -781,7 +781,7 @@ const RunningTestScreen = ({
                                     <Text style={{
                                         fontSize: 18,
                                         color: "white",
-                                        fontWeight: 200,
+                                        fontWeight: "200",
                                     }}>{formatPace(runMetrics.averageSpeed)}/miles</Text>
                                 </View>
                                 <View style={{

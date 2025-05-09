@@ -138,7 +138,7 @@ const SprintHistory = ({
                 </View>
                 <View>
                     <Text style={{
-                        fontWeight: 700,
+                        fontWeight: "700",
                         fontSize: 20,
                         color: "white"
                     }}>300 METER SPRINT HISTORY</Text>

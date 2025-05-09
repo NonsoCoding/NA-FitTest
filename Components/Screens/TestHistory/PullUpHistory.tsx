@@ -138,7 +138,7 @@ const PullUpHistory = ({
                 </View>
                 <View>
                     <Text style={{
-                        fontWeight: 700,
+                        fontWeight: "700",
                         fontSize: 25,
                         color: "white"
                     }}>PULL UPS HISTORY</Text>

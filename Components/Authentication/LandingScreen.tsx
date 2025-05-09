@@ -23,12 +23,12 @@ const LandingScreen = ({
                 padding: 20,
             }}>
                 <Text style={{
-                    fontWeight: 600,
+                    fontWeight: "600",
                     fontSize: 45,
                     color: "white"
                 }}>TacticalPT</Text>
                 <Text style={{
-                    fontWeight: 300,
+                    fontWeight: "300",
                     color: "white",
                     fontSize: 18,
                     textAlign: "center"

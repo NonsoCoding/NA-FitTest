@@ -138,7 +138,7 @@ const RunningHistory = ({
                 </View>
                 <View>
                     <Text style={{
-                        fontWeight: 700,
+                        fontWeight: "700",
                         fontSize: 25,
                         color: "white"
                     }}>1.5 MILE RUN HISTORY</Text>
