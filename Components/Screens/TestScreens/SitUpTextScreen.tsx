@@ -405,7 +405,7 @@ const SitUpTestScreen = ({
             flex: 1,
         }}>
             <View style={{
-                backgroundColor: Theme.colos.primaryColor,
+                backgroundColor: Theme.colors.primaryColor,
                 justifyContent: "flex-end",
                 gap: 20,
                 padding: 20,
@@ -508,7 +508,7 @@ const SitUpTestScreen = ({
                             alignItems: "center"
                         }}>
                             <Switch
-                                color={Theme.colos.primaryColor}
+                                color={Theme.colors.primaryColor}
                                 value={isAutoDetectEnabled}
                                 onValueChange={(value) => setIsAutoDetectEnabled(value)}
                             />
@@ -551,7 +551,7 @@ const SitUpTestScreen = ({
                 }}>
                     <View style={{
                         height: 300,
-                        backgroundColor: Theme.colos.primaryColor,
+                        backgroundColor: Theme.colors.primaryColor,
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: 5
@@ -628,7 +628,7 @@ const SitUpTestScreen = ({
                         height: 200,
                         width: "60%",
                         alignSelf: "center",
-                        backgroundColor: Theme.colos.primaryColor,
+                        backgroundColor: Theme.colors.primaryColor,
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: 5
@@ -707,7 +707,7 @@ const SitUpTestScreen = ({
                 }}>
                     <View style={{
                         height: 300,
-                        backgroundColor: Theme.colos.primaryColor,
+                        backgroundColor: Theme.colors.primaryColor,
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: 5
@@ -782,7 +782,7 @@ const SitUpTestScreen = ({
                 }}>
                     <View style={{
                         height: 360,
-                        backgroundColor: Theme.colos.primaryColor,
+                        backgroundColor: Theme.colors.primaryColor,
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: 5
@@ -891,7 +891,7 @@ const SitUpTestScreen = ({
                         height: "30%",
                         padding: 20,
                         justifyContent: "center",
-                        backgroundColor: Theme.colos.backgroundColor,
+                        backgroundColor: Theme.colors.backgroundColor,
                         gap: 20
                     }}>
                         <View style={{
@@ -965,7 +965,7 @@ const styles = StyleSheet.create({
     },
     getStartedBtn: {
         padding: 15,
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         alignItems: "center",
         justifyContent: "space-between",
         width: "100%",

@@ -381,7 +381,7 @@ const PullUpTestScreen = ({
             flex: 1,
         }}>
             <View style={{
-                backgroundColor: Theme.colos.primaryColor,
+                backgroundColor: Theme.colors.primaryColor,
                 justifyContent: "flex-end",
                 gap: 20,
                 padding: 20,
@@ -486,7 +486,7 @@ const PullUpTestScreen = ({
                             alignItems: "center"
                         }}>
                             <Switch
-                                color={Theme.colos.primaryColor}
+                                color={Theme.colors.primaryColor}
                                 value={isAutoDetectEnabled}
                                 onValueChange={(value) => setIsAutoDetectEnabled(value)}
                             />
@@ -529,7 +529,7 @@ const PullUpTestScreen = ({
                 }}>
                     <View style={{
                         height: 300,
-                        backgroundColor: Theme.colos.primaryColor,
+                        backgroundColor: Theme.colors.primaryColor,
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: 5
@@ -606,7 +606,7 @@ const PullUpTestScreen = ({
                         height: 200,
                         alignSelf: "center",
                         width: "60%",
-                        backgroundColor: Theme.colos.primaryColor,
+                        backgroundColor: Theme.colors.primaryColor,
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: 5
@@ -686,7 +686,7 @@ const PullUpTestScreen = ({
                 }}>
                     <View style={{
                         height: 300,
-                        backgroundColor: Theme.colos.primaryColor,
+                        backgroundColor: Theme.colors.primaryColor,
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: 5
@@ -761,7 +761,7 @@ const PullUpTestScreen = ({
                 }}>
                     <View style={{
                         height: 360,
-                        backgroundColor: Theme.colos.primaryColor,
+                        backgroundColor: Theme.colors.primaryColor,
                         alignItems: "center",
                         justifyContent: "center",
                         borderRadius: 5
@@ -871,7 +871,7 @@ const PullUpTestScreen = ({
                         height: "30%",
                         padding: 20,
                         justifyContent: "center",
-                        backgroundColor: Theme.colos.backgroundColor,
+                        backgroundColor: Theme.colors.backgroundColor,
                         gap: 20
                     }}>
                         <View style={{
@@ -942,7 +942,7 @@ const styles = StyleSheet.create({
     },
     getStartedBtn: {
         padding: 15,
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         alignItems: "center",
         justifyContent: "space-between",
         width: "100%",

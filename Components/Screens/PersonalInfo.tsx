@@ -84,7 +84,7 @@ const PersonalInfo = ({
                         }}>
                             <View style={{
                                 flex: 1,
-                                backgroundColor: Theme.colos.primaryColor,
+                                backgroundColor: Theme.colors.primaryColor,
                                 padding: 20,
                                 justifyContent: "flex-end"
                             }}>
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
         flex: 1
     },
     btn: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         flexDirection: "row",
         justifyContent: "space-between",
         borderRadius: 5,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 10,
         borderWidth: 1,
-        borderColor: Theme.colos.lightPrimary,
+        borderColor: Theme.colors.lightPrimary,
         position: 'relative',
     },
     textinput: {

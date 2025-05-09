@@ -158,7 +158,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                 </TouchableOpacity>
                 <View style={{
                     borderWidth: 0.5,
-                    borderColor: Theme.colos.second_primary
+                    borderColor: Theme.colors.second_primary
                 }}></View>
                 <TouchableOpacity
                     onPress={() => props.navigation.navigate('Profile')}
@@ -181,7 +181,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                 </TouchableOpacity>
                 <View style={{
                     borderWidth: 0.5,
-                    borderColor: Theme.colos.second_primary
+                    borderColor: Theme.colors.second_primary
                 }}></View>
                 <TouchableOpacity
                     onPress={() => props.navigation.navigate('HomePage')}
@@ -204,7 +204,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                 </TouchableOpacity>
                 <View style={{
                     borderWidth: 0.5,
-                    borderColor: Theme.colos.second_primary
+                    borderColor: Theme.colors.second_primary
                 }}></View>
                 <TouchableOpacity
                     onPress={() => props.navigation.navigate('History')}
@@ -227,7 +227,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                 </TouchableOpacity>
                 <View style={{
                     borderWidth: 0.5,
-                    borderColor: Theme.colos.second_primary
+                    borderColor: Theme.colors.second_primary
                 }}></View>
                 <TouchableOpacity
                     onPress={() => {
@@ -252,7 +252,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                 </TouchableOpacity>
                 <View style={{
                     borderWidth: 0.5,
-                    borderColor: Theme.colos.second_primary
+                    borderColor: Theme.colors.second_primary
                 }}></View>
             </View>
             <Modal
@@ -287,7 +287,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                             }}
                         >
                             <Text style={{
-                                color: Theme.colos.primaryColor,
+                                color: Theme.colors.primaryColor,
                                 fontSize: 18
                             }}>cancel</Text>
                         </TouchableOpacity>
@@ -323,7 +323,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Theme.colos.backgroundColor,
+        backgroundColor: Theme.colors.backgroundColor,
         marginTop: Platform.OS === "android" ? StatusBar.currentHeight : null,
     },
     profileSection: {
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
     },
     logout_btn: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         padding: 15,
         borderRadius: 5,
         alignItems: "center"

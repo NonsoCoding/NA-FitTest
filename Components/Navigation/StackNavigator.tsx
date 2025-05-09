@@ -22,7 +22,7 @@ const StackNavigation: React.FC = () => {
                     screenOptions={{
                         headerShown: false,
                         cardStyle: {
-                            backgroundColor: Theme.colos.backgroundColor
+                            backgroundColor: Theme.colors.backgroundColor
                         }
                     }}
                 >

@@ -669,7 +669,7 @@ const SprintTestScreen = ({
                         <View style={{
                             height: 250,
                             width: "70%",
-                            backgroundColor: Theme.colos.primaryColor,
+                            backgroundColor: Theme.colors.primaryColor,
                             alignItems: "center",
                             justifyContent: "center",
                             borderRadius: 5
@@ -714,7 +714,7 @@ const SprintTestScreen = ({
                     }}>
                         <View style={{
                             height: 360,
-                            backgroundColor: Theme.colos.primaryColor,
+                            backgroundColor: Theme.colors.primaryColor,
                             alignItems: "center",
                             justifyContent: "center",
                             borderRadius: 5,
@@ -939,7 +939,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     startButton: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
     },
     stopButton: {
         backgroundColor: '#F44336',

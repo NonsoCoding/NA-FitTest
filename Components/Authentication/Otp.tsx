@@ -50,7 +50,7 @@ const OTPScreen = ({
             )}
             <View style={{
                 height: "30%",
-                backgroundColor: Theme.colos.primaryColor,
+                backgroundColor: Theme.colors.primaryColor,
                 justifyContent: 'flex-end',
                 padding: 20
             }}>
@@ -82,7 +82,7 @@ const OTPScreen = ({
                         inputCount={4}
                         containerStyle={styles.otpContainer}
                         textInputStyle={styles.underlineStyleBase}
-                        tintColor={Theme.colos.primaryColor}
+                        tintColor={Theme.colors.primaryColor}
                         offTintColor="#ccc"
                         autoFocus
                     />
@@ -99,7 +99,7 @@ const OTPScreen = ({
 
                         >
                             <Text style={{
-                                color: Theme.colos.primaryColor
+                                color: Theme.colors.primaryColor
                             }}>resend OTP</Text>
                         </TouchableOpacity>
                     </View>
@@ -169,10 +169,10 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
     underlineStyleHighLighted: {
-        borderColor: Theme.colos.primaryColor,
+        borderColor: Theme.colors.primaryColor,
     },
     btn: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         padding: 15,
         alignItems: "center",
         flexDirection: "row",

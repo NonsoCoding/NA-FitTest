@@ -12,7 +12,7 @@ const IntroScreen = ({
     return (
         <View style={{
             flex: 1,
-            backgroundColor: Theme.colos.primaryColor
+            backgroundColor: Theme.colors.primaryColor
         }}>
             <View style={{
                 flex: 3,
@@ -62,7 +62,7 @@ export default IntroScreen;
 
 const styles = StyleSheet.create({
     btn: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         padding: 20,
         borderRadius: 5,
         flexDirection: "row",

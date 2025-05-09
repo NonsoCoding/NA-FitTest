@@ -105,7 +105,7 @@ const EditDetails = ({
             )}
             <View style={{
                 height: "22%",
-                backgroundColor: Theme.colos.primaryColor,
+                backgroundColor: Theme.colors.primaryColor,
                 padding: 20,
                 paddingTop: 60,
                 justifyContent: "center",
@@ -166,12 +166,12 @@ const EditDetails = ({
                         gap: 5
                     }}>
                         <Text style={{
-                            color: Theme.colos.mediumPrimary
+                            color: Theme.colors.mediumPrimary
                         }}>FirstName</Text>
                         <View style={styles.textinput_container}>
                             <TextInput
                                 placeholder={userInfo?.firstName || "FirstName"}
-                                placeholderTextColor={Theme.colos.second_primary}
+                                placeholderTextColor={Theme.colors.second_primary}
                                 style={styles.textinput}
                                 value={firstName}
                                 onChangeText={setFirstName}
@@ -191,12 +191,12 @@ const EditDetails = ({
                         gap: 5
                     }}>
                         <Text style={{
-                            color: Theme.colos.mediumPrimary
+                            color: Theme.colors.mediumPrimary
                         }}>LastName</Text>
                         <View style={styles.textinput_container}>
                             <TextInput
                                 placeholder={userInfo?.lastName || "LastName"}
-                                placeholderTextColor={Theme.colos.second_primary}
+                                placeholderTextColor={Theme.colors.second_primary}
                                 style={styles.textinput}
                                 value={lastName}
                                 onChangeText={setLastName}
@@ -216,12 +216,12 @@ const EditDetails = ({
                         gap: 5
                     }}>
                         <Text style={{
-                            color: Theme.colos.mediumPrimary
+                            color: Theme.colors.mediumPrimary
                         }}>Email</Text>
                         <View style={styles.textinput_container}>
                             <TextInput
                                 placeholder={email}
-                                placeholderTextColor={Theme.colos.second_primary}
+                                placeholderTextColor={Theme.colors.second_primary}
                                 style={styles.textinput}
                                 editable={isEmailEditing}
                             />
@@ -239,12 +239,12 @@ const EditDetails = ({
                         gap: 5
                     }}>
                         <Text style={{
-                            color: Theme.colos.mediumPrimary
+                            color: Theme.colors.mediumPrimary
                         }}>Password</Text>
                         <View style={styles.textinput_container}>
                             <TextInput
                                 placeholder="************"
-                                placeholderTextColor={Theme.colos.second_primary}
+                                placeholderTextColor={Theme.colors.second_primary}
                                 style={styles.textinput}
                                 editable={isPasswordEditing}
                             />
@@ -294,14 +294,14 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         borderRadius: 5,
-        borderColor: Theme.colos.black
+        borderColor: Theme.colors.black
     },
     textinput: {
         flex: 1,
         paddingVertical: 10
     },
     continue_email_button: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",

@@ -20,7 +20,7 @@ const PasswordOTPScreen = ({
         <View style={styles.container}>
             <View style={{
                 height: "30%",
-                backgroundColor: Theme.colos.primaryColor,
+                backgroundColor: Theme.colors.primaryColor,
                 justifyContent: 'flex-end',
                 padding: 20
             }}>
@@ -80,7 +80,7 @@ const PasswordOTPScreen = ({
                         }}
                     >
                         <Text style={{
-                            color: Theme.colos.primaryColor
+                            color: Theme.colors.primaryColor
                         }}>Resend OTP</Text>
                     </TouchableOpacity>
                 </View>
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
         borderColor: "#1F1F1F80",
     },
     btn: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         padding: 20,
         flexDirection: "row",
         alignItems: "center",

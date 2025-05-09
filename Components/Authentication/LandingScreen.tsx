@@ -13,7 +13,7 @@ const LandingScreen = ({
     return (
         <View style={{
             flex: 1,
-            backgroundColor: Theme.colos.primaryColor
+            backgroundColor: Theme.colors.primaryColor
         }}>
             <View style={{
                 flex: 1,
@@ -67,7 +67,7 @@ const LandingScreen = ({
                     alignItems: "center",
                     padding: 5,
                     borderRadius: 7,
-                    borderColor: Theme.colos.borderColor,
+                    borderColor: Theme.colors.borderColor,
                     flexDirection: "row",
                     gap: 20,
                     justifyContent: "center"
@@ -77,7 +77,7 @@ const LandingScreen = ({
                 // }}
                 >
                     <Text style={{
-                        color: Theme.colos.primaryColor,
+                        color: Theme.colors.primaryColor,
                         fontSize: 18,
                     }}>GOOGLE</Text>
                     <LottieView
@@ -98,7 +98,7 @@ const LandingScreen = ({
                             navigation.navigate("SignUpScreen");
                         }}
                     >
-                        <Text style={{ color: Theme.colos.primaryColor, fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Sign Up</Text>
+                        <Text style={{ color: Theme.colors.primaryColor, fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Sign Up</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -110,7 +110,7 @@ export default LandingScreen;
 
 const styles = StyleSheet.create({
     btn: {
-        backgroundColor: Theme.colos.second_primary,
+        backgroundColor: Theme.colors.second_primary,
         padding: 20,
         borderRadius: 5,
         flexDirection: "row",
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     line: {
         flex: 1,
         height: 2,
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
     },
     dividerText: {
         paddingHorizontal: 10,

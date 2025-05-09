@@ -155,7 +155,7 @@ const VerificationLinkScreen = ({
                         disabled={!canResend}
                     >
                         <Text style={{
-                            color: Theme.colos.primaryColor
+                            color: Theme.colors.primaryColor
                         }}>Click to resend</Text>
                     </TouchableOpacity>
                 </View>

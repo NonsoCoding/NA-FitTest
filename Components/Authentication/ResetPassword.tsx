@@ -19,7 +19,7 @@ const ResetPassword = ({
         }}>
             <View style={{
                 flex: 1,
-                backgroundColor: Theme.colos.primaryColor,
+                backgroundColor: Theme.colors.primaryColor,
                 padding: 20,
                 paddingBottom: 30,
                 justifyContent: "flex-end"
@@ -113,7 +113,7 @@ const ResetPassword = ({
                                 })
                             }}
                         >
-                            <Text style={{ color: Theme.colos.primaryColor, fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Login</Text>
+                            <Text style={{ color: Theme.colors.primaryColor, fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Login</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
         marginVertical: 10,
     },
     continue_email_button: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 10,
         borderWidth: 1,
-        borderColor: Theme.colos.lightPrimary,
+        borderColor: Theme.colors.lightPrimary,
         position: 'relative',
     },
     textinput: {

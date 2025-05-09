@@ -105,7 +105,7 @@ const SitUpHistory = ({
         <View style={styles.container}>
             <View style={{
                 height: "22%",
-                backgroundColor: Theme.colos.primaryColor,
+                backgroundColor: Theme.colors.primaryColor,
                 padding: 20,
                 paddingTop: 60,
                 justifyContent: "center",

@@ -663,7 +663,7 @@ const RunningTestScreen = ({
                         <View style={{
                             height: 200,
                             width: "70%",
-                            backgroundColor: Theme.colos.primaryColor,
+                            backgroundColor: Theme.colors.primaryColor,
                             alignItems: "center",
                             justifyContent: "center",
                             borderRadius: 5
@@ -706,7 +706,7 @@ const RunningTestScreen = ({
                     }}>
                         <View style={{
                             height: 360,
-                            backgroundColor: Theme.colos.primaryColor,
+                            backgroundColor: Theme.colors.primaryColor,
                             alignItems: "center",
                             justifyContent: "center",
                             borderRadius: 5,
@@ -929,7 +929,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     startButton: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
     },
     stopButton: {
         backgroundColor: '#F44336',

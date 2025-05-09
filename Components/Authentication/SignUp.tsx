@@ -123,7 +123,7 @@ const SignUpScreen = ({
                     }}>
                         <View style={{
                             flex: 1,
-                            backgroundColor: Theme.colos.primaryColor,
+                            backgroundColor: Theme.colors.primaryColor,
                             padding: 20,
                             paddingBottom: 30,
                             justifyContent: "flex-end"
@@ -205,7 +205,7 @@ const SignUpScreen = ({
                                                 setTogglePasswordVisibility(!togglePasswordVisibility)
                                             }}
                                         >
-                                            <Feather name={togglePasswordVisibility ? 'eye' : 'eye-off'} size={20} color={Theme.colos.primaryColor} />
+                                            <Feather name={togglePasswordVisibility ? 'eye' : 'eye-off'} size={20} color={Theme.colors.primaryColor} />
                                         </TouchableOpacity>
                                     </View>
                                     {touched.password && errors.password && (
@@ -251,7 +251,7 @@ const SignUpScreen = ({
                                         padding: 5,
                                         flex: 1,
                                         borderRadius: 5,
-                                        borderColor: Theme.colos.lightPrimary,
+                                        borderColor: Theme.colors.lightPrimary,
                                         flexDirection: "row",
                                         justifyContent: "center"
                                     }}
@@ -260,7 +260,7 @@ const SignUpScreen = ({
                                     // }}
                                     >
                                         <Text style={{
-                                            color: Theme.colos.primaryColor,
+                                            color: Theme.colors.primaryColor,
                                             fontSize: 18
                                         }}>GOOGLE</Text>
                                         <LottieView
@@ -285,7 +285,7 @@ const SignUpScreen = ({
                                             })
                                         }}
                                     >
-                                        <Text style={{ color: Theme.colos.primaryColor, fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Log in</Text>
+                                        <Text style={{ color: Theme.colors.primaryColor, fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Log in</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
         marginVertical: 10,
     },
     continue_email_button: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         paddingHorizontal: 10,
         borderWidth: 1,
-        borderColor: Theme.colos.lightPrimary,
+        borderColor: Theme.colors.lightPrimary,
         position: 'relative',
     },
     textinput: {
@@ -367,7 +367,7 @@ const styles = StyleSheet.create({
     line: {
         flex: 1,
         height: 1,
-        backgroundColor: Theme.colos.lightPrimary,
+        backgroundColor: Theme.colors.lightPrimary,
     },
     dividerText: {
         paddingHorizontal: 10,

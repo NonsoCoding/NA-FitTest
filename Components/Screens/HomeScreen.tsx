@@ -490,7 +490,7 @@ const styles = StyleSheet.create({
     },
     top_container: {
         height: "25%",
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         padding: 20,
         paddingTop: 60,
         justifyContent: "space-between",
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
         gap: 20
     },
     logout_btn: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         padding: 15,
         borderRadius: 10,
         alignItems: "center"

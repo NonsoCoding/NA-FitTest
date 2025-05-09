@@ -129,7 +129,7 @@ const Profile = ({
             )}
             <View style={{
                 height: "22%",
-                backgroundColor: Theme.colos.primaryColor,
+                backgroundColor: Theme.colors.primaryColor,
                 padding: 20,
                 paddingTop: 60,
                 justifyContent: "center",
@@ -184,7 +184,7 @@ const Profile = ({
                 gap: 20
             }}>
                 <View style={{
-                    backgroundColor: Theme.colos.primaryColor,
+                    backgroundColor: Theme.colors.primaryColor,
                     padding: 20,
                     borderRadius: 5,
                     flexDirection: "row",
@@ -238,14 +238,14 @@ const Profile = ({
                         gap: 5
                     }}>
                         <Text style={{
-                            color: Theme.colos.mediumPrimary
+                            color: Theme.colors.mediumPrimary
                         }}>Height (ft)</Text>
                         <View style={styles.textinput_container}>
                             <TextInput
                                 placeholder={height || "Enter height (ft)"}
                                 value={height}
                                 onChangeText={setHeight}
-                                placeholderTextColor={Theme.colos.second_primary}
+                                placeholderTextColor={Theme.colors.second_primary}
                                 style={styles.textinput}
                                 editable={isHeightEditing}
                             />
@@ -263,12 +263,12 @@ const Profile = ({
                         gap: 5
                     }}>
                         <Text style={{
-                            color: Theme.colos.mediumPrimary
+                            color: Theme.colors.mediumPrimary
                         }}>Weight (lbs)</Text>
                         <View style={styles.textinput_container}>
                             <TextInput
                                 placeholder={weight || "Enter weight (lbs)"}
-                                placeholderTextColor={Theme.colos.second_primary}
+                                placeholderTextColor={Theme.colors.second_primary}
                                 style={styles.textinput}
                                 value={weight}
                                 onChangeText={setWeight}
@@ -288,7 +288,7 @@ const Profile = ({
                         gap: 5
                     }}>
                         <Text style={{
-                            color: Theme.colos.mediumPrimary
+                            color: Theme.colors.mediumPrimary
                         }}>DateofBirth</Text>
                         <View style={styles.textinput_container}>
                             <Text style={[
@@ -392,14 +392,14 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         borderRadius: 5,
-        borderColor: Theme.colos.black
+        borderColor: Theme.colors.black
     },
     textinput: {
         flex: 1,
         paddingVertical: 10
     },
     continue_email_button: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 5,
     },
     confirmButton: {
-        backgroundColor: Theme.colos.primaryColor,
+        backgroundColor: Theme.colors.primaryColor,
     },
     cancelButton: {
         backgroundColor: '#ccc',
