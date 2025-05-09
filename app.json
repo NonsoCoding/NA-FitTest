@@ -35,7 +35,6 @@
       "expo-secure-store"
     ],
     "extra": {
-      "EXPO_PUBLIC_API_URL": "http://test-dev.hasob.app:9550/api/v1/auth",
       "eas": {
         "projectId": "32aaec0f-06b7-4751-8c0a-7326e4bfe426"
       }

@@ -39,8 +39,6 @@ const LoginScreen = ({
 }: LoginIprops) => {
 
     const [isLoginCompleteModalVisible, setIsLoginCompleteModalVisible] = useState(false);
-    // Enhanced password rules regex
-    const passwordRules = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
 
     // Email domain whitelist (add more as needed)
     const allowedDomains = ['com', 'net', 'org', 'io', 'co', 'edu', 'gov'];
