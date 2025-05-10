@@ -16,10 +16,9 @@
       "infoPlist": {
         "NSCameraUsageDescription": "This app uses the camera to track push ups",
         "NSAppTransportSecurity": {
-        "NSAllowsArbitraryLoads": true
+          "NSAllowsArbitraryLoads": true
+        }
       }
-      }
-
     },
     "android": {
       "adaptiveIcon": {
@@ -30,17 +29,12 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-font",
-      "expo-secure-store"
-    ],
+    "plugins": ["expo-font", "expo-secure-store"],
+    "newArchEnabled": true,
     "extra": {
       "eas": {
         "projectId": "32aaec0f-06b7-4751-8c0a-7326e4bfe426"
       }
-    },
-    "experiments": {
-      "newArchEnabled": true
     }
   }
 }
