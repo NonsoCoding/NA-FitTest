@@ -92,13 +92,13 @@ const LandingScreen = ({
                     />
                 </TouchableOpacity>
                 <View style={{ flexDirection: 'row', gap: 6, alignSelf: "center", alignItems: "center" }}>
-                    <Text style={{ color: '#333', fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Don't have an account?</Text>
+                    <Text style={{ color: '#333', fontSize: 16 }}>Don't have an account?</Text>
                     <TouchableOpacity
                         onPress={() => {
                             navigation.navigate("SignUpScreen");
                         }}
                     >
-                        <Text style={{ color: Theme.colors.primaryColor, fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Sign Up</Text>
+                        <Text style={{ color: Theme.colors.primaryColor, fontSize: 16 }}>Sign Up</Text>
                     </TouchableOpacity>
                 </View>
             </View>

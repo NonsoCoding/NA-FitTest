@@ -12,7 +12,6 @@ interface IHistoryProps {
 
 }
 
-const pushUpsVideoSource = require('../../assets/ExerciseGifs/pushUps.mp4');
 
 const History = ({
 

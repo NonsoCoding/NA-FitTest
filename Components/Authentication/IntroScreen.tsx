@@ -31,7 +31,7 @@ const IntroScreen = ({
                     color: "white",
                     fontSize: 18,
                     textAlign: "center"
-                }}>This is the official fitness app for the army of national defense</Text>
+                }}>Official fitness app of the Army for National Defense</Text>
             </View>
             <View style={{
                 height: "20%",
@@ -42,16 +42,18 @@ const IntroScreen = ({
                 <TouchableOpacity style={
                     styles.btn
                 }
-
+                    onPress={() => {
+                        navigation.navigate("LandingScreen");
+                    }}
                 >
                     <Text style={styles.btn_text}>Get started</Text>
-                    {/* <Image source={require("../../assets/downloadedIcons/fast.png")}
+                    <Image source={require("../../assets/downloadedIcons/fast.png")}
                         style={{
                             width: 20,
                             height: 20,
-                            resizeMode: "contain"
+                            resizeMode: "contain",
                         }}
-                    /> */}
+                    />
                 </TouchableOpacity>
             </View>
         </View>

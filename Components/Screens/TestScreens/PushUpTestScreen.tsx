@@ -25,7 +25,6 @@ interface SensorData {
     y?: number;
 }
 
-const VideoSource = require("../../../assets/ExerciseGifs/pushUps.mp4")
 
 const PushUpsTestScreen = ({
     navigation
@@ -640,7 +639,6 @@ const PushUpsTestScreen = ({
                                 <Text style={{
                                     fontSize: 17,
                                     color: "white",
-                                    fontFamily: Theme.Montserrat_Font.Mont500
                                 }}>close</Text>
                             </TouchableOpacity>
                         </View>
@@ -659,13 +657,11 @@ const PushUpsTestScreen = ({
                                 <Text style={{
                                     fontSize: 60,
                                     color: "white",
-                                    fontFamily: Theme.Montserrat_Font.Mont700
                                 }}>{prepTime}</Text>
                                 <Text style={{
                                     fontSize: 17,
                                     bottom: 10,
                                     color: "white",
-                                    fontFamily: Theme.Montserrat_Font.Mont500
                                 }}>sec</Text>
                             </View>
                             <TouchableOpacity
@@ -674,7 +670,6 @@ const PushUpsTestScreen = ({
                                 }}
                             >
                                 <Text style={{
-                                    fontFamily: Theme.MuseoModerno_Font.Muse600,
                                     color: "white"
                                 }}>GET READY</Text>
                             </TouchableOpacity>
@@ -717,7 +712,6 @@ const PushUpsTestScreen = ({
                                     <Text style={{
                                         fontSize: 17,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>close</Text>
                                 </TouchableOpacity>
                             </View> */}
@@ -737,13 +731,11 @@ const PushUpsTestScreen = ({
                                 <Text style={{
                                     fontSize: 60,
                                     color: "white",
-                                    fontFamily: Theme.Montserrat_Font.Mont700
                                 }}>{startTime}</Text>
                                 <Text style={{
                                     fontSize: 17,
                                     bottom: 10,
                                     color: "white",
-                                    fontFamily: Theme.Montserrat_Font.Mont500
                                 }}>sec</Text>
                             </View>
                             <TouchableOpacity
@@ -806,7 +798,6 @@ const PushUpsTestScreen = ({
                                 <Text style={{
                                     fontSize: 17,
                                     color: "white",
-                                    fontFamily: Theme.Montserrat_Font.Mont500
                                 }}>close</Text>
                             </TouchableOpacity>
                         </View>
@@ -826,19 +817,16 @@ const PushUpsTestScreen = ({
                                 <Text style={{
                                     fontSize: 60,
                                     color: "white",
-                                    fontFamily: Theme.Montserrat_Font.Mont700
                                 }}>{pushUpCount}</Text>
                                 {/* <Text style={{
                                         fontSize: 17,
                                         bottom: 10,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>min</Text> */}
                             </View>
                             <View
                             >
                                 <Text style={{
-                                    fontFamily: Theme.MuseoModerno_Font.Muse600,
                                     color: "white"
                                 }}>Correct Push Ups</Text>
                             </View>
@@ -850,7 +838,6 @@ const PushUpsTestScreen = ({
                                 }}
                             >
                                 <Text style={{
-                                    fontFamily: Theme.Montserrat_Font.Mont400,
                                     color: "white"
                                 }}>SUBMIT</Text>
                             </TouchableOpacity>

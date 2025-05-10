@@ -109,7 +109,7 @@ const SignUpScreen = ({
                         loop={true}
                         autoPlay={true}
                     />
-                    <Text style={{ color: "#fff", marginTop: 10, fontFamily: Theme.Montserrat_Font.Mont400 }}>Signing you in...</Text>
+                    <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
                 </View>
             )}
             <Formik<SignUpValues>
@@ -276,7 +276,7 @@ const SignUpScreen = ({
                                     </TouchableOpacity>
                                 </View>
                                 <View style={{ flexDirection: 'row', gap: 6, alignSelf: "center" }}>
-                                    <Text style={{ color: '#333', fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Already have an account?</Text>
+                                    <Text style={{ color: '#333', fontSize: 16 }}>Already have an account?</Text>
                                     <TouchableOpacity
                                         onPress={() => {
                                             navigation.reset({
@@ -285,7 +285,7 @@ const SignUpScreen = ({
                                             })
                                         }}
                                     >
-                                        <Text style={{ color: Theme.colors.primaryColor, fontSize: 16, fontFamily: Theme.Montserrat_Font.Mont600 }}>Log in</Text>
+                                        <Text style={{ color: Theme.colors.primaryColor, fontSize: 16 }}>Log in</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -320,7 +320,6 @@ const styles = StyleSheet.create({
     },
     email_button_text: {
         fontSize: 15,
-        fontFamily: Theme.Montserrat_Font.Mont500,
         color: "white"
     },
     button_icon: {
@@ -342,14 +341,12 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: 20,
         paddingHorizontal: 10,
-        fontFamily: Theme.Montserrat_Font.Mont500,
         fontSize: 14,
     },
     otp_textinput: {
         backgroundColor: "white",
         borderRadius: 40,
         padding: 20,
-        fontFamily: Theme.Montserrat_Font.Mont500,
         fontSize: 14
     },
     get_code_button: {

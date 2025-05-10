@@ -25,7 +25,6 @@ interface SensorData {
     y?: number;
 }
 
-const VideoSource = require("../../../assets/ExerciseGifs/situps.mp4")
 
 const SitUpTestScreen = ({
     navigation
@@ -482,7 +481,6 @@ const SitUpTestScreen = ({
                         }}>
                             <Text style={{
                                 fontSize: 25,
-                                fontFamily: Theme.Montserrat_Font.Mont700
                             }}>
                                 38
                             </Text>
@@ -525,7 +523,6 @@ const SitUpTestScreen = ({
                     }}
                 >
                     <Text style={{
-                        fontFamily: Theme.Montserrat_Font.Mont400,
                         color: "white"
                     }}>GET STARTED</Text>
                     <Image source={require("../../../assets/downloadedIcons/fast.png")}
@@ -728,7 +725,6 @@ const SitUpTestScreen = ({
                                     <Text style={{
                                         fontSize: 17,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>close</Text>
                                 </TouchableOpacity>
                             </View> */}
@@ -839,7 +835,6 @@ const SitUpTestScreen = ({
                                         fontSize: 17,
                                         bottom: 10,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>min</Text> */}
                             </View>
                             <View
@@ -858,7 +853,6 @@ const SitUpTestScreen = ({
                                 }}
                             >
                                 <Text style={{
-                                    fontFamily: Theme.Montserrat_Font.Mont400,
                                     color: "white"
                                 }}>SUBMIT</Text>
                                 <Image source={require("../../../assets/downloadedIcons/fast.png")}

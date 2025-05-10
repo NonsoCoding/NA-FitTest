@@ -806,7 +806,6 @@ const RunningTestScreen = ({
                                     }}
                                 >
                                     <Text style={{
-                                        fontFamily: Theme.Montserrat_Font.Mont400,
                                         color: "white"
                                     }}>Continue</Text>
                                     <Image source={require("../../../assets/downloadedIcons/fast.png")}

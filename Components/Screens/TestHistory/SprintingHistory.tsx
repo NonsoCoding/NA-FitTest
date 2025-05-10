@@ -90,7 +90,7 @@ const SprintHistory = ({
                         width: 20,
                     }}
                 />
-                <Text>125</Text>
+                <Text>{item.TacticalPoints || 0}</Text>
             </View>
         </View>
         // <View style={{ padding: 10, borderBottomWidth: 1, borderColor: "#ccc" }}>

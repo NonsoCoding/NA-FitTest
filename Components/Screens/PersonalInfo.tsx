@@ -69,7 +69,7 @@ const PersonalInfo = ({
                         loop={true}
                         autoPlay={true}
                     />
-                    <Text style={{ color: "#fff", marginTop: 10, fontFamily: Theme.Montserrat_Font.Mont400 }}>Signing you in...</Text>
+                    <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
                 </View>
             )}
             <Formik
@@ -170,7 +170,7 @@ const PersonalInfo = ({
                                                     onChangeText={handleChange('serviceNumber')}
                                                     onBlur={handleBlur('serviceNumber')}
                                                     value={values.serviceNumber}
-                                                    keyboardType="number-pad"
+
                                                 />
                                             </View>
                                             {touched.serviceNumber && errors.serviceNumber && (
@@ -246,7 +246,6 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: 20,
         paddingHorizontal: 10,
-        fontFamily: Theme.Montserrat_Font.Mont500,
         fontSize: 14,
     },
     loadingOverlay: {

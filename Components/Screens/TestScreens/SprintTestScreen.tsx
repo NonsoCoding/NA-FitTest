@@ -684,13 +684,11 @@ const SprintTestScreen = ({
                                     <Text style={{
                                         fontSize: 60,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont700
                                     }}>0{prepTime}</Text>
                                     <Text style={{
                                         fontSize: 17,
                                         bottom: 10,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>sec</Text>
                                 </View>
                                 <Text style={{
@@ -816,7 +814,6 @@ const SprintTestScreen = ({
                                     }}
                                 >
                                     <Text style={{
-                                        fontFamily: Theme.Montserrat_Font.Mont400,
                                         color: "white"
                                     }}>SUBMIT </Text>
                                     <Image source={require("../../../assets/downloadedIcons/fast.png")}

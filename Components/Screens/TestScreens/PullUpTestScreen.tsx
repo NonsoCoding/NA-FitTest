@@ -25,8 +25,6 @@ interface SensorData {
     y?: number;
 }
 
-const VideoSource = require("../../../assets/ExerciseGifs/pullUps.mp4")
-
 const PullUpTestScreen = ({
     navigation
 }: ITestProps) => {
@@ -503,7 +501,6 @@ const PullUpTestScreen = ({
                     }}
                 >
                     <Text style={{
-                        fontFamily: Theme.Montserrat_Font.Mont400,
                         color: "white"
                     }}>GET STARTED</Text>
                     <Image source={require("../../../assets/downloadedIcons/fast.png")}
@@ -633,7 +630,6 @@ const PullUpTestScreen = ({
                                 <Text style={{
                                     fontSize: 17,
                                     color: "white",
-                                    fontFamily: Theme.Montserrat_Font.Mont500
                                 }}>close</Text>
                             </TouchableOpacity>
                         </View>
@@ -707,7 +703,6 @@ const PullUpTestScreen = ({
                                     <Text style={{
                                         fontSize: 17,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>close</Text>
                                 </TouchableOpacity>
                             </View> */}
@@ -794,7 +789,6 @@ const PullUpTestScreen = ({
                                 <Text style={{
                                     fontSize: 17,
                                     color: "white",
-                                    fontFamily: Theme.Montserrat_Font.Mont500
                                 }}>close</Text>
                             </TouchableOpacity>
                         </View>
@@ -819,13 +813,11 @@ const PullUpTestScreen = ({
                                         fontSize: 17,
                                         bottom: 10,
                                         color: "white",
-                                        fontFamily: Theme.Montserrat_Font.Mont500
                                     }}>min</Text> */}
                             </View>
                             <View
                             >
                                 <Text style={{
-                                    fontFamily: Theme.MuseoModerno_Font.Muse600,
                                     color: "white"
                                 }}>Correct Push Ups</Text>
                             </View>
@@ -838,7 +830,6 @@ const PullUpTestScreen = ({
                                 }}
                             >
                                 <Text style={{
-                                    fontFamily: Theme.Montserrat_Font.Mont400,
                                     color: "white"
                                 }}>SUBMIT</Text>
                                 <Image source={require("../../../assets/downloadedIcons/fast.png")}

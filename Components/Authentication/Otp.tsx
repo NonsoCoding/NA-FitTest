@@ -45,7 +45,7 @@ const OTPScreen = ({
                         loop={true}
                         autoPlay={true}
                     />
-                    <Text style={{ color: "#fff", marginTop: 10, fontFamily: Theme.Montserrat_Font.Mont400 }}>Signing you in...</Text>
+                    <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
                 </View>
             )}
             <View style={{

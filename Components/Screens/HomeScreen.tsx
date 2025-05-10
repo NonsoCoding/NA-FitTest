@@ -3,19 +3,12 @@ import { Theme } from "../Branding/Theme";
 import LottieView from "lottie-react-native";
 import { useEffect, useState } from "react";
 import { auth, db } from "../../Firebase/Settings";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, onSnapshot } from "firebase/firestore";
 
 
 interface IHomePageProps {
     navigation: any;
 }
-
-const pushUpsVideoSource = require('../../assets/ExerciseGifs/pushUps.mp4');
-const pullUpVideoSource = require('../../assets/ExerciseGifs/pullUps.mp4');
-const sprintVideoSource = require('../../assets/ExerciseGifs/sprint.mp4');
-const sitUpVideoSource = require('../../assets/ExerciseGifs/situps.mp4');
-const runningVideoSource = require('../../assets/ExerciseGifs/running.mp4');
-
 
 const HomePage = ({
     navigation
@@ -44,18 +37,16 @@ const HomePage = ({
         return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     };
 
-    const fetchUserInfo = async () => {
-
+    useEffect(() => {
         const user = auth.currentUser;
         if (!user) return;
 
-        try {
-            const docRef = doc(db, "UserDetails", user.uid);
-            const docSnap = await getDoc(docRef);
+        const docRef = doc(db, "UserDetails", user.uid);
 
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                console.log("User Data: ", data);
+                console.log("Real-time User Data: ", data);
 
                 setUserInfo({
                     firstName: data.firstName,
@@ -64,28 +55,25 @@ const HomePage = ({
                     TacticalPoints: data.TacticalPoints
                 });
             } else {
-                console.log("So such document");
+                console.log("No such document");
             }
-        } catch (error) {
-            console.log("Error fetching user data: ", error);
-        }
-    }
+        }, (error) => {
+            console.log("Error fetching user data in real-time: ", error);
+        });
+
+        return () => unsubscribe(); // Clean up the listener when the component unmounts
+    }, []);
 
     useEffect(() => {
-        fetchUserInfo();
-    }, [])
+        const user = auth.currentUser;
+        if (!user) return;
 
-    useEffect(() => {
-        const fetchPersonalBests = async () => {
-            const user = auth.currentUser;
-            if (!user) return;
+        const userDetailsRef = doc(db, "UserDetails", user.uid);
 
-            const userDetailsRef = doc(db, "UserDetails", user.uid);
-            const docSnap = await getDoc(userDetailsRef);
-
+        const unsubscribe = onSnapshot(userDetailsRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data().personalBests || {};
-                console.log("Fetched personalBests: ", data);
+                console.log("Real-time personalBests: ", data);
 
                 setPersonalBests({
                     pushUps: data.pushUps || 0,
@@ -95,32 +83,12 @@ const HomePage = ({
                     sprintTime: data.sprintTime || "none"
                 });
             }
-        };
+        }, (error) => {
+            console.error("Error fetching personalBests in real-time:", error);
+        });
 
-        fetchPersonalBests();
+        return () => unsubscribe(); // Cleanup listener on unmount
     }, []);
-
-
-    // const pushUpsPlayer = useVideoPlayer(pushUpsVideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-    // const pullUpsPlayer = useVideoPlayer(pullUpVideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-    // const sprintPlayer = useVideoPlayer(sprintVideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-    // const sitUpPlayer = useVideoPlayer(sitUpVideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-    // const runningPlayer = useVideoPlayer(runningVideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
 
     return (
         <View style={{
@@ -138,7 +106,7 @@ const HomePage = ({
                         loop={true}
                         autoPlay={true}
                     />
-                    <Text style={{ color: "#fff", marginTop: 10, fontFamily: Theme.Montserrat_Font.Mont400 }}>Signing you in...</Text>
+                    <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
                 </View>
             )}
             <View style={styles.top_container}>

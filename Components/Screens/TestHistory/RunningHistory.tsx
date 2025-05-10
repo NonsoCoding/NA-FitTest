@@ -65,7 +65,7 @@ const RunningHistory = ({
                         width: 20,
                     }}
                 />
-                <Text>{item.pushUpCount || 0}</Text>
+                <Text>{item.distance || 0}(m)</Text>
             </View>
             <View style={{
                 gap: 10,
@@ -78,7 +78,7 @@ const RunningHistory = ({
                         width: 20,
                     }}
                 />
-                <Text>{item.startTime}</Text>
+                <Text>{item.elapsedTime}s</Text>
             </View>
             <View style={{
                 gap: 10,
@@ -90,7 +90,7 @@ const RunningHistory = ({
                         width: 20,
                     }}
                 />
-                <Text>125</Text>
+                <Text>{item.TacticalPoints}</Text>
             </View>
         </View>
         // <View style={{ padding: 10, borderBottomWidth: 1, borderColor: "#ccc" }}>
