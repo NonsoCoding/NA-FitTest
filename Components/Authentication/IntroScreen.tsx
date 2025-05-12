@@ -31,7 +31,7 @@ const IntroScreen = ({
                     color: "white",
                     fontSize: 18,
                     textAlign: "center"
-                }}>Official fitness app of the Army for National Defense</Text>
+                }}>Official Personal Traning App of the Army for National Defense</Text>
             </View>
             <View style={{
                 height: "20%",
