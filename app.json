@@ -38,8 +38,9 @@
     "newArchEnabled": true,
     "extra": {
       "eas": {
-        "projectId": "32aaec0f-06b7-4751-8c0a-7326e4bfe426"
+        "projectId": "5bf53300-40fe-440c-905c-4ecf6f104f51"
       }
-    }
+    },
+    "owner": "nonsolovescoding"
   }
 }
