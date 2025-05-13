@@ -70,23 +70,68 @@ const LoginScreen = ({
         }
     }, [isLoginCompleteModalVisible]);
 
+    const saveUserToStorage = async (uid: any) => {
+        try {
+            await AsyncStorage.setItem('userUid', uid);
+            console.log("User saved successfully");
+        } catch (e) {
+            console.log("Saving user failed: ", e);
+        }
+    }
+
     const loginWithEmail = async (values: { email: string, password: string }) => {
         setIsLoading(true);
         try {
-            const userCredentials = await signInWithEmailAndPassword(auth, values.email, values.password);
+            const userCredentials = await signInWithEmailAndPassword(
+                auth,
+                values.email,
+                values.password
+            );
             const user = userCredentials.user;
+            const uid = userCredentials.user.uid;
+            saveUserToStorage(uid)
+            console.log('Stored user:', user);
             setIsLoading(false);
             console.log("User signed in:", user.email);
             console.log("Email verified: ", user.emailVerified);
             navigation.reset({
-                index: 1,
+                index: 0,
                 routes: [{ name: "MainDrawer" }]
             })
             return user;
         } catch (error: any) {
             setIsLoading(false);
-            console.error("Login error: ", error.message);
-            throw error;
+            let errorMessage = 'Login failed';
+            console.log('Error saving user data: ', error);
+            switch (error.code) {
+                case 'auth/user-not-found':
+                    errorMessage = "This user does not exist";
+                    break;
+                case 'auth/invalid-credential':
+                    errorMessage = "Invalid email or password";
+                    console.log("Caught invalid-credentials error");
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage = 'Invalid email or password';
+                    break;
+                case 'auth/too-many-requests':
+                    errorMessage = 'Too many failed login attempts. Try again later.';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'Please enter a valid email address';
+                    break;
+                default:
+                    errorMessage = `Error: ${error.code} - ${error.message}`;
+                    console.log("Default error case hit with:", error.code);
+            }
+            console.log("Error message se to: ", errorMessage);
+            Alert.alert(
+                "Login Error",
+                errorMessage,
+                [
+                    { text: "OK", onPress: () => console.log("OK Pressed") }
+                ]
+            );
         } finally {
             setIsLoading(false)
         }

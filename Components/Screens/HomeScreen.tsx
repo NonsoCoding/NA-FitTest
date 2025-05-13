@@ -4,6 +4,7 @@ import LottieView from "lottie-react-native";
 import { useEffect, useState } from "react";
 import { auth, db } from "../../Firebase/Settings";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 interface IHomePageProps {
@@ -15,7 +16,12 @@ const HomePage = ({
 }: IHomePageProps) => {
 
     const [isLoading, setIsLoading] = useState(false);
-    const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; serviceNumber: string; TacticalPoints: string; } | null>(null);
+    const [userInfo, setUserInfo] = useState<{
+        firstName: string;
+        lastName: string;
+        serviceNumber: string;
+        TacticalPoints: string;
+    } | null>(null);
     const [personalBests, setPersonalBests] = useState({
         pushUps: 0,
         sitUps: 0,
@@ -37,16 +43,14 @@ const HomePage = ({
         return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
     };
 
-    useEffect(() => {
-        const user = auth.currentUser;
-        if (!user) return;
-
-        const docRef = doc(db, "UserDetails", user.uid);
+    const subscribeToUserData = (uid: any) => {
+        const docRef = doc(db, "UserDetails", uid);
 
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 console.log("Real-time User Data: ", data);
+                console.log("Full docSnap data: ", docSnap.data());
 
                 setUserInfo({
                     firstName: data.firstName,
@@ -61,7 +65,42 @@ const HomePage = ({
             console.log("Error fetching user data in real-time: ", error);
         });
 
-        return () => unsubscribe(); // Clean up the listener when the component unmounts
+        return unsubscribe;
+    };
+
+    const getUserFromStorage = async () => {
+        try {
+            const uid = await AsyncStorage.getItem('userUid');
+            console.log("Retrieved user UID from storage:", uid);
+            return uid;
+        } catch (e) {
+            console.log("Error retrieving user from storage:", e);
+            return null;
+        }
+    };
+
+    useEffect(() => {
+        const checkStoredUser = async () => {
+            // Check if there's a stored UID
+            const storedUid = await getUserFromStorage();
+
+            if (storedUid) {
+                console.log("Found stored user UID:", storedUid);
+                // Subscribe to user data with the stored UID
+                subscribeToUserData(storedUid);
+
+                // Optional: You can also navigate to main screen here if needed
+                // navigation.reset({
+                //     index: 0,
+                //     routes: [{ name: "MainDrawer" }]
+                // });
+            } else {
+                console.log("No user found in storage");
+                // You can redirect to login screen here if needed
+            }
+        };
+
+        checkStoredUser();
     }, []);
 
     useEffect(() => {
@@ -79,8 +118,8 @@ const HomePage = ({
                     pushUps: data.pushUps || 0,
                     sitUps: data.sitUps || 0,
                     pullUps: data.pullUps || 0,
-                    runTime: data.runTime || "none",
-                    sprintTime: data.sprintTime || "none"
+                    runTime: data.runTime || 0,
+                    sprintTime: data.sprintTime || 0
                 });
             }
         }, (error) => {

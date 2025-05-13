@@ -74,20 +74,59 @@ const SignUpScreen = ({
     const [isLoginCompleteModalVisible, setIsLoginCompleteModalVisible] = useState(false)
     const [code, setCode] = useState('');
 
+    const saveUserToStorage = async (uid: any) => {
+        try {
+            await AsyncStorage.setItem('userUid', uid);
+            console.log("User saved successfully");
+        } catch (e) {
+            console.log("Saving user failed: ", e);
+        }
+    }
 
     const SignUp = async (values: SignUpValues) => {
         setIsLoading(true);
         try {
             const userCredentials = await createUserWithEmailAndPassword(auth, values.email, values.password);
             const user = userCredentials.user;
+            const uid = userCredentials.user.uid;
             console.log('User created: ', user);
-
             await sendEmailVerification(user);
+            saveUserToStorage(uid)
             Alert.alert('Success', 'A verification link has been sent to your email.');
-
             navigation.navigate('VerificationScreen');
         } catch (error: any) {
-            Alert.alert('Error', error.message)
+            setIsLoading(false);
+            let errorMessage = 'Login failed';
+            console.log('Error saving user data: ', error);
+            switch (error.code) {
+                case 'auth/user-not-found':
+                    errorMessage = "This user does not exist";
+                    break;
+                case 'auth/invalid-credential':
+                    errorMessage = "Invalid email or password";
+                    console.log("Caught invalid-credentials error");
+                    break;
+                case 'auth/wrong-password':
+                    errorMessage = 'Invalid email or password';
+                    break;
+                case 'auth/too-many-requests':
+                    errorMessage = 'Too many failed login attempts. Try again later.';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'Please enter a valid email address';
+                    break;
+                default:
+                    errorMessage = `Error: ${error.code} - ${error.message}`;
+                    console.log("Default error case hit with:", error.code);
+            }
+            console.log("Error message se to: ", errorMessage);
+            Alert.alert(
+                "Login Error",
+                errorMessage,
+                [
+                    { text: "OK", onPress: () => console.log("OK Pressed") }
+                ]
+            );
         } finally {
             setIsLoading(false);
         }

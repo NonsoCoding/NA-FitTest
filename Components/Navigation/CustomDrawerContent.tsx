@@ -6,6 +6,8 @@ import { Theme } from '../Branding/Theme';
 import LottieView from 'lottie-react-native';
 import { auth, db } from '../../Firebase/Settings';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { signOut } from 'firebase/auth';
 
 
 type CustomDrawerContentProps = DrawerContentComponentProps & {
@@ -46,18 +48,23 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
         return () => unsubscribe(); // Clean up the listener when the component unmounts
     }, []);
 
-
-    const signingOut = async (sessionId: string) => {
+    const logout = async () => {
         setIsLoading(true);
-
-        setTimeout(() => {
+        try {
+            await AsyncStorage.removeItem('userUid');
+            await signOut(auth);
+            setTimeout(() => {
+                setIsLoading(false);
+                navigation.reset({
+                    index: 1,
+                    routes: [{ name: "LandingScreen" }]
+                })
+            }, 5000);
+        } catch (e) {
             setIsLoading(false);
-            navigation.reset({
-                index: 0,
-                routes: [{ name: "LandingScreen" }],
-            });
-        }, 5000);
-    };
+            console.error('Error during logout: ', e);
+        }
+    }
 
     return (
         <View style={styles.container}>
@@ -304,7 +311,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                             onPress={() => {
                                 setIsLogOutModalVisible(false);
                                 setTimeout(() => {
-                                    signingOut("SignedOut"); // show loading
+                                    logout();
                                 }, 700);
                             }}
                         >

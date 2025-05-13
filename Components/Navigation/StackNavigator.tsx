@@ -23,12 +23,13 @@ import RunningHistory from "../Screens/TestHistory/RunningHistory";
 import SitUpHistory from "../Screens/TestHistory/SitUpHistory";
 import SprintHistory from "../Screens/TestHistory/SprintingHistory";
 import PersonalInfo from "../Screens/PersonalInfo";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
 
 const Stack = createStackNavigator();
 
 
 const StackNavigation: React.FC = () => {
-    // const { isSignedIn } = useAuth();
 
     return (
         <GestureHandlerRootView style={{
@@ -36,6 +37,7 @@ const StackNavigation: React.FC = () => {
         }}>
             <NavigationContainer>
                 <Stack.Navigator
+
                     screenOptions={{
                         headerShown: false,
                         cardStyle: {
