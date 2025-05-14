@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "TacticalPT",
-    "slug": "TacticalPT",
+    "name": "Dapt",
+    "slug": "dapt",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
+      "resizeMode": "cover",
       "backgroundColor": "#4B5320"
     },
     "ios": {
@@ -19,21 +19,22 @@
           "NSAllowsArbitraryLoads": true
         }
       },
-      "bundleIdentifier": "com.nonsoobi.TacticalPT"
+      "bundleIdentifier": "com.nonsoobi.dapt"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.nonsoobi.TacticalPT"
+      "package": "com.nonsoobi.dapt"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-image-picker"
     ],
     "extra": {
       "eas": {

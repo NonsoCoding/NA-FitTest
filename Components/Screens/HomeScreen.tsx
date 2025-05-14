@@ -21,6 +21,7 @@ const HomePage = ({
         lastName: string;
         serviceNumber: string;
         TacticalPoints: string;
+        profilePic: any;
     } | null>(null);
     const [personalBests, setPersonalBests] = useState({
         pushUps: 0,
@@ -56,7 +57,8 @@ const HomePage = ({
                     firstName: data.firstName,
                     lastName: data.lastName,
                     serviceNumber: data.serviceNumber,
-                    TacticalPoints: data.TacticalPoints
+                    TacticalPoints: data.TacticalPoints,
+                    profilePic: data.profilePic
                 });
             } else {
                 console.log("No such document");
@@ -193,11 +195,12 @@ const HomePage = ({
                     gap: 10
                 }}>
                     <View>
-                        <Image source={require("../../assets/downloadedIcons/profile.png")}
+                        <Image source={{ uri: userInfo?.profilePic || require("../../assets/downloadedIcons/profile.png") }}
                             style={{
                                 width: 60,
                                 height: 60,
-                                resizeMode: "contain"
+                                resizeMode: "cover",
+                                borderRadius: 30
                             }}
                         />
                     </View>

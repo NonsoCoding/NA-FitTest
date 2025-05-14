@@ -19,7 +19,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 
     const [isLogOutModalVisible, setIsLogOutModalVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; serviceNumber: string; TacticalPoints: string } | null>(null);
+    const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; serviceNumber: string; TacticalPoints: string, profilePic: any } | null>(null);
 
     useEffect(() => {
         const user = auth.currentUser;
@@ -36,7 +36,8 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                     firstName: data.firstName,
                     lastName: data.lastName,
                     serviceNumber: data.serviceNumber,
-                    TacticalPoints: data.TacticalPoints
+                    TacticalPoints: data.TacticalPoints,
+                    profilePic: data.profilePic
                 });
             } else {
                 console.log("No such document");
@@ -96,11 +97,12 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                     gap: 10
                 }}>
                     <Image
-                        source={require("../../assets/downloadedIcons/profile.png")}
+                        source={{ uri: userInfo?.profilePic || require("../../assets/downloadedIcons/profile.png") }}
                         style={{
                             height: 50,
                             width: 50,
-                            resizeMode: "contain"
+                            resizeMode: "cover",
+                            borderRadius: 25
                         }}
                     />
                     <View>
