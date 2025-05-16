@@ -1,6 +1,6 @@
 import { Alert, Button, Image, ImageBackground, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { DrawerParamList } from "../nav/type";
 import { useNavigation } from "@react-navigation/native";
@@ -10,7 +10,7 @@ import { getAuth, setPersistence } from "firebase/auth";
 import LottieView from "lottie-react-native";
 import { format } from 'date-fns';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { FontAwesome, FontAwesome5, FontAwesome6, Ionicons } from "@expo/vector-icons";
+import { Feather, FontAwesome, FontAwesome5, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import CameraModal from "../Modals/CameraModal";
 import * as ImagePicker from "expo-image-picker";
 interface IProfileProps {
@@ -37,13 +37,13 @@ const Profile = ({
     const [isCameraModalVisible, setIsCameraModalVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [previewProfilePictureeModal, setPreviewProfilePictureeModal] = useState(false);
-
+    const inputRef = useRef<TextInput>(null); // 👈 create ref
 
     const onChange = (event: any, selectedDate?: Date) => {
-        setShow(Platform.OS === 'ios'); // iOS keeps the picker open
+        setShow(Platform.OS === 'ios');
         if (selectedDate) {
             setDateOfBirth(selectedDate);
-            setIsDateOfBirthEditing(false); // Close editing mode after selection
+            setIsDateOfBirthEditing(false);
         }
     };
 
@@ -220,6 +220,22 @@ const Profile = ({
         }
     }
 
+    const deleteProfileImage = async (userId: string) => {
+        const auth = getAuth();
+        // const 
+        try {
+            const userDocRef = doc(db, "UserDetails", userId);
+            await updateDoc(userDocRef, {
+                profilePic: ""
+            });
+
+            console.log("Image deleted successfully");
+
+        } catch (error) {
+            console.error("Error deleting image: ", error);
+        }
+    }
+
     return (
         <View style={styles.container}>
             {isLoading && (
@@ -234,7 +250,7 @@ const Profile = ({
                         loop={true}
                         autoPlay={true}
                     />
-                    <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
+                    <Text style={{ color: "#fff", marginTop: 10 }}>Setting profile...</Text>
                 </View>
             )}
             {selectedImage ? (
@@ -358,17 +374,27 @@ const Profile = ({
                                     }} style={{
 
                                     }}>
-                                        <ImageBackground source={{ uri: userInfo?.profilePic || require("../../assets/downloadedIcons/profile.png") }}
-                                            style={{
-                                                height: 50,
-                                                width: 50,
-                                                borderRadius: 25,
-                                                overflow: "hidden"
-                                            }}
-                                            resizeMode="cover"
-                                        >
-
-                                        </ImageBackground>
+                                        {userInfo?.profilePic ? (
+                                            <Image
+                                                source={{ uri: userInfo.profilePic }}
+                                                style={{
+                                                    width: 60,
+                                                    height: 60,
+                                                    resizeMode: "cover",
+                                                    borderRadius: 30
+                                                }}
+                                            />
+                                        ) : (
+                                            <Image
+                                                source={require("../../assets/downloadedIcons/profile.png")}
+                                                style={{
+                                                    width: 60,
+                                                    height: 60,
+                                                    resizeMode: "cover",
+                                                    borderRadius: 30
+                                                }}
+                                            />
+                                        )}
                                     </TouchableOpacity>
                                     <TouchableOpacity style={{
                                         flexDirection: "row",
@@ -423,13 +449,32 @@ const Profile = ({
                             gap: 10
                         }}>
                             <View style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 5
+                            }}>
+                                <Text style={{
+                                    fontSize: 12,
+                                    fontWeight: "600"
+                                }}>CLICK THE ICON TO MAKE EDITABLE </Text>
+                                <Feather
+                                    name="edit"
+                                    size={15}
+                                    color={isHeightEditing ? Theme.colors.primaryColor : "black"}
+                                />
+                            </View>
+                            <View style={{
                                 gap: 5
                             }}>
                                 <Text style={{
                                     color: Theme.colors.mediumPrimary
                                 }}>Height (ft)</Text>
-                                <View style={styles.textinput_container}>
+                                <View style={[styles.textinput_container, {
+                                    borderColor: isHeightEditing ? Theme.colors.primaryColor : "black",
+                                    borderWidth: isHeightEditing ? 2 : 1
+                                }]}>
                                     <TextInput
+                                        ref={inputRef}
                                         placeholder={height || "Enter height (ft)"}
                                         value={height}
                                         onChangeText={setHeight}
@@ -437,12 +482,19 @@ const Profile = ({
                                         style={styles.textinput}
                                         editable={isHeightEditing}
                                     />
-                                    <TouchableOpacity onPress={() => setIsHeightEditing(prev => !prev)}>
-                                        <Image source={require("../../assets/downloadedIcons/edit-line.png")}
-                                            style={{
-                                                height: 25,
-                                                width: 25
-                                            }}
+                                    <TouchableOpacity onPress={() => {
+                                        setIsHeightEditing(prev => {
+                                            const newState = !prev;
+                                            if (!prev) {
+                                                setTimeout(() => inputRef.current?.focus(), 700);
+                                            }
+                                            return newState;
+                                        })
+                                    }}>
+                                        <Feather
+                                            name="edit"
+                                            size={25}
+                                            color={isHeightEditing ? Theme.colors.primaryColor : "black"}
                                         />
                                     </TouchableOpacity>
                                 </View>
@@ -453,8 +505,12 @@ const Profile = ({
                                 <Text style={{
                                     color: Theme.colors.mediumPrimary
                                 }}>Weight (lbs)</Text>
-                                <View style={styles.textinput_container}>
+                                <View style={[styles.textinput_container, {
+                                    borderColor: isWeightEditing ? Theme.colors.primaryColor : 'black',
+                                    borderWidth: isWeightEditing ? 2 : 1
+                                }]}>
                                     <TextInput
+                                        ref={inputRef}
                                         placeholder={weight || "Enter weight (lbs)"}
                                         placeholderTextColor={Theme.colors.second_primary}
                                         style={styles.textinput}
@@ -462,12 +518,19 @@ const Profile = ({
                                         onChangeText={setWeight}
                                         editable={isWeightEditing}
                                     />
-                                    <TouchableOpacity onPress={() => setIsWeightEditing(prev => !prev)}>
-                                        <Image source={require("../../assets/downloadedIcons/edit-line.png")}
-                                            style={{
-                                                height: 25,
-                                                width: 25
-                                            }}
+                                    <TouchableOpacity onPress={() => {
+                                        setIsWeightEditing(prev => {
+                                            const newState = !prev;
+                                            if (!prev) {
+                                                setTimeout(() => inputRef.current?.focus(), 700);
+                                            }
+                                            return newState;
+                                        })
+                                    }}>
+                                        <Feather
+                                            name="edit"
+                                            color={isWeightEditing ? Theme.colors.primaryColor : 'black'}
+                                            size={25}
                                         />
                                     </TouchableOpacity>
                                 </View>
@@ -478,7 +541,10 @@ const Profile = ({
                                 <Text style={{
                                     color: Theme.colors.mediumPrimary
                                 }}>DateofBirth</Text>
-                                <View style={styles.textinput_container}>
+                                <View style={[styles.textinput_container, {
+                                    borderColor: isDateOfBirthEditing ? Theme.colors.primaryColor : "black",
+                                    borderWidth: isDateOfBirthEditing ? 2 : 1
+                                }]}>
                                     <Text style={[
                                         styles.textinput,
                                         { paddingVertical: 10 }
@@ -489,15 +555,13 @@ const Profile = ({
                                         setIsDateOfBirthEditing(true);
                                         setShow(true);
                                     }}>
-                                        <Image source={require("../../assets/downloadedIcons/edit-line.png")}
-                                            style={{
-                                                height: 25,
-                                                width: 25
-                                            }}
+                                        <Feather
+                                            name="edit"
+                                            size={25}
+                                            color={isDateOfBirthEditing ? Theme.colors.primaryColor : "black"}
                                         />
                                     </TouchableOpacity>
                                 </View>
-
                                 {/* Date Picker */}
                                 {show && (
                                     <View style={{
@@ -679,11 +743,15 @@ const Profile = ({
                                                 color={"white"}
                                             />
                                         </TouchableOpacity>
-                                        <TouchableOpacity style={{
-                                            flexDirection: 'row',
-                                            justifyContent: "space-between",
-                                            alignItems: "center"
-                                        }}>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                deleteProfileImage("");
+                                            }}
+                                            style={{
+                                                flexDirection: 'row',
+                                                justifyContent: "space-between",
+                                                alignItems: "center"
+                                            }}>
                                             <Text style={{
                                                 color: 'red',
                                                 fontWeight: "700"

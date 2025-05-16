@@ -21,16 +21,14 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; serviceNumber: string; TacticalPoints: string, profilePic: any } | null>(null);
 
-    useEffect(() => {
-        const user = auth.currentUser;
-        if (!user) return;
-
-        const docRef = doc(db, "UserDetails", user.uid);
+    const subscribeToUserData = (uid: any) => {
+        const docRef = doc(db, "UserDetails", uid);
 
         const unsubscribe = onSnapshot(docRef, (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 console.log("Real-time User Data: ", data);
+                console.log("Full docSnap data: ", docSnap.data());
 
                 setUserInfo({
                     firstName: data.firstName,
@@ -46,8 +44,45 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
             console.log("Error fetching user data in real-time: ", error);
         });
 
-        return () => unsubscribe(); // Clean up the listener when the component unmounts
+        return unsubscribe;
+    };
+
+
+    const getUserFromStorage = async () => {
+        try {
+            const uid = await AsyncStorage.getItem('userUid');
+            console.log("Retrieved user UID from storage:", uid);
+            return uid;
+        } catch (e) {
+            console.log("Error retrieving user from storage:", e);
+            return null;
+        }
+    };
+
+    useEffect(() => {
+        const checkStoredUser = async () => {
+            // Check if there's a stored UID
+            const storedUid = await getUserFromStorage();
+
+            if (storedUid) {
+                console.log("Found stored user UID:", storedUid);
+                // Subscribe to user data with the stored UID
+                subscribeToUserData(storedUid);
+
+                // Optional: You can also navigate to main screen here if needed
+                // navigation.reset({
+                //     index: 0,
+                //     routes: [{ name: "MainDrawer" }]
+                // });
+            } else {
+                console.log("No user found in storage");
+                // You can redirect to login screen here if needed
+            }
+        };
+
+        checkStoredUser();
     }, []);
+
 
     const logout = async () => {
         setIsLoading(true);
@@ -96,18 +131,30 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                     alignItems: "center",
                     gap: 10
                 }}>
-                    <Image
-                        source={{ uri: userInfo?.profilePic || require("../../assets/downloadedIcons/profile.png") }}
-                        style={{
-                            height: 50,
-                            width: 50,
-                            resizeMode: "cover",
-                            borderRadius: 25
-                        }}
-                    />
+                    {userInfo?.profilePic ? (
+                        <Image
+                            source={{ uri: userInfo.profilePic }}
+                            style={{
+                                width: 60,
+                                height: 60,
+                                resizeMode: "cover",
+                                borderRadius: 30
+                            }}
+                        />
+                    ) : (
+                        <Image
+                            source={require("../../assets/downloadedIcons/profile.png")}
+                            style={{
+                                width: 60,
+                                height: 60,
+                                resizeMode: "cover",
+                                borderRadius: 30
+                            }}
+                        />
+                    )}
                     <View>
                         <Text style={{
-                            fontSize: 15,
+                            fontSize: 12,
                             fontWeight: "600"
                         }}>{userInfo?.firstName} {userInfo?.lastName}</Text>
                         <Text style={{
@@ -167,7 +214,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                     borderColor: Theme.colors.second_primary
                 }}></View>
                 <TouchableOpacity
-                    onPress={() => props.navigation.navigate('Profile')}
+                    onPress={() => props.navigation.navigate('HomePage')}
                     style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -176,8 +223,8 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                         justifyContent: "space-between"
                     }}
                 >
-                    <Text style={{}}>My Profile</Text>
-                    <Image source={require("../../assets/downloadedIcons/user-shared-fill.png")}
+                    <Text style={{}}>Home</Text>
+                    <Image source={require("../../assets/downloadedIcons/home-9-fill.png")}
                         style={{
                             width: 20,
                             height: 20,
@@ -190,7 +237,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                     borderColor: Theme.colors.second_primary
                 }}></View>
                 <TouchableOpacity
-                    onPress={() => props.navigation.navigate('HomePage')}
+                    onPress={() => props.navigation.navigate('Profile')}
                     style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -199,8 +246,8 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                         justifyContent: "space-between"
                     }}
                 >
-                    <Text style={{}}>Home</Text>
-                    <Image source={require("../../assets/downloadedIcons/home-9-fill.png")}
+                    <Text style={{}}>My Profile</Text>
+                    <Image source={require("../../assets/downloadedIcons/user-shared-fill.png")}
                         style={{
                             width: 20,
                             height: 20,
@@ -336,7 +383,7 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         padding: 20,
         gap: 10,
-        paddingTop: 80,
+        paddingTop: Platform.OS === "android" ? 40 : 70,
         justifyContent: "space-between",
         flexDirection: "row",
     },

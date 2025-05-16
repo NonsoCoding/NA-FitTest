@@ -16,7 +16,7 @@ export const DrawerNavigator = () => {
       drawerType: 'front',
       drawerStyle: {
         flex: 1,
-        width: "75%"
+        width: "80%"
       }
     }}
       drawerContent={(props) => <CustomDrawerContent {...props} />}

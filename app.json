@@ -26,7 +26,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.nonsoobi.dapt"
+      "package": "com.nonsoobi.dapt",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,7 +41,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "5bf53300-40fe-440c-905c-4ecf6f104f51"
+        "projectId": "8961de1c-5518-48f1-ac7a-9e8286c0acbb"
       }
     },
     "owner": "nonsolovescoding"

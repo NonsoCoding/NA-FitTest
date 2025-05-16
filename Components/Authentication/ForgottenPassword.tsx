@@ -64,7 +64,7 @@ const ForgottenPassword = ({
                             <TextInput
                                 style={styles.textinput}
                                 placeholderTextColor={"#8c8c8e"}
-                                placeholder="tacticalpt@gmail.com"
+                                placeholder="dapt@gmail.com"
                             />
                         </View>
                     </View>

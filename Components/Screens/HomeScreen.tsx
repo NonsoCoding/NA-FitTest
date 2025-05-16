@@ -6,7 +6,6 @@ import { auth, db } from "../../Firebase/Settings";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
 interface IHomePageProps {
     navigation: any;
 }
@@ -195,14 +194,27 @@ const HomePage = ({
                     gap: 10
                 }}>
                     <View>
-                        <Image source={{ uri: userInfo?.profilePic || require("../../assets/downloadedIcons/profile.png") }}
-                            style={{
-                                width: 60,
-                                height: 60,
-                                resizeMode: "cover",
-                                borderRadius: 30
-                            }}
-                        />
+                        {userInfo?.profilePic ? (
+                            <Image
+                                source={{ uri: userInfo.profilePic }}
+                                style={{
+                                    width: 60,
+                                    height: 60,
+                                    resizeMode: "cover",
+                                    borderRadius: 30
+                                }}
+                            />
+                        ) : (
+                            <Image
+                                source={require("../../assets/downloadedIcons/profile.png")}
+                                style={{
+                                    width: 60,
+                                    height: 60,
+                                    resizeMode: "cover",
+                                    borderRadius: 30
+                                }}
+                            />
+                        )}
                     </View>
                     <View style={{
                     }}>
@@ -256,14 +268,7 @@ const HomePage = ({
                                     navigation.navigate("PushUpsScreen")
                                 }}
                             >
-                                {/* <VideoView
-                                    style={{
-                                        height: 100,
-                                        width: 100,
-                                        borderRadius: 5
-                                    }}
-                                    player={pushUpsPlayer}
-                                /> */}
+
                                 <View style={{
                                     gap: 4
                                 }}>
@@ -304,14 +309,6 @@ const HomePage = ({
                                     navigation.navigate("SprintScreen")
                                 }}
                             >
-                                {/* <VideoView
-                                    style={{
-                                        height: 100,
-                                        width: 100,
-                                        borderRadius: 5
-                                    }}
-                                    player={sprintPlayer}
-                                /> */}
                                 <View style={{
                                     gap: 4
                                 }}>
@@ -351,14 +348,7 @@ const HomePage = ({
                                     navigation.navigate("SitUpScreen")
                                 }}
                             >
-                                {/* <VideoView
-                                    style={{
-                                        height: 82,
-                                        width: 97,
-                                        borderRadius: 5
-                                    }}
-                                    player={sitUpPlayer}
-                                /> */}
+
                                 <View style={{
                                     gap: 4
                                 }}>
@@ -399,14 +389,7 @@ const HomePage = ({
                                     navigation.navigate("RunningScreen")
                                 }}
                             >
-                                {/* <VideoView
-                                    style={{
-                                        height: 100,
-                                        width: 100,
-                                        borderRadius: 5
-                                    }}
-                                    player={runningPlayer}
-                                /> */}
+
                                 <View style={{
                                     gap: 4
                                 }}>
@@ -447,14 +430,7 @@ const HomePage = ({
                                     navigation.navigate("PullUpScreen")
                                 }}
                             >
-                                {/* <VideoView
-                                    style={{
-                                        height: 100,
-                                        width: 100,
-                                        borderRadius: 5
-                                    }}
-                                    player={pullUpsPlayer}
-                                /> */}
+
                                 <View style={{
                                     gap: 4
                                 }}>

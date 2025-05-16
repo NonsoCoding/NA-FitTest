@@ -25,7 +25,7 @@ const IntroScreen = ({
                     fontWeight: "600",
                     fontSize: 45,
                     color: "white"
-                }}>TacticalPT</Text>
+                }}>Dapt</Text>
                 <Text style={{
                     fontWeight: "300",
                     color: "white",

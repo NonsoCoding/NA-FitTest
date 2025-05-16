@@ -740,16 +740,28 @@ const SitUpTestScreen = ({
                             <View style={{
                                 flexDirection: "row",
                                 alignItems: "flex-end",
+
                             }}>
                                 <Text style={{
-                                    fontSize: 60,
-                                    color: "white",
-                                }}>{startTime}</Text>
+                                    fontSize: 20,
+                                    color: "white"
+                                }}>
+                                    {startTime}
+                                </Text>
                                 <Text style={{
-                                    fontSize: 17,
-                                    bottom: 10,
+                                    fontSize: 12,
                                     color: "white",
                                 }}>sec</Text>
+                            </View>
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "flex-end",
+                            }}>
+                                <Text style={{
+                                    fontSize: 50,
+                                    color: "white",
+                                }}>{sitUpCount}</Text>
+
                             </View>
                             <TouchableOpacity
                                 onPress={() => {

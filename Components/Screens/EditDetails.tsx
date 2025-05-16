@@ -1,12 +1,13 @@
 import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { DrawerParamList } from "../nav/type";
 import { useNavigation } from "@react-navigation/native";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../../Firebase/Settings";
 import LottieView from "lottie-react-native";
+import { Feather } from "@expo/vector-icons";
 
 interface IProfileProps {
 
@@ -28,6 +29,7 @@ const EditDetails = ({
     const [email, setEmail] = useState('');
     const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; } | null>(null);
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
+    const inputRef = useRef<TextInput>(null);
 
     const fetchUserInfo = async () => {
         const user = auth.currentUser;
@@ -100,7 +102,7 @@ const EditDetails = ({
                         loop={true}
                         autoPlay={true}
                     />
-                    <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
+                    <Text style={{ color: "#fff", marginTop: 10 }}>Saving changes..</Text>
                 </View>
             )}
             <View style={{
@@ -157,8 +159,22 @@ const EditDetails = ({
             <View style={{
                 flex: 3,
                 padding: 20,
-                gap: 20
+                gap: 10
             }}>
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 5
+                }}>
+                    <Text style={{
+                        fontSize: 12,
+                        fontWeight: "600"
+                    }}>CLICK THE ICON TO MAKE EDITABLE </Text>
+                    <Feather
+                        name="edit"
+                        size={15}
+                    />
+                </View>
                 <View style={{
                     gap: 10
                 }}>
@@ -168,8 +184,12 @@ const EditDetails = ({
                         <Text style={{
                             color: Theme.colors.mediumPrimary
                         }}>FirstName</Text>
-                        <View style={styles.textinput_container}>
+                        <View style={[styles.textinput_container, {
+                            borderColor: isFirstNameEditing ? Theme.colors.primaryColor : 'black',
+                            borderWidth: isFirstNameEditing ? 2 : 1
+                        }]}>
                             <TextInput
+                                ref={inputRef}
                                 placeholder={userInfo?.firstName || "FirstName"}
                                 placeholderTextColor={Theme.colors.second_primary}
                                 style={styles.textinput}
@@ -177,12 +197,19 @@ const EditDetails = ({
                                 onChangeText={setFirstName}
                                 editable={isFirstNameEditing}
                             />
-                            <TouchableOpacity onPress={() => setIsFirstNameEditing(prev => !prev)}>
-                                <Image source={require("../../assets/downloadedIcons/edit-line.png")}
-                                    style={{
-                                        height: 25,
-                                        width: 25
-                                    }}
+                            <TouchableOpacity onPress={() => {
+                                setIsFirstNameEditing(prev => {
+                                    const newState = !prev;
+                                    if (!prev) {
+                                        setTimeout(() => inputRef.current?.focus(), 700);
+                                    }
+                                    return newState;
+                                })
+                            }}>
+                                <Feather
+                                    name="edit"
+                                    color={isFirstNameEditing ? Theme.colors.primaryColor : "black"}
+                                    size={25}
                                 />
                             </TouchableOpacity>
                         </View>
@@ -193,8 +220,12 @@ const EditDetails = ({
                         <Text style={{
                             color: Theme.colors.mediumPrimary
                         }}>LastName</Text>
-                        <View style={styles.textinput_container}>
+                        <View style={[styles.textinput_container, {
+                            borderColor: isLastNameEditing ? Theme.colors.primaryColor : "black",
+                            borderWidth: isLastNameEditing ? 2 : 1
+                        }]}>
                             <TextInput
+                                ref={inputRef}
                                 placeholder={userInfo?.lastName || "LastName"}
                                 placeholderTextColor={Theme.colors.second_primary}
                                 style={styles.textinput}
@@ -202,12 +233,19 @@ const EditDetails = ({
                                 onChangeText={setLastName}
                                 editable={isLastNameEditing}
                             />
-                            <TouchableOpacity onPress={() => setIsLastNameEditing(prev => !prev)}>
-                                <Image source={require("../../assets/downloadedIcons/edit-line.png")}
-                                    style={{
-                                        height: 25,
-                                        width: 25
-                                    }}
+                            <TouchableOpacity onPress={() => {
+                                setIsLastNameEditing(prev => {
+                                    const newState = !prev;
+                                    if (!prev) {
+                                        setTimeout(() => inputRef.current?.focus(), 700);
+                                    }
+                                    return newState;
+                                })
+                            }}>
+                                <Feather
+                                    name="edit"
+                                    color={isLastNameEditing ? Theme.colors.primaryColor : "black"}
+                                    size={25}
                                 />
                             </TouchableOpacity>
                         </View>

@@ -30,6 +30,17 @@ const Stack = createStackNavigator();
 
 
 const StackNavigation: React.FC = () => {
+    const [initialRoute, setinitialRoute] = useState<string | null>(null);
+
+    useEffect(() => {
+        const checkLoginStatus = async () => {
+            const uid = await AsyncStorage.getItem('userUid');
+            setinitialRoute(uid ? 'MainDrawer' : 'LandingScreen');
+        }
+        checkLoginStatus();
+    }, []);
+
+    if (initialRoute === null) return null;
 
     return (
         <GestureHandlerRootView style={{
@@ -37,7 +48,7 @@ const StackNavigation: React.FC = () => {
         }}>
             <NavigationContainer>
                 <Stack.Navigator
-
+                    initialRouteName={initialRoute}
                     screenOptions={{
                         headerShown: false,
                         cardStyle: {

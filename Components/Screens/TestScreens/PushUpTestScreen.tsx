@@ -45,7 +45,7 @@ const PushUpsTestScreen = ({
     const [isFirstCalibration, setIsFirstCalibration] = useState(true);
     const [personalBest, setPersonalBest] = useState(0);
     const [calibrationValues, setCalibrationValues] = useState({
-        downThreshold: -0.4,
+        downThreshold: 0.08,
         upThreshold: -0.1,
         midThreshold: -0.25
     });
@@ -75,7 +75,7 @@ const PushUpsTestScreen = ({
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // Track recent Z values for smoothing
-    const recentZValues = useRef<number[]>([]);
+    const recentYValues = useRef<number[]>([]);
     const MAX_HISTORY = 5;
 
     // const pullUpsPlayer = useVideoPlayer(VideoSource, (player) => {
@@ -139,17 +139,17 @@ const PushUpsTestScreen = ({
 
 
     // Function to get smoothed Z value
-    const getSmoothedZ = () => {
-        if (recentZValues.current.length === 0) return 0;
-        const sum = recentZValues.current.reduce((a, b) => a + b, 0);
-        return sum / recentZValues.current.length;
+    const getSmoothedY = () => {
+        if (recentYValues.current.length === 0) return 0;
+        const sum = recentYValues.current.reduce((a, b) => a + b, 0);
+        return sum / recentYValues.current.length;
     };
 
     // Add new Z value and maintain limited history
-    const addZValue = (z: number) => {
-        recentZValues.current.push(z);
-        if (recentZValues.current.length > MAX_HISTORY) {
-            recentZValues.current.shift();
+    const addYValue = (y: number) => {
+        recentYValues.current.push(y);
+        if (recentYValues.current.length > MAX_HISTORY) {
+            recentYValues.current.shift();
         }
     };
 
@@ -272,17 +272,17 @@ const PushUpsTestScreen = ({
 
 
     useEffect(() => {
-        if (!isCountingActive || sensorData.z === undefined || !isAutoDetectEnabled) return;
+        if (!isCountingActive || sensorData.y === undefined || !isAutoDetectEnabled) return;
 
         const now = Date.now();
-        const z = sensorData.z;
+        const y = sensorData.y;
 
-        addZValue(z);
-        const smoothedZ = getSmoothedZ();
+        addYValue(y);
+        const smoothedY = getSmoothedY();
 
         switch (pushupState) {
             case PushupState.READY:
-                if (smoothedZ < calibrationValues.midThreshold) {
+                if (smoothedY < calibrationValues.midThreshold) {
                     setPushupState(PushupState.GOING_DOWN); // Pulling down
                     setStateTimestamps(prev => ({ ...prev, downStart: now }));
                     console.log("Pulling down");
@@ -290,7 +290,7 @@ const PushUpsTestScreen = ({
                 break;
 
             case PushupState.GOING_DOWN:
-                if (smoothedZ < calibrationValues.downThreshold) {
+                if (smoothedY < calibrationValues.downThreshold) {
                     setPushupState(PushupState.DOWN);
                     setStateTimestamps(prev => ({ ...prev, downEnd: now }));
                     console.log("Reached bottom");
@@ -298,7 +298,7 @@ const PushUpsTestScreen = ({
                 break;
 
             case PushupState.DOWN:
-                if (smoothedZ > calibrationValues.midThreshold) {
+                if (smoothedY > calibrationValues.midThreshold) {
                     setPushupState(PushupState.GOING_UP);
                     setStateTimestamps(prev => ({ ...prev, upStart: now }));
                     console.log("Pulling up");
@@ -306,7 +306,7 @@ const PushUpsTestScreen = ({
                 break;
 
             case PushupState.GOING_UP:
-                if (smoothedZ > calibrationValues.upThreshold) {
+                if (smoothedY > calibrationValues.upThreshold) {
                     const duration = now - stateTimestamps.downEnd;
 
                     if (duration >= MIN_PUSHUP_TIME &&
@@ -727,16 +727,28 @@ const PushUpsTestScreen = ({
                             <View style={{
                                 flexDirection: "row",
                                 alignItems: "flex-end",
+
                             }}>
                                 <Text style={{
-                                    fontSize: 60,
-                                    color: "white",
-                                }}>{startTime}</Text>
+                                    fontSize: 20,
+                                    color: "white"
+                                }}>
+                                    {startTime}
+                                </Text>
                                 <Text style={{
-                                    fontSize: 17,
-                                    bottom: 10,
+                                    fontSize: 12,
                                     color: "white",
                                 }}>sec</Text>
+                            </View>
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "flex-end",
+                            }}>
+                                <Text style={{
+                                    fontSize: 50,
+                                    color: "white",
+                                }}>{pushUpCount}</Text>
+
                             </View>
                             <TouchableOpacity
                                 onPress={() => {
