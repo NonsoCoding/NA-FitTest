@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import { useNavigation } from "@react-navigation/native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
@@ -18,22 +18,43 @@ const History = ({
 }: IHistoryProps) => {
 
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
+    const [history, setHistory] = useState<{ type: string, data: any[] }[]>([]);
 
-    const [history, setHistory] = useState<any[]>([]);
+    const categoryLabels: { [key: string]: string } = {
+        SitUps: "Sit Ups",
+        PushUps: "Push Ups",
+        PullUps: "Pull Ups",
+        Sprint: "300 Meter Sprint",
+        Runs: "1.5 Meter run"
+    };
 
     const fetchHistory = async () => {
         const user = auth.currentUser;
         if (!user) return;
 
         try {
-            const querySnapshot = await getDocs(collection(db, `UserDetails/${user.uid}/SitUps`));
-            const results: any[] = [];
-            querySnapshot.forEach((doc) => {
-                results.push({ id: doc.id, ...doc.data() });
-            });
-            // Sort by timestamp (optional)
-            results.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-            setHistory(results);
+            const categories = ["SitUps", "PushUps", "PullUps", "Sprint", "Runs"];
+            const allHistory: any[] = [];
+
+            for (const category of categories) {
+                const querySnapshot = await getDocs(collection(db, `UserDetails/${user.uid}/${category}`));
+                const results: any[] = [];
+
+                querySnapshot.forEach((doc) => {
+                    results.push({
+                        id: doc.id,
+                        type: categories,
+                        ...doc.data()
+                    });
+                });
+
+                if (results.length > 0) {
+                    results.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                    allHistory.push({ type: category, data: results });
+                }
+            }
+
+            setHistory(allHistory);
         } catch (error) {
             console.error("Failed to fetch history:", error);
         }
@@ -42,65 +63,7 @@ const History = ({
     useEffect(() => {
         fetchHistory();
     }, []);
-    // const pushUpsPlayer = useVideoPlayer(pushUpsVideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
 
-    const renderHistoryItem = ({ item }: { item: any }) => (
-        <View style={{
-            flexDirection: "row",
-            gap: 30,
-            borderWidth: 1,
-            padding: 20,
-            marginBottom: 20
-        }}>
-            <View style={{
-                gap: 10,
-                justifyContent: "center",
-                alignItems: "center"
-            }}>
-                <Image source={require("../../assets/downloadedIcons/shield-line.png")}
-                    style={{
-                        height: 20,
-                        width: 20,
-                    }}
-                />
-                <Text>{item.pushUpCount || 0}</Text>
-            </View>
-            <View style={{
-                gap: 10,
-                justifyContent: "center",
-                alignItems: "center"
-            }}>
-                <Image source={require("../../assets/downloadedIcons/timer-line.png")}
-                    style={{
-                        height: 20,
-                        width: 20,
-                    }}
-                />
-                <Text>{item.startTime}</Text>
-            </View>
-            <View style={{
-                gap: 10,
-                alignItems: 'center'
-            }}>
-                <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
-                    style={{
-                        height: 20,
-                        width: 20,
-                    }}
-                />
-                <Text>125</Text>
-            </View>
-        </View>
-        // <View style={{ padding: 10, borderBottomWidth: 1, borderColor: "#ccc" }}>
-        //     <Text>🕒 {new Date(item.timestamp).toLocaleString()}</Text>
-        //     <Text>💪 Push-Ups: {item.pushUpCount || 0}</Text>
-        //     <Text>⏳ Duration: {item.startTime}s</Text>
-        // </View>
-
-    );
 
     return (
         <View style={styles.container}>
@@ -115,27 +78,9 @@ const History = ({
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "space-between",
+                    top: 20,
+                    justifyContent: "flex-end",
                 }}>
-                    <TouchableOpacity style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10
-                    }}
-                        onPress={() => {
-                            navigation.goBack();
-                        }}
-                    >
-                        <Image source={require("../../assets/downloadedIcons/fast.png")}
-                            style={{
-                                width: 20,
-                                height: 20
-                            }}
-                        />
-                        <Text style={{
-                            color: "white"
-                        }}>Back</Text>
-                    </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => navigation.openDrawer()}
                     >
@@ -155,17 +100,86 @@ const History = ({
                     }}>HISTORY</Text>
                 </View>
             </View>
-            <View style={{
-                flex: 3,
-                padding: 20,
-                gap: 15
-            }}>
-                <FlatList
-                    data={history}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderHistoryItem}
-                />
-            </View>
+            <ScrollView>
+                <View style={{
+                    flex: 3,
+                    padding: 20,
+                    gap: 15
+                }}>
+                    {history.map((section) => (
+                        <View key={section.type} style={{ marginBottom: 0 }}>
+                            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>
+                                {categoryLabels[section.type] || section.type}
+                            </Text>
+                            {section.data.map((item: any, index: number) => (
+                                <View
+                                    key={item.id || `${section.type}-${index}`}
+                                    style={{
+                                        flexDirection: "row",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        gap: 30,
+                                        borderWidth: 1,
+                                        padding: 20,
+                                        marginBottom: 20
+                                    }}>
+                                    <View
+                                        style={{
+                                            flexDirection: "row",
+                                            gap: 30,
+                                        }}
+                                    >
+                                        <View style={{
+                                            gap: 10,
+                                            justifyContent: "center",
+                                            alignItems: "center"
+                                        }}>
+                                            <Image source={require("../../assets/downloadedIcons/shield-line.png")}
+                                                style={{
+                                                    height: 20,
+                                                    width: 20,
+                                                }}
+                                            />
+                                            <Text>{item.pushUpCount || 0}</Text>
+                                        </View>
+                                        <View style={{
+                                            gap: 10,
+                                            justifyContent: "center",
+                                            alignItems: "center"
+                                        }}>
+                                            <Image source={require("../../assets/downloadedIcons/timer-line.png")}
+                                                style={{
+                                                    height: 20,
+                                                    width: 20,
+                                                }}
+                                            />
+                                            <Text>60s</Text>
+                                        </View>
+                                        <View style={{
+                                            gap: 10,
+                                            alignItems: 'center'
+                                        }}>
+                                            <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
+                                                style={{
+                                                    height: 20,
+                                                    width: 20,
+                                                }}
+                                            />
+                                            <Text>{item.TacticalPoints}</Text>
+                                        </View>
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            fontWeight: '200',
+                                            fontSize: 12
+                                        }}>{new Date(item.timestamp).toLocaleString()}</Text>
+                                    </View>
+                                </View>
+                            ))}
+                        </View>
+                    ))}
+                </View>
+            </ScrollView>
         </View>
     )
 }

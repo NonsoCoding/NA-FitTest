@@ -916,7 +916,7 @@ const SitUpTestScreen = ({
                             </View>
                         </View>
                         <TextInput
-                            value={sitUpCount.toString()}
+                            value={sitUpCount === 0 ? "" : sitUpCount.toString()}
                             onChangeText={(text) => setSitUpCount(Number(text))}
                             keyboardType="numeric"
                             placeholderTextColor="#aaa"

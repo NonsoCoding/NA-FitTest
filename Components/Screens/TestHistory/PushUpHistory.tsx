@@ -51,54 +51,61 @@ const PushUpHistory = ({
             flexDirection: "row",
             gap: 30,
             borderWidth: 1,
+            justifyContent: "space-between",
+            alignItems: "center",
             padding: 20,
             marginBottom: 20
         }}>
             <View style={{
-                gap: 10,
-                justifyContent: "center",
-                alignItems: "center"
+                flexDirection: "row",
+                gap: 30,
             }}>
-                <Image source={require("../../../assets/downloadedIcons/shield-line.png")}
-                    style={{
-                        height: 20,
-                        width: 20,
-                    }}
-                />
-                <Text>{item.pushUpCount || 0}</Text>
+                <View style={{
+                    gap: 10,
+                    justifyContent: "center",
+                    alignItems: "center"
+                }}>
+                    <Image source={require("../../../assets/downloadedIcons/shield-line.png")}
+                        style={{
+                            height: 20,
+                            width: 20,
+                        }}
+                    />
+                    <Text>{item.pushUpCount || 0}</Text>
+                </View>
+                <View style={{
+                    gap: 10,
+                    justifyContent: "center",
+                    alignItems: "center"
+                }}>
+                    <Image source={require("../../../assets/downloadedIcons/timer-line.png")}
+                        style={{
+                            height: 20,
+                            width: 20,
+                        }}
+                    />
+                    <Text>60s</Text>
+                </View>
+                <View style={{
+                    gap: 10,
+                    alignItems: 'center'
+                }}>
+                    <Image source={require("../../../assets/downloadedIcons/medalIcon.png")}
+                        style={{
+                            height: 20,
+                            width: 20,
+                        }}
+                    />
+                    <Text>{item.TacticalPoints}</Text>
+                </View>
             </View>
-            <View style={{
-                gap: 10,
-                justifyContent: "center",
-                alignItems: "center"
-            }}>
-                <Image source={require("../../../assets/downloadedIcons/timer-line.png")}
-                    style={{
-                        height: 20,
-                        width: 20,
-                    }}
-                />
-                <Text>60s</Text>
-            </View>
-            <View style={{
-                gap: 10,
-                alignItems: 'center'
-            }}>
-                <Image source={require("../../../assets/downloadedIcons/medalIcon.png")}
-                    style={{
-                        height: 20,
-                        width: 20,
-                    }}
-                />
-                <Text>{item.TacticalPoints}</Text>
+            <View>
+                <Text style={{
+                    fontWeight: "200",
+                    fontSize: 12
+                }}>{new Date(item.timestamp).toLocaleString()}</Text>
             </View>
         </View>
-        // <View style={{ padding: 10, borderBottomWidth: 1, borderColor: "#ccc" }}>
-        //     <Text>🕒 {new Date(item.timestamp).toLocaleString()}</Text>
-        //     <Text>💪 Push-Ups: {item.pushUpCount || 0}</Text>
-        //     <Text>⏳ Duration: {item.startTime}s</Text>
-        // </View>
-
     );
 
     return (

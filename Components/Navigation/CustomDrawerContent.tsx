@@ -20,6 +20,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
     const [isLogOutModalVisible, setIsLogOutModalVisible] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; serviceNumber: string; TacticalPoints: string, profilePic: any } | null>(null);
+    const currentRoute = props.state.routeNames[props.state.index];
 
     const subscribeToUserData = (uid: any) => {
         const docRef = doc(db, "UserDetails", uid);
@@ -190,40 +191,24 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                 padding: 20,
                 gap: 10
             }}>
-                <TouchableOpacity
-                    onPress={() => props.navigation.navigate('AdminDashbaord')}
-                    style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        paddingHorizontal: 15,
-                        paddingVertical: 10,
-                        justifyContent: "space-between"
-                    }}
-                >
-                    <Text style={{}}>Admin Dashbaord</Text>
-                    <Image source={require("../../assets/downloadedIcons/user-settings-line.png")}
-                        style={{
-                            width: 20,
-                            height: 20,
-                            resizeMode: "contain"
-                        }}
-                    />
-                </TouchableOpacity>
                 <View style={{
                     borderWidth: 0.5,
                     borderColor: Theme.colors.second_primary
                 }}></View>
                 <TouchableOpacity
                     onPress={() => props.navigation.navigate('HomePage')}
-                    style={{
+                    style={[currentRoute === 'HomePage' && styles.activeItem, {
                         flexDirection: "row",
                         alignItems: "center",
                         paddingHorizontal: 15,
                         paddingVertical: 10,
                         justifyContent: "space-between"
-                    }}
+                    }]}
                 >
-                    <Text style={{}}>Home</Text>
+                    <Text style={[
+                        styles.drawerItemText,
+                        currentRoute === "HomePage" && styles.activeText
+                    ]}>Home</Text>
                     <Image source={require("../../assets/downloadedIcons/home-9-fill.png")}
                         style={{
                             width: 20,
@@ -238,15 +223,18 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                 }}></View>
                 <TouchableOpacity
                     onPress={() => props.navigation.navigate('Profile')}
-                    style={{
+                    style={[currentRoute === 'Profile' && styles.activeItem, {
                         flexDirection: "row",
                         alignItems: "center",
                         paddingHorizontal: 15,
                         paddingVertical: 10,
                         justifyContent: "space-between"
-                    }}
+                    }]}
                 >
-                    <Text style={{}}>My Profile</Text>
+                    <Text style={[
+                        styles.drawerItemText,
+                        currentRoute === 'Profile' && styles.activeText
+                    ]}>My Profile</Text>
                     <Image source={require("../../assets/downloadedIcons/user-shared-fill.png")}
                         style={{
                             width: 20,
@@ -261,15 +249,18 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                 }}></View>
                 <TouchableOpacity
                     onPress={() => props.navigation.navigate('History')}
-                    style={{
+                    style={[currentRoute === 'History' && styles.activeItem, {
                         flexDirection: "row",
                         alignItems: "center",
                         paddingVertical: 10,
                         paddingHorizontal: 15,
                         justifyContent: "space-between"
-                    }}
+                    }]}
                 >
-                    <Text style={{}}>History</Text>
+                    <Text style={[
+                        styles.drawerItemText,
+                        currentRoute === 'History' && styles.activeText
+                    ]}>History</Text>
                     <Image source={require("../../assets/downloadedIcons/history-line (1).png")}
                         style={{
                             width: 20,
@@ -402,7 +393,36 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 9999,
+    },
+    drawerItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 15,
+        paddingVertical: 10,
+        justifyContent: "space-between",
+    },
+
+    activeItem: {
+        backgroundColor: Theme.colors.second_primary + "20", // Light highlight
+        borderLeftWidth: 4,
+        borderLeftColor: Theme.colors.primaryColor,
+    },
+
+    drawerItemText: {
+        fontSize: 14,
+    },
+
+    activeText: {
+        fontWeight: "bold",
+        color: Theme.colors.primaryColor,
+    },
+
+    drawerItemIcon: {
+        width: 20,
+        height: 20,
+        resizeMode: "contain",
     }
+
 });
 
 export default CustomDrawerContent;

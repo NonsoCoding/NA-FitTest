@@ -1,4 +1,4 @@
-import { Image, ImageBackground, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, KeyboardAvoidingView, Modal, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../Branding/Theme";
 import { useEffect, useRef, useState } from "react";
 import { Accelerometer } from "expo-sensors";
@@ -36,7 +36,7 @@ const PushUpsTestScreen = ({
     const [isResultModalVisible, setIsResultModalVisible] = useState(false);
     const [prepTime, setPrepTime] = useState(5);
     const [isStartRunning, setIsStartRunning] = useState(false);
-    const [startTime, setStartTime] = useState(60);
+    const [startTime, setStartTime] = useState(30);
     const [sensorData, setSensorData] = useState<SensorData>({});
     const [pushUpCount, setPushUpCount] = useState(0);
     const [isAutoDetectEnabled, setIsAutoDetectEnabled] = useState(true);
@@ -45,9 +45,9 @@ const PushUpsTestScreen = ({
     const [isFirstCalibration, setIsFirstCalibration] = useState(true);
     const [personalBest, setPersonalBest] = useState(0);
     const [calibrationValues, setCalibrationValues] = useState({
-        downThreshold: 0.08,
-        upThreshold: -0.1,
-        midThreshold: -0.25
+        downThreshold: 0.04,   // was 0.08
+        upThreshold: -0.05,    // was -0.1
+        midThreshold: -0.2
     });
     const [lastCountTime, setLastCountTime] = useState<number>(0);
     const [isRunning, setIsRunning] = useState(false);
@@ -77,11 +77,6 @@ const PushUpsTestScreen = ({
     // Track recent Z values for smoothing
     const recentYValues = useRef<number[]>([]);
     const MAX_HISTORY = 5;
-
-    // const pullUpsPlayer = useVideoPlayer(VideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
 
 
     const saveRunResultToFirestore = async () => {
@@ -460,6 +455,7 @@ const PushUpsTestScreen = ({
                     <View style={{
                         flexDirection: "row",
                         paddingHorizontal: 20,
+                        alignItems: "center",
                         justifyContent: "space-between",
                     }}>
                         <View style={{
@@ -490,7 +486,7 @@ const PushUpsTestScreen = ({
                         </View>
                         <View style={{
                             alignItems: "center",
-                            gap: 5
+                            gap: 0
                         }}>
                             <Switch
                                 color={Theme.colors.primaryColor}
@@ -861,59 +857,63 @@ const PushUpsTestScreen = ({
                 visible={showManualInputModal}
                 animationType="slide"
                 transparent={true}
-                onRequestClose={() => {
-                    setShowManualInputModal(false);
-                }}
+                onRequestClose={() => setShowManualInputModal(false)}
             >
-                <View style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    backgroundColor: "rgba(0, 0, 0, 0.6)",
-                    padding: 20
-                }}>
-                    <View style={{
-                        height: "40%",
-                        padding: 20,
+                <View
+                    style={{
+                        flex: 1,
                         justifyContent: "center",
-                        backgroundColor: Theme.colors.backgroundColor,
-                        gap: 20
-                    }}>
-                        <View style={{
-                            gap: 10
-                        }}>
-                            <Text style={{
-                                textAlign: "center",
-                                fontWeight: "600"
-                            }}>TIME OVER!!!</Text>
-                            <View>
-                                <Text style={{
+                        backgroundColor: "rgba(0, 0, 0, 0.6)",
+                        padding: 20,
+                    }}
+                >
+                    <View
+                        style={{
+                            // keep size fixed so it doesn’t shrink
+                            height: Platform.OS === "android" ? 300 : 300,
+                            justifyContent: "center",
+                            backgroundColor: Theme.colors.backgroundColor,
+                            padding: 20,
+                            gap: 20,
+                        }}
+                    >
+                        <View style={{ gap: 10 }}>
+                            <Text style={{ textAlign: "center", fontWeight: "600" }}>
+                                TIME OVER!!!
+                            </Text>
+                            <Text
+                                style={{
                                     fontWeight: "200",
                                     fontSize: 16,
-                                    textAlign: "center"
-                                }}>Input your push-up count</Text>
-                            </View>
+                                    textAlign: "center",
+                                }}
+                            >
+                                Input your push-up count
+                            </Text>
                         </View>
                         <TextInput
-                            value={pushUpCount.toString()}
+                            value={pushUpCount === 0 ? "" : pushUpCount.toString()}
                             onChangeText={(text) => setPushUpCount(Number(text))}
                             keyboardType="numeric"
                             placeholderTextColor="#aaa"
                             style={{
                                 borderWidth: 1,
-                                borderColor: '#ccc',
+                                borderColor: "#ccc",
                                 borderRadius: 10,
                                 alignSelf: "center",
                                 width: "30%",
                                 padding: 15,
                                 fontSize: 16,
-                                backgroundColor: '#f9f9f9',
-                                color: '#000',
+                                backgroundColor: "#f9f9f9",
+                                color: "#000",
                             }}
                         />
-                        <TouchableOpacity style={styles.getStartedBtn}
+                        <TouchableOpacity
+                            style={styles.getStartedBtn}
                             onPress={() => {
                                 setShowManualInputModal(false);
                                 setPrepTime(5);
+                                setStartTime(60);
                                 saveRunResultToFirestore();
                                 setIsRunning(false);
                                 if (intervalRef.current) {
@@ -922,13 +922,12 @@ const PushUpsTestScreen = ({
                                 }
                             }}
                         >
-                            <Text style={{
-                                color: "white"
-                            }}>SUBMIT</Text>
-                            <Image source={require("../../../assets/downloadedIcons/fast.png")}
+                            <Text style={{ color: "white" }}>SUBMIT</Text>
+                            <Image
+                                source={require("../../../assets/downloadedIcons/fast.png")}
                                 style={{
                                     height: 24,
-                                    width: 24
+                                    width: 24,
                                 }}
                             />
                         </TouchableOpacity>

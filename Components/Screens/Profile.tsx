@@ -308,27 +308,9 @@ const Profile = ({
                         <View style={{
                             flexDirection: "row",
                             alignItems: "center",
-                            justifyContent: "space-between",
+                            top: 10,
+                            justifyContent: "flex-end",
                         }}>
-                            <TouchableOpacity style={{
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 10
-                            }}
-                                onPress={() => {
-                                    navigation.goBack();
-                                }}
-                            >
-                                <Image source={require("../../assets/downloadedIcons/fast.png")}
-                                    style={{
-                                        width: 20,
-                                        height: 20
-                                    }}
-                                />
-                                <Text style={{
-                                    color: "white"
-                                }}>Back</Text>
-                            </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={() => navigation.openDrawer()}
                             >
@@ -788,7 +770,7 @@ const Profile = ({
                                     }}
                                     style={{
                                         position: "absolute",
-                                        top: 60,
+                                        top: Platform.OS === "android" ? 20 : 50,
                                         padding: 20,
                                     }}>
                                     <Text style={{

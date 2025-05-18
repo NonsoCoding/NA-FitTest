@@ -735,12 +735,10 @@ const PullUpTestScreen = ({
                                 flexDirection: "row",
                                 alignItems: "flex-end",
                             }}>
-
                                 <Text style={{
                                     fontSize: 50,
                                     color: "white",
                                 }}>{pullUpCount}</Text>
-
                             </View>
                             <TouchableOpacity
                                 onPress={() => {
@@ -872,7 +870,7 @@ const PullUpTestScreen = ({
                     padding: 20
                 }}>
                     <View style={{
-                        height: "30%",
+                        height: 300,
                         padding: 20,
                         justifyContent: "center",
                         backgroundColor: Theme.colors.backgroundColor,
@@ -890,11 +888,11 @@ const PullUpTestScreen = ({
                                     fontWeight: "200",
                                     fontSize: 16,
                                     textAlign: "center"
-                                }}>Input your sit-up count</Text>
+                                }}>Input your pull-up count</Text>
                             </View>
                         </View>
                         <TextInput
-                            value={pullUpCount.toString()}
+                            value={pullUpCount === 0 ? "" : pullUpCount.toString()}
                             onChangeText={(text) => setPullUpCount(Number(text))}
                             keyboardType="numeric"
                             placeholderTextColor="#aaa"

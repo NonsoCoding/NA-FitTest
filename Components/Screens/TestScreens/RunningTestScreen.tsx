@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, Modal, Image, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, SafeAreaView, ActivityIndicator, Modal, Image, Animated, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { Accelerometer, Gyroscope, Pedometer } from 'expo-sensors';
 import { MaterialIcons, FontAwesome5, FontAwesome6 } from '@expo/vector-icons';
@@ -316,63 +316,44 @@ const RunningTestScreen = ({
         const newCoord: Coordinate = { latitude, longitude };
 
         setRunMetrics(prev => {
-            const coordinates = [...prev.coordinates, newCoord];
-
-            // Calculate distance if we have at least two points
+            const coordinates = [...prev.coordinates];
             let newDistance = prev.distance;
             let newAvgSpeed = prev.averageSpeed;
+            let currentSpeed = speed ?? 0;
 
-            if (prev.coordinates.length > 0) {
-                const lastCoord = prev.coordinates[prev.coordinates.length - 1];
-                const segmentDistance = geolib.getDistance(
-                    lastCoord,
-                    newCoord
-                );
+            if (coordinates.length > 0) {
+                const lastCoord = coordinates[coordinates.length - 1];
+                const segmentDistance = geolib.getDistance(lastCoord, newCoord);
 
-                // Validate segment (eliminate GPS jumps)
-                if (isValidSegment(segmentDistance, speed || 0)) {
-                    newDistance = prev.distance + segmentDistance;
+                if (isValidSegment(segmentDistance, currentSpeed)) {
+                    newDistance += segmentDistance;
 
-                    // Update average speed if time has elapsed
                     if (prev.elapsedTime > 0) {
                         newAvgSpeed = newDistance / prev.elapsedTime;
                     }
-                }
-            }
 
-            // Auto-center map on user's current position
-            if (mapRef.current) {
-                const region: Region = {
-                    latitude,
-                    longitude,
-                    latitudeDelta: 0.005,
-                    longitudeDelta: 0.005,
-                };
-                mapRef.current.animateToRegion(region, 500);
+                    coordinates.push(newCoord);
+                }
+            } else {
+                // First coordinate
+                coordinates.push(newCoord);
             }
 
             return {
                 ...prev,
-                coordinates,
                 distance: newDistance,
-                currentSpeed: speed || 0,
                 averageSpeed: newAvgSpeed,
+                currentSpeed: currentSpeed,
+                coordinates: coordinates,
             };
         });
     };
 
+
     const isValidSegment = (distance: number, speed: number): boolean => {
-        // Filter out unrealistic GPS jumps
-        // Typically a person can't move more than ~25 meters in a second
-        const MAX_REALISTIC_DISTANCE: number = 25; // meters per second
-
-        if (distance > MAX_REALISTIC_DISTANCE) {
-            console.log('Filtered unrealistic GPS jump:', distance);
-            return false;
-        }
-
-        return true;
+        return distance > 0 && distance < 50 && speed >= 0;
     };
+
 
     // Motion detection functions
     const startMotionDetection = async (): Promise<void> => {
@@ -508,7 +489,8 @@ const RunningTestScreen = ({
                     flexDirection: "row",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    padding: 20
+                    padding: 20,
+                    marginTop: Platform.OS === "android" ? 40 : 0
                 }}>
                     <TouchableOpacity
                         onPress={() => {

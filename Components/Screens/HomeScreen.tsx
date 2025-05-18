@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { auth, db } from "../../Firebase/Settings";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { async } from "@firebase/util";
 
 interface IHomePageProps {
     navigation: any;
@@ -46,19 +47,29 @@ const HomePage = ({
     const subscribeToUserData = (uid: any) => {
         const docRef = doc(db, "UserDetails", uid);
 
-        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+        const unsubscribe = onSnapshot(docRef, async (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 console.log("Real-time User Data: ", data);
                 console.log("Full docSnap data: ", docSnap.data());
 
-                setUserInfo({
+                const userData = {
                     firstName: data.firstName,
                     lastName: data.lastName,
                     serviceNumber: data.serviceNumber,
                     TacticalPoints: data.TacticalPoints,
                     profilePic: data.profilePic
-                });
+                };
+                setUserInfo(userData);
+                try {
+                    await AsyncStorage.setItem('userInfo', JSON.stringify(userData));
+                    console.log("Saved userInfo to storage:", userData);
+                    console.log("Profile pic URI:", userInfo?.profilePic);
+                    console.log("Full docSnap data: ", docSnap.data());
+
+                } catch (e) {
+                    console.error("Error saving userInfo to storage:", e);
+                }
             } else {
                 console.log("No such document");
             }
@@ -80,29 +91,60 @@ const HomePage = ({
         }
     };
 
+    const checkStoredUser = async () => {
+        // Check if there's a stored UID
+        const storedUid = await getUserFromStorage();
+
+        if (storedUid) {
+            console.log("Found stored user UID:", storedUid);
+            // Subscribe to user data with the stored UID
+            subscribeToUserData(storedUid);
+
+            // Optional: You can also navigate to main screen here if needed
+            // navigation.reset({
+            //     index: 0,
+            //     routes: [{ name: "MainDrawer" }]
+            // });
+        } else {
+            console.log("No user found in storage");
+            // You can redirect to login screen here if needed
+        }
+    };
+
+
     useEffect(() => {
-        const checkStoredUser = async () => {
-            // Check if there's a stored UID
-            const storedUid = await getUserFromStorage();
+        checkStoredUser();
+    }, [])
 
-            if (storedUid) {
-                console.log("Found stored user UID:", storedUid);
-                // Subscribe to user data with the stored UID
-                subscribeToUserData(storedUid);
+    const savePersonalBestsToStorage = async (bests: typeof personalBests) => {
+        try {
+            await AsyncStorage.setItem('personalBests', JSON.stringify(bests));
+            console.log("Saved personalBests to storage:", bests);
+        } catch (e) {
+            console.error("Error saving personalBests to storage:", e);
+        }
+    };
 
-                // Optional: You can also navigate to main screen here if needed
-                // navigation.reset({
-                //     index: 0,
-                //     routes: [{ name: "MainDrawer" }]
-                // });
-            } else {
-                console.log("No user found in storage");
-                // You can redirect to login screen here if needed
+
+
+    useEffect(() => {
+        const loadPersonalBestsFromStorage = async () => {
+            try {
+                const storedBests = await AsyncStorage.getItem('personalBests');
+                if (storedBests) {
+                    const parsed = JSON.parse(storedBests);
+                    console.log("Loaded personalBests from storage:", parsed);
+                    setPersonalBests(parsed);
+                }
+            } catch (e) {
+                console.error("Error loading personalBests from storage:", e);
             }
         };
 
-        checkStoredUser();
+        loadPersonalBestsFromStorage();
     }, []);
+
+
 
     useEffect(() => {
         const user = auth.currentUser;
@@ -115,13 +157,15 @@ const HomePage = ({
                 const data = docSnap.data().personalBests || {};
                 console.log("Real-time personalBests: ", data);
 
-                setPersonalBests({
+                const bests = {
                     pushUps: data.pushUps || 0,
                     sitUps: data.sitUps || 0,
                     pullUps: data.pullUps || 0,
                     runTime: data.runTime || 0,
                     sprintTime: data.sprintTime || 0
-                });
+                }
+                setPersonalBests(bests);
+                savePersonalBestsToStorage(bests)
             }
         }, (error) => {
             console.error("Error fetching personalBests in real-time:", error);
@@ -129,6 +173,25 @@ const HomePage = ({
 
         return () => unsubscribe(); // Cleanup listener on unmount
     }, []);
+
+    const loadUserInfoFromStorage = async () => {
+        try {
+            const storedInfo = await AsyncStorage.getItem('userInfo');
+            if (storedInfo) {
+                const parsed = JSON.parse(storedInfo);
+                setUserInfo(parsed);
+                console.log("Loaded userInfo from storage:", parsed);
+                console.log('stored info', storedInfo);
+
+            }
+        } catch (e) {
+            console.error("Error loading userInfo from storage:", e);
+        }
+    };
+
+    useEffect(() => {
+        loadUserInfoFromStorage();
+    }, [])
 
     return (
         <View style={{
@@ -221,11 +284,12 @@ const HomePage = ({
                         <Text style={{
                             color: "white",
                             fontSize: 20,
-                            fontWeight: "600"
+                            fontWeight: '300'
                         }}>{userInfo?.firstName} {userInfo?.lastName}</Text>
                         <Text style={{
                             color: "white",
-                            fontSize: 12
+                            fontSize: 12,
+                            fontWeight: '200'
                         }}>SN: {userInfo?.serviceNumber}</Text>
                         <View style={{
                             flexDirection: 'row',
@@ -238,7 +302,8 @@ const HomePage = ({
                                 }}
                             />
                             <Text style={{
-                                color: 'white'
+                                color: 'white',
+                                fontWeight: '200'
                             }}>{userInfo?.TacticalPoints ?? 0}</Text>
                         </View>
                     </View>
@@ -261,7 +326,7 @@ const HomePage = ({
                         <View style={{
                             padding: 20,
                             borderRadius: 5,
-                            backgroundColor: "rgba(0, 0, 0, 0.3)"
+                            backgroundColor: "rgba(0, 0, 0, 0.05)"
                         }}>
                             <TouchableOpacity style={styles.exercise_btn}
                                 onPress={() => {
@@ -274,11 +339,11 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontWeight: "600",
-                                        color: "white"
+                                        fontWeight: "300",
+
                                     }}>Push-Ups</Text>
                                     <Text style={{
-                                        color: "white"
+                                        fontWeight: '200'
                                     }}>Minimum Requirement: 38</Text>
                                     <View style={{
                                         flexDirection: "row",
@@ -292,8 +357,7 @@ const HomePage = ({
                                             }}
                                         />
                                         <Text style={{
-                                            color: "white",
-
+                                            fontWeight: '200'
                                         }}>Personal Best: {personalBests.pushUps}</Text>
                                     </View>
                                 </View>
@@ -302,7 +366,7 @@ const HomePage = ({
                         <View style={{
                             padding: 20,
                             borderRadius: 5,
-                            backgroundColor: "rgba(0, 0, 0, 0.3)"
+                            backgroundColor: "rgba(0, 0, 0, 0.05)"
                         }}>
                             <TouchableOpacity style={styles.exercise_btn}
                                 onPress={() => {
@@ -314,11 +378,11 @@ const HomePage = ({
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontWeight: "600",
-                                        color: "white"
+                                        fontWeight: "300",
+
                                     }}>300 Meter Sprint</Text>
                                     <Text style={{
-                                        color: "white"
+                                        fontWeight: '200'
                                     }}>Minimum Requirement: 60s</Text>
                                     <View style={{
                                         flexDirection: "row",
@@ -332,7 +396,7 @@ const HomePage = ({
                                             }}
                                         />
                                         <Text style={{
-                                            color: "white",
+                                            fontWeight: '200'
                                         }}>Personal Best: {formatTime(personalBests.sprintTime)}</Text>
                                     </View>
                                 </View>
@@ -341,24 +405,23 @@ const HomePage = ({
                         <View style={{
                             padding: 20,
                             borderRadius: 5,
-                            backgroundColor: "rgba(0, 0, 0, 0.3)"
+                            backgroundColor: "rgba(0, 0, 0, 0.05)"
                         }}>
                             <TouchableOpacity style={styles.exercise_btn}
                                 onPress={() => {
                                     navigation.navigate("SitUpScreen")
                                 }}
                             >
-
                                 <View style={{
                                     gap: 4
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontWeight: "600",
-                                        color: "white"
+                                        fontWeight: "300",
+
                                     }}>Sit-Ups</Text>
                                     <Text style={{
-                                        color: "white"
+                                        fontWeight: '200'
                                     }}>Minimum Requirement: 38</Text>
                                     <View style={{
                                         flexDirection: "row",
@@ -372,8 +435,7 @@ const HomePage = ({
                                             }}
                                         />
                                         <Text style={{
-                                            color: "white",
-
+                                            fontWeight: '200'
                                         }}>Personal Best: {personalBests.sitUps}</Text>
                                     </View>
                                 </View>
@@ -382,24 +444,22 @@ const HomePage = ({
                         <View style={{
                             padding: 20,
                             borderRadius: 5,
-                            backgroundColor: "rgba(0, 0, 0, 0.3)"
+                            backgroundColor: "rgba(0, 0, 0, 0.05)"
                         }}>
                             <TouchableOpacity style={styles.exercise_btn}
                                 onPress={() => {
                                     navigation.navigate("RunningScreen")
                                 }}
                             >
-
                                 <View style={{
                                     gap: 4
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontWeight: "600",
-                                        color: "white"
+                                        fontWeight: "300",
                                     }}>1.5 Mile Run</Text>
                                     <Text style={{
-                                        color: "white"
+                                        fontWeight: '200'
                                     }}>Minimum Requirement: 10:00 min</Text>
                                     <View style={{
                                         flexDirection: "row",
@@ -413,8 +473,7 @@ const HomePage = ({
                                             }}
                                         />
                                         <Text style={{
-                                            color: "white",
-
+                                            fontWeight: '200'
                                         }}>Personal Best: {formatTime(personalBests.runTime)}</Text>
                                     </View>
                                 </View>
@@ -423,24 +482,22 @@ const HomePage = ({
                         <View style={{
                             padding: 20,
                             borderRadius: 5,
-                            backgroundColor: "rgba(0, 0, 0, 0.3)"
+                            backgroundColor: "rgba(0, 0, 0, 0.05)"
                         }}>
                             <TouchableOpacity style={styles.exercise_btn}
                                 onPress={() => {
                                     navigation.navigate("PullUpScreen")
                                 }}
                             >
-
                                 <View style={{
                                     gap: 4
                                 }}>
                                     <Text style={{
                                         fontSize: 24,
-                                        fontWeight: "600",
-                                        color: "white"
+                                        fontWeight: "300",
                                     }}>Pull-Ups</Text>
                                     <Text style={{
-                                        color: "white"
+                                        fontWeight: '200'
                                     }}>Minimum Requirement: 38</Text>
                                     <View style={{
                                         flexDirection: "row",
@@ -454,8 +511,7 @@ const HomePage = ({
                                             }}
                                         />
                                         <Text style={{
-                                            color: "white",
-
+                                            fontWeight: '200'
                                         }}>Personal Best: {personalBests.pullUps}</Text>
                                     </View>
                                 </View>
