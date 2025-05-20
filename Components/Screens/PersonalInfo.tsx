@@ -166,10 +166,10 @@ const PersonalInfo = ({
                                                 <TextInput
                                                     placeholderTextColor={"#8c8c8e"}
                                                     style={styles.textinput}
-                                                    placeholder="Service Number"
-                                                    onChangeText={handleChange('serviceNumber')}
+                                                    placeholder="Enter Army Number"
+                                                    onChangeText={(text) => handleChange('serviceNumber')('N/A' + text)}
                                                     onBlur={handleBlur('serviceNumber')}
-                                                    value={values.serviceNumber}
+                                                    value={values.serviceNumber.replace(/^N\/A/, '')}
 
                                                 />
                                             </View>
