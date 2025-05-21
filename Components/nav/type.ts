@@ -6,6 +6,7 @@ export type DrawerParamList = {
     EditDetails: undefined;
   History: undefined;
   AdminDashbaord: undefined;
+  ResetPassword: undefined
   // Add more screens here if needed
 };
 
@@ -14,6 +15,7 @@ export type RootStackParamList = {
     History: undefined;
   LandingScreen: undefined;
   LoginScreen: undefined;
+  ResetPassword: undefined;
   SignUpScreen: undefined;
     AdminDashboard: undefined
     OTPScreen: undefined;

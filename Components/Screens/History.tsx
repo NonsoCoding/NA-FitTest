@@ -1,4 +1,4 @@
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import { useNavigation } from "@react-navigation/native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { auth, db } from "../../Firebase/Settings";
 import { FlatList } from "react-native-gesture-handler";
+import { Feather } from "@expo/vector-icons";
+import LottieView from "lottie-react-native";
 
 interface IHistoryProps {
 
@@ -19,6 +21,7 @@ const History = ({
 
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
     const [history, setHistory] = useState<{ type: string, data: any[] }[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const categoryLabels: { [key: string]: string } = {
         SitUps: "Sit Ups",
@@ -57,6 +60,8 @@ const History = ({
             setHistory(allHistory);
         } catch (error) {
             console.error("Failed to fetch history:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -100,86 +105,137 @@ const History = ({
                     }}>HISTORY</Text>
                 </View>
             </View>
-            <ScrollView>
+            {loading ? (
                 <View style={{
-                    flex: 3,
-                    padding: 20,
-                    gap: 15
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bottom: 60
                 }}>
-                    {history.map((section) => (
-                        <View key={section.type} style={{ marginBottom: 0 }}>
-                            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>
-                                {categoryLabels[section.type] || section.type}
-                            </Text>
-                            {section.data.map((item: any, index: number) => (
-                                <View
-                                    key={item.id || `${section.type}-${index}`}
-                                    style={{
-                                        flexDirection: "row",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                        gap: 30,
-                                        borderWidth: 1,
-                                        padding: 20,
-                                        marginBottom: 20
-                                    }}>
+                    <ActivityIndicator size={"large"} />
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 5
+                    }}>
+                        <Text>Loading history</Text>
+                        <LottieView
+                            source={require("../../assets/ExerciseGifs/Animation - 1747754050109.json")}
+                            style={{
+                                height: 40,
+                                width: 40
+                            }}
+                            resizeMode="contain"
+                            loop={true}
+                            autoPlay={true}
+                        />
+                    </View>
+                </View>
+            ) : history.length === 0 ? (
+                <View style={{
+                    flexDirection: "row",
+                    gap: 5,
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    bottom: 60,
+                }}>
+                    <Text style={{
+                        fontSize: 17,
+                    }}>No history yet</Text>
+                    <LottieView
+                        source={require("../../assets/ExerciseGifs/Animation - 1747754050109.json")}
+                        style={{
+                            height: 40,
+                            width: 40,
+                        }}
+                        resizeMode="contain"
+                        loop={true}
+                        autoPlay={true}
+                    />
+                </View>
+            ) : (
+                <ScrollView>
+                    <View style={{
+                        flex: 3,
+                        padding: 20,
+                        gap: 15
+                    }}>
+                        {history.map((section) => (
+                            <View key={section.type} style={{ marginBottom: 0 }}>
+                                <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 8 }}>
+                                    {categoryLabels[section.type] || section.type}
+                                </Text>
+                                {section.data.map((item: any, index: number) => (
                                     <View
+                                        key={item.id || `${section.type}-${index}`}
                                         style={{
                                             flexDirection: "row",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
                                             gap: 30,
-                                        }}
-                                    >
-                                        <View style={{
-                                            gap: 10,
-                                            justifyContent: "center",
-                                            alignItems: "center"
+                                            borderWidth: 1,
+                                            padding: 20,
+                                            marginBottom: 20
                                         }}>
-                                            <Image source={require("../../assets/downloadedIcons/shield-line.png")}
-                                                style={{
-                                                    height: 20,
-                                                    width: 20,
-                                                }}
-                                            />
-                                            <Text>{item.pushUpCount || 0}</Text>
+                                        <View
+                                            style={{
+                                                flexDirection: "row",
+                                                gap: 30,
+                                            }}
+                                        >
+                                            <View style={{
+                                                gap: 10,
+                                                justifyContent: "center",
+                                                alignItems: "center"
+                                            }}>
+                                                <Image source={require("../../assets/downloadedIcons/shield-line.png")}
+                                                    style={{
+                                                        height: 20,
+                                                        width: 20,
+                                                    }}
+                                                />
+                                                <Text>{item.pushUpCount || 0}</Text>
+                                            </View>
+                                            <View style={{
+                                                gap: 10,
+                                                justifyContent: "center",
+                                                alignItems: "center"
+                                            }}>
+                                                <Image source={require("../../assets/downloadedIcons/timer-line.png")}
+                                                    style={{
+                                                        height: 20,
+                                                        width: 20,
+                                                    }}
+                                                />
+                                                <Text>60s</Text>
+                                            </View>
+                                            <View style={{
+                                                gap: 10,
+                                                alignItems: 'center'
+                                            }}>
+                                                <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
+                                                    style={{
+                                                        height: 20,
+                                                        width: 20,
+                                                    }}
+                                                />
+                                                <Text>{item.TacticalPoints}</Text>
+                                            </View>
                                         </View>
-                                        <View style={{
-                                            gap: 10,
-                                            justifyContent: "center",
-                                            alignItems: "center"
-                                        }}>
-                                            <Image source={require("../../assets/downloadedIcons/timer-line.png")}
-                                                style={{
-                                                    height: 20,
-                                                    width: 20,
-                                                }}
-                                            />
-                                            <Text>60s</Text>
-                                        </View>
-                                        <View style={{
-                                            gap: 10,
-                                            alignItems: 'center'
-                                        }}>
-                                            <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
-                                                style={{
-                                                    height: 20,
-                                                    width: 20,
-                                                }}
-                                            />
-                                            <Text>{item.TacticalPoints}</Text>
+                                        <View>
+                                            <Text style={{
+                                                fontWeight: '200',
+                                                fontSize: 12
+                                            }}>{new Date(item.timestamp).toLocaleString()}</Text>
                                         </View>
                                     </View>
-                                    <View>
-                                        <Text style={{
-                                            fontWeight: '200',
-                                            fontSize: 12
-                                        }}>{new Date(item.timestamp).toLocaleString()}</Text>
-                                    </View>
-                                </View>
-                            ))}
-                        </View>
-                    ))}
-                </View>
-            </ScrollView>
+                                ))}
+                            </View>
+                        ))}
+                    </View>
+                </ScrollView>
+            )}
         </View>
     )
 }

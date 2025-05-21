@@ -534,7 +534,7 @@ const styles = StyleSheet.create({
         height: "25%",
         backgroundColor: Theme.colors.primaryColor,
         padding: 20,
-        paddingTop: 60,
+        paddingTop: 80,
         justifyContent: "space-between",
         gap: 20,
     },

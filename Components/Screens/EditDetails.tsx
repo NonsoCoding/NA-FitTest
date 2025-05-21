@@ -268,13 +268,14 @@ const EditDetails = ({
                                 style={styles.textinput}
                                 editable={isPasswordEditing}
                             />
-                            <TouchableOpacity onPress={() => setIsPasswordEditing(prev => !prev)}>
-                                <Image source={require("../../assets/downloadedIcons/edit-line.png")}
-                                    style={{
-                                        height: 25,
-                                        width: 25
-                                    }}
-                                />
+                            <TouchableOpacity onPress={() => {
+                                navigation.navigate("ResetPassword")
+                            }}>
+                                <Text style={{
+                                    fontWeight: "300",
+                                    fontSize: 12,
+                                    color: Theme.colors.primaryColor
+                                }}>Change password</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

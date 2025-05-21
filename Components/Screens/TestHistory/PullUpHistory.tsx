@@ -1,4 +1,4 @@
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { useEffect, useState } from "react";
@@ -7,6 +7,7 @@ import { FlatList } from "react-native-gesture-handler";
 import { DrawerParamList } from "../../nav/type";
 import { auth, db } from "../../../Firebase/Settings";
 import { Theme } from "../../Branding/Theme";
+import LottieView from "lottie-react-native";
 
 interface IHistoryProps {
 
@@ -19,6 +20,7 @@ const PullUpHistory = ({
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
 
     const [history, setHistory] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const fetchHistory = async () => {
         const user = auth.currentUser;
@@ -30,11 +32,12 @@ const PullUpHistory = ({
             querySnapshot.forEach((doc) => {
                 results.push({ id: doc.id, ...doc.data() });
             });
-            // Sort by timestamp (optional)
             results.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
             setHistory(results);
         } catch (error) {
             console.error("Failed to fetch history:", error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -149,17 +152,69 @@ const PullUpHistory = ({
                     }}>PULL UPS HISTORY</Text>
                 </View>
             </View>
-            <View style={{
-                flex: 3,
-                padding: 20,
-                gap: 15
-            }}>
-                <FlatList
-                    data={history}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderHistoryItem}
-                />
-            </View>
+            {loading ? (
+                <View style={{
+                    flex: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bottom: 60
+                }}>
+                    <ActivityIndicator size={"large"} />
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 5
+                    }}>
+                        <Text>Loading history</Text>
+                        <LottieView
+                            source={require("../../../assets/ExerciseGifs/Animation - 1747754050109.json")}
+                            style={{
+                                height: 40,
+                                width: 40
+                            }}
+                            resizeMode="contain"
+                            loop={true}
+                            autoPlay={true}
+                        />
+                    </View>
+                </View>
+            ) : history.length === 0 ? (
+                <View style={{
+                    flexDirection: "row",
+                    gap: 5,
+                    flex: 1,
+                    justifyContent: "center",
+                    alignItems: "center",
+                    bottom: 60,
+                }}>
+                    <Text style={{
+                        fontSize: 17,
+                    }}>No history yet</Text>
+                    <LottieView
+                        source={require("../../../assets/ExerciseGifs/Animation - 1747754050109.json")}
+                        style={{
+                            height: 40,
+                            width: 40,
+                        }}
+                        resizeMode="contain"
+                        loop={true}
+                        autoPlay={true}
+                    />
+                </View>
+            ) : (
+                <View style={{
+                    flex: 3,
+                    padding: 20,
+                    gap: 15
+                }}>
+                    <FlatList
+                        data={history}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderHistoryItem}
+                    />
+                </View>
+            )}
+
         </View>
     )
 }

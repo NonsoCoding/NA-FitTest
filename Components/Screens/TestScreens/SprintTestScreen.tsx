@@ -719,22 +719,19 @@ const SprintTestScreen = ({
                                     }}>close</Text>
                                 </TouchableOpacity>
                             </View>
-                            <Text style={{
-                                color: "white",
-                                fontSize: 25
-                            }}>Run Summary</Text>
                             <View style={{
                                 height: 230,
-                                width: '80%',
+                                width: '90%',
                                 borderRadius: 5,
-                                alignItems: "center",
+                                padding: 20,
                                 justifyContent: "center",
                                 gap: 10,
                                 backgroundColor: "rgba(0, 0, 0, 0.3)"
                             }}>
                                 <View style={{
                                     flexDirection: "row",
-                                    alignItems: "center"
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
                                 }}>
                                     <Text style={{
                                         fontSize: 18,
@@ -748,7 +745,8 @@ const SprintTestScreen = ({
                                 </View>
                                 <View style={{
                                     flexDirection: "row",
-                                    alignItems: "center"
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
                                 }}>
                                     <Text style={{
                                         fontSize: 18,
@@ -762,7 +760,8 @@ const SprintTestScreen = ({
                                 </View>
                                 <View style={{
                                     flexDirection: "row",
-                                    alignItems: "center"
+                                    alignItems: "center",
+                                    justifyContent: 'space-between'
                                 }}>
                                     <Text style={{
                                         fontSize: 18,
@@ -776,7 +775,8 @@ const SprintTestScreen = ({
                                 </View>
                                 <View style={{
                                     flexDirection: "row",
-                                    alignItems: "center"
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
                                 }}>
                                     <Text style={{
                                         fontSize: 18,
@@ -798,7 +798,7 @@ const SprintTestScreen = ({
                                 >
                                     <Text style={{
                                         color: "white"
-                                    }}>SUBMIT </Text>
+                                    }}>continue</Text>
                                     <Image source={require("../../../assets/downloadedIcons/fast.png")}
                                         style={{
                                             width: 25,
@@ -931,11 +931,11 @@ const styles = StyleSheet.create({
         marginRight: 10,
     },
     getStartedBtn: {
-        padding: 10,
-        backgroundColor: "black",
+        padding: 15,
+        backgroundColor: Theme.colors.primaryColor,
         alignItems: "center",
         justifyContent: "space-between",
-        width: "70%",
+        width: "100%",
         alignSelf: "center",
         borderRadius: 5,
         gap: 10,

@@ -1,22 +1,83 @@
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import { Formik } from "formik";
 import { FontAwesome6, Fontisto } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
+import { useState } from "react";
+import { auth } from "../../Firebase/Settings";
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
+import * as yup from "yup";
 
 interface IResetPasswordProps {
     navigation: any;
 }
 
-
 const ResetPassword = ({
     navigation
 }: IResetPasswordProps) => {
+
+    const resetFormValidation = yup.object().shape({
+        oldPassword: yup.string().required("old password is required."),
+        newPassword: yup.string().required("new password is required.").min(6, "Password must be at least 6 characters"),
+        confirmNewPassword: yup.string().oneOf([yup.ref('newPassword')], 'Passwords must match').required("Confirm password is required.")
+    })
+
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleChangedPassword = async (values: { oldPassword: string; newPassword: string; confirmNewPassword: string; }) => {
+        setIsLoading(true);
+        const user = auth.currentUser;
+
+        if (!user || !user.email) {
+            Alert.alert('Error', 'No user is signed in.');
+            return;
+        }
+
+        if (values.newPassword !== values.confirmNewPassword) {
+            Alert.alert('Error', 'New password do not match.');
+            return;
+        }
+
+        const credential = EmailAuthProvider.credential(user.email, values.oldPassword);
+
+        try {
+            setIsLoading(true);
+            await reauthenticateWithCredential(user, credential);
+            await updatePassword(user, values.newPassword);
+            Alert.alert('success', 'Password updated successfully.')
+            console.log("success", "Password updated successfully");
+            navigation.reset({
+                index: 0,
+                routes: [{ name: "Profile" }]
+            })
+        } catch (error: any) {
+            setIsLoading(false);
+            Alert.alert('Error', error.message)
+            console.log("Error: ", error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
 
     return (
         <View style={{
             flex: 1
         }}>
+            {isLoading && (
+                <View style={styles.loadingOverlay}>
+                    <LottieView
+                        source={require("../../assets/ExerciseGifs/Animation - 1745262738989.json")}
+                        style={{
+                            height: 80,
+                            width: 80
+                        }}
+                        resizeMode="contain"
+                        loop={true}
+                        autoPlay={true}
+                    />
+                    <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
+                </View>
+            )}
             <View style={{
                 flex: 1,
                 backgroundColor: Theme.colors.primaryColor,
@@ -40,84 +101,131 @@ const ResetPassword = ({
                     }}>Type your new password to recover your account</Text>
                 </View>
             </View>
-            <View style={{
-                flex: 3,
-                padding: 20,
-                paddingTop: 20
-            }}>
-                <View style={{
-                    gap: 10
-                }}>
-                    <View style={{
-                        gap: 5
-                    }}>
-                        <View style={[styles.textinput_container, {
-                            marginBottom: 5
-                        }]}>
-                            <Image source={require("../../assets/downloadedIcons/lock-2-fill.png")}
-                                style={{
-                                    height: 20,
-                                    width: 20
-                                }}
-                                resizeMode='contain'
-                            />
-                            <TextInput
-                                style={styles.textinput}
-                                placeholderTextColor={"#8c8c8e"}
-                                placeholder="password"
-                            />
+            <Formik
+                initialValues={{ oldPassword: "", newPassword: "", confirmNewPassword: "" }}
+                validationSchema={resetFormValidation}
+                onSubmit={handleChangedPassword}
+            >
+                {({ errors, setSubmitting, touched, setTouched, handleBlur, validateForm, handleChange, values, handleSubmit }) => {
+                    return (
+                        <View style={{
+                            flex: 3,
+                            padding: 20,
+                            paddingTop: 20
+                        }}>
+                            <View style={{
+                                gap: 10
+                            }}>
+                                <View style={{
+                                    gap: 5
+                                }}>
+                                    <View style={[styles.textinput_container, {
+                                        marginBottom: 5
+                                    }]}>
+                                        <Image source={require("../../assets/downloadedIcons/lock-2-fill.png")}
+                                            style={{
+                                                height: 20,
+                                                width: 20
+                                            }}
+                                            resizeMode='contain'
+                                        />
+                                        <TextInput
+                                            style={styles.textinput}
+                                            placeholderTextColor={"#8c8c8e"}
+                                            value={values.oldPassword}
+                                            onChangeText={handleChange("oldPassword")}
+                                            onBlur={handleBlur("oldPassword")}
+                                            placeholder="old password"
+                                        />
+                                    </View>
+                                    {touched.oldPassword && errors.oldPassword && (
+                                        <Text style={{
+                                            color: "red"
+                                        }}>{errors.oldPassword}</Text>
+                                    )}
+                                    <View style={[styles.textinput_container, {
+                                        marginBottom: 5
+                                    }]}>
+                                        <Image source={require("../../assets/downloadedIcons/lock-2-fill.png")}
+                                            style={{
+                                                height: 20,
+                                                width: 20
+                                            }}
+                                            resizeMode='contain'
+                                        />
+                                        <TextInput
+                                            style={styles.textinput}
+                                            placeholderTextColor={"#8c8c8e"}
+                                            value={values.newPassword}
+                                            onChangeText={handleChange("newPassword")}
+                                            onBlur={handleBlur("newPassword")}
+                                            placeholder="new password"
+                                        />
+                                    </View>
+                                    {touched.newPassword && errors.newPassword && (
+                                        <Text style={{
+                                            color: "red"
+                                        }}>{errors.newPassword}</Text>
+                                    )}
+                                    <View style={[styles.textinput_container, {
+                                        marginBottom: 5
+                                    }]}>
+                                        <Image source={require("../../assets/downloadedIcons/lock-2-fill.png")}
+                                            style={{
+                                                height: 20,
+                                                width: 20
+                                            }}
+                                            resizeMode='contain'
+                                        />
+                                        <TextInput
+                                            style={styles.textinput}
+                                            placeholderTextColor={"#8c8c8e"}
+                                            value={values.confirmNewPassword}
+                                            onChangeText={handleChange("confirmNewPassword")}
+                                            onBlur={handleBlur("confirmNewPassword")}
+                                            placeholder="confirm password"
+                                        />
+                                    </View>
+                                    {touched.confirmNewPassword && errors.confirmNewPassword && (
+                                        <Text style={{
+                                            color: "red"
+                                        }}>{errors.confirmNewPassword}</Text>
+                                    )}
+                                </View>
+                                <View style={{
+                                    alignItems: "flex-end"
+                                }}>
+                                </View>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        handleSubmit();
+                                    }}
+                                    style={[styles.continue_email_button, {
+                                        padding: 20
+                                    }]}>
+                                    <Text style={styles.email_button_text}>confirm</Text>
+                                    <Image source={require("../../assets/Icons/fast-forward.png")}
+                                        style={[styles.button_icon, {
+                                            height: 15,
+                                            width: 15
+                                        }]}
+                                    />
+                                </TouchableOpacity>
+                                <View style={{ flexDirection: 'row', gap: 6, alignSelf: "center" }}>
+                                    <Text style={{ color: '#333', fontSize: 16 }}>Changed your mind?</Text>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            navigation.goBack()
+                                        }}
+                                    >
+                                        <Text style={{ color: Theme.colors.primaryColor, fontSize: 16 }}>back</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
                         </View>
-                        <View style={[styles.textinput_container, {
-                            marginBottom: 5
-                        }]}>
-                            <Image source={require("../../assets/downloadedIcons/lock-2-fill.png")}
-                                style={{
-                                    height: 20,
-                                    width: 20
-                                }}
-                                resizeMode='contain'
-                            />
-                            <TextInput
-                                style={styles.textinput}
-                                placeholderTextColor={"#8c8c8e"}
-                                placeholder="confirm password"
-                            />
-                        </View>
-                    </View>
-                    <View style={{
-                        alignItems: "flex-end"
-                    }}>
-                    </View>
-                    <TouchableOpacity
-                        onPress={() => {
-                            navigation.navigate("PasswordOTPScreen")
-                        }}
-                        style={[styles.continue_email_button, {
-                            padding: 20
-                        }]}>
-                        <Text style={styles.email_button_text}>continue</Text>
-                        <Image source={require("../../assets/Icons/fast-forward.png")}
-                            style={[styles.button_icon, {
-                                height: 15,
-                                width: 15
-                            }]}
-                        />
-                    </TouchableOpacity>
-                    <View style={{ flexDirection: 'row', gap: 6, alignSelf: "center" }}>
-                        <Text style={{ color: '#333', fontSize: 16 }}>Remebered password?</Text>
-                        <TouchableOpacity
-                            onPress={() => {
-                                navigation.reset({
-                                    index: 0,
-                                    routes: [{ name: "LoginScreen" }]
-                                })
-                            }}
-                        >
-                            <Text style={{ color: Theme.colors.primaryColor, fontSize: 16 }}>Login</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </View>
+                    )
+                }}
+            </Formik>
         </View>
     )
 }

@@ -711,22 +711,20 @@ const RunningTestScreen = ({
                                     }}>close</Text>
                                 </TouchableOpacity>
                             </View>
-                            <Text style={{
-                                color: "white",
-                                fontSize: 25
-                            }}>Run Summary</Text>
+
                             <View style={{
                                 height: 230,
-                                width: '80%',
+                                width: '90%',
                                 borderRadius: 5,
-                                alignItems: "center",
+                                padding: 20,
                                 justifyContent: "center",
                                 gap: 10,
                                 backgroundColor: "rgba(0, 0, 0, 0.3)"
                             }}>
                                 <View style={{
                                     flexDirection: "row",
-                                    alignItems: "center"
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
                                 }}>
                                     <Text style={{
                                         fontSize: 18,
@@ -740,7 +738,8 @@ const RunningTestScreen = ({
                                 </View>
                                 <View style={{
                                     flexDirection: "row",
-                                    alignItems: "center"
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
                                 }}>
                                     <Text style={{
                                         fontSize: 18,
@@ -754,7 +753,8 @@ const RunningTestScreen = ({
                                 </View>
                                 <View style={{
                                     flexDirection: "row",
-                                    alignItems: "center"
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
                                 }}>
                                     <Text style={{
                                         fontSize: 18,
@@ -768,6 +768,7 @@ const RunningTestScreen = ({
                                 </View>
                                 <View style={{
                                     flexDirection: "row",
+                                    justifyContent: "space-between",
                                     alignItems: "center"
                                 }}>
                                     <Text style={{
@@ -916,17 +917,17 @@ const styles = StyleSheet.create({
         backgroundColor: '#F44336',
     },
     buttonText: {
-        color: 'white',
+        color: Theme.colors.primaryColor,
         fontWeight: 'bold',
         fontSize: 16,
         marginRight: 10,
     },
     getStartedBtn: {
-        padding: 10,
-        backgroundColor: "black",
+        padding: 15,
+        backgroundColor: Theme.colors.primaryColor,
         alignItems: "center",
         justifyContent: "space-between",
-        width: "70%",
+        width: "100%",
         alignSelf: "center",
         borderRadius: 5,
         gap: 10,

@@ -9,7 +9,6 @@ import LoginScreen from "../Authentication/Login";
 import SignUpScreen from "../Authentication/SignUp";
 import OTPScreen from "../Authentication/Otp";
 import VerificationLinkScreen from "../Authentication/VerificationLinkScreen";
-import PasswordOTPScreen from "../Authentication/PasswordOTPResetScreen";
 import ForgottenPassword from "../Authentication/ForgottenPassword";
 import PullUpTestScreen from "../Screens/TestScreens/PullUpTestScreen";
 import ResetPassword from "../Authentication/ResetPassword";
@@ -25,6 +24,7 @@ import SprintHistory from "../Screens/TestHistory/SprintingHistory";
 import PersonalInfo from "../Screens/PersonalInfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
+import Profile from "../Screens/Profile";
 
 const Stack = createStackNavigator();
 
@@ -63,13 +63,13 @@ const StackNavigation: React.FC = () => {
                     <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
                     <Stack.Screen name="OTPScreen" component={OTPScreen} />
                     <Stack.Screen name="VerificationScreen" component={VerificationLinkScreen} />
-                    <Stack.Screen name="PasswordOTPScreen" component={PasswordOTPScreen} />
                     <Stack.Screen name="PullUpScreen" component={PullUpTestScreen} />
                     <Stack.Screen name="ForgottenPassword" component={ForgottenPassword} />
                     <Stack.Screen name="ResetPassword" component={ResetPassword} />
                     <Stack.Screen name="PushUpsScreen" component={PushUpsTestScreen} />
                     <Stack.Screen name="SprintScreen" component={SprintTestScreen} />
                     <Stack.Screen name="SitUpScreen" component={SitUpTestScreen} />
+                    <Stack.Screen name="Profile" component={Profile} />
                     <Stack.Screen name="RunningScreen" component={RunningTestScreen} />
                     <Stack.Screen name="PullUpsHistory" component={PullUpHistory} />
                     <Stack.Screen name="PushUpHistory" component={PushUpHistory} />
