@@ -6,10 +6,17 @@ import { auth, db } from "../../Firebase/Settings";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { async } from "@firebase/util";
-
 interface IHomePageProps {
     navigation: any;
 }
+
+
+const pushUpsVideoSource = require('../../assets/ExerciseGifs/pushUps.mp4');
+const pullUpVideoSource = require('../../assets/ExerciseGifs/pullUps.mp4');
+const sprintVideoSource = require('../../assets/ExerciseGifs/sprint.mp4');
+const sitUpVideoSource = require('../../assets/ExerciseGifs/situps.mp4');
+const runningVideoSource = require('../../assets/ExerciseGifs/running.mp4');
+
 
 const HomePage = ({
     navigation
@@ -37,6 +44,26 @@ const HomePage = ({
         day: 'numeric'
     });
 
+    // const pushUpsPlayer = useVideoPlayer(pushUpsVideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
+    // const pullUpsPlayer = useVideoPlayer(pullUpVideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
+    // const sprintPlayer = useVideoPlayer(sprintVideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
+    // const sitUpPlayer = useVideoPlayer(sitUpVideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
+    // const runningPlayer = useVideoPlayer(runningVideoSource, (player) => {
+    //     player.loop = true;
+    //     player.play();
+    // });
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);

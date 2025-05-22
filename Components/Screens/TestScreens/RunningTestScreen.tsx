@@ -75,7 +75,6 @@ const RunningTestScreen = ({
     const [isResultModalVisible, setIsResultModalVisible] = useState(false)
     const [prepTime, setPrepTime] = useState(5);
     const animatedProgress = useRef(new Animated.Value(0)).current;
-    // Constants
     const TARGET_DISTANCE_MILES: number = 1.5;
     const TARGET_DISTANCE_METERS: number = TARGET_DISTANCE_MILES * 1609.34; // Miles to meters
     const MIN_RUNNING_SPEED: number = 2.0; // m/s (about 4.5 mph)
@@ -106,7 +105,7 @@ const RunningTestScreen = ({
         const pushUpDocRef = doc(db, `UserDetails/${user.uid}/Runs/${Date.now()}`);
         console.log("Attempting to save run to path:", pushUpDocRef);
 
-        const TacticalPoints = runMetrics.elapsedTime <= 600 ? 5 : 0;
+        const TacticalPoints = runMetrics.elapsedTime <= 600 && runMetrics.distance >= TARGET_DISTANCE_METERS ? 5 : 0;
 
         const runData = {
             uid: user.uid,

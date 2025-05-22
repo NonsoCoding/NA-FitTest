@@ -102,7 +102,7 @@ const SprintTestScreen = ({
         const pushUpDocRef = doc(db, `UserDetails/${user.uid}/Sprint/${Date.now()}`);
         console.log("Attempting to save run to path:", pushUpDocRef);
 
-        const TacticalPoints = runMetrics.elapsedTime <= 600 ? 5 : 0;
+        const TacticalPoints = runMetrics.elapsedTime <= 600 && runMetrics.distance >= TARGET_DISTANCE_METERS ? 5 : 0;
 
         const runData = {
             uid: user.uid,

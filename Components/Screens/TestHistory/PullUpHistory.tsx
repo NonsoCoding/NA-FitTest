@@ -159,7 +159,7 @@ const PullUpHistory = ({
                     justifyContent: "center",
                     bottom: 60
                 }}>
-                    <ActivityIndicator size={"large"} />
+                    <ActivityIndicator size={"large"} color={Theme.colors.primaryColor} />
                     <View style={{
                         flexDirection: "row",
                         alignItems: "center",

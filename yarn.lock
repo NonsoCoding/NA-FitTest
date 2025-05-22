@@ -3716,6 +3716,11 @@ expo-modules-core@1.12.26:
   dependencies:
     invariant "^2.2.4"
 
+expo-permissions@^14.4.0:
+  version "14.4.0"
+  resolved "https://registry.yarnpkg.com/expo-permissions/-/expo-permissions-14.4.0.tgz#d7bb2f0026b87e1294ee551969c35306193f4ad3"
+  integrity sha512-oAcnJ7dlZhpBydK73cwomA2xofizayVUz+FW5REl7dMu7MYyeN/3aqhlpZ3mYddrxvG161bqu97MQr01UixUnw==
+
 expo-secure-store@~13.0.2:
   version "13.0.2"
   resolved "https://registry.yarnpkg.com/expo-secure-store/-/expo-secure-store-13.0.2.tgz#ba8f6076fc38062a28bb2ce5edab9cd28ef88598"
