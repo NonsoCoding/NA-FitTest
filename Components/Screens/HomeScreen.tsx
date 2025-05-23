@@ -1,4 +1,4 @@
-import { Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import LottieView from "lottie-react-native";
 import { useEffect, useState } from "react";
@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
         height: "25%",
         backgroundColor: Theme.colors.primaryColor,
         padding: 20,
-        paddingTop: 80,
+        paddingTop: Platform.OS === "android" ? 60 : 80,
         justifyContent: "space-between",
         gap: 20,
     },
