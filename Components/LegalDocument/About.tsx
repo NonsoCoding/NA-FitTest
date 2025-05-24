@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 20,
         paddingTop: 80,
-        backgroundColor: "#fff",
+        backgroundColor: "#121212", // Dark background
     },
     scroll: {
         marginTop: 10,
@@ -142,9 +142,10 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     headerTitle: {
-        fontSize: 18,
+        fontSize: 15,
         fontWeight: "700",
         textAlign: "center",
+        color: "#ffffff", // Light text for contrast
     },
     notificationIcon: {
         position: "absolute",
@@ -155,13 +156,21 @@ const styles = StyleSheet.create({
         height: 30,
     },
     section: {
-        marginBottom: 30,
+        backgroundColor: "#1e1e1e", // Card-like section
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
     },
     sectionTitle: {
         fontSize: 17,
         fontWeight: "600",
-        marginBottom: 15,
-        color: "#333",
+        marginBottom: 12,
+        color: "#ffffff",
     },
     item: {
         flexDirection: "row",
@@ -172,21 +181,23 @@ const styles = StyleSheet.create({
     label: {
         fontWeight: "600",
         fontSize: 15,
+        color: "#eeeeee",
     },
     value: {
         fontWeight: "300",
         fontSize: 15,
+        color: "#bbbbbb",
     },
     subtext: {
-        fontSize: 14,
+        fontSize: 13,
         marginTop: 10,
         marginBottom: 10,
-        color: "#555",
+        color: "#999999",
     },
     paragraph: {
         fontSize: 14,
         lineHeight: 22,
-        color: "#444",
+        color: "#cccccc",
         marginBottom: 10,
     },
     bulletList: {
@@ -196,7 +207,7 @@ const styles = StyleSheet.create({
     bullet: {
         fontSize: 14,
         lineHeight: 22,
-        color: "#444",
+        color: "#cccccc",
         marginBottom: 6,
     },
 });
