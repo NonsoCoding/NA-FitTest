@@ -5,7 +5,7 @@ import { Accelerometer } from "expo-sensors";
 import { Switch } from "react-native-paper";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../../../Firebase/Settings";
-
+import * as Speech from "expo-speech";
 
 interface ITestProps {
     navigation?: any;
@@ -75,6 +75,11 @@ const PullUpTestScreen = ({
     // Track recent Z values for smoothing
     const recentZValues = useRef<number[]>([]);
     const MAX_HISTORY = 5;
+
+    const sayNumber = (number: number) => {
+        Speech.speak(number.toString());
+    }
+
 
     // const sitUpsPlayer = useVideoPlayer(VideoSource, (player) => {
     //     player.loop = true;
@@ -199,17 +204,26 @@ const PullUpTestScreen = ({
     // Preparation timer logic
     useEffect(() => {
         if (isRunning && prepTime > 0) {
+            sayNumber(prepTime);
+
             intervalRef.current = setInterval(() => {
                 setPrepTime(prev => {
-                    if (prev === 1) {
+                    const newTime = prev - 1;
+                    if (newTime > 0) {
+                        sayNumber(newTime);
+                    }
+
+                    if (newTime <= 0) {
                         clearInterval(intervalRef.current as NodeJS.Timeout);
                         setIsRunning(false);
                         setIsPrepModalVisible(false);
                         setTimeout(() => {
+                            Speech.speak("Begin!")
                             setIsStartModalVisible(true);
-                        }, 700);
+                        }, 700)
                     }
-                    return prev - 1;
+
+                    return newTime;
                 });
             }, 1000);
         }
@@ -239,6 +253,9 @@ const PullUpTestScreen = ({
 
                         setTimeout(() => {
                             if (isAutoDetectEnabled) {
+                                Speech.stop();
+                                Speech.speak("Time's up!");
+                                console.log("Times Up");
                                 setIsResultModalVisible(true);
                             } else {
                                 askForManualInputModal()
@@ -308,9 +325,18 @@ const PullUpTestScreen = ({
                         duration <= MAX_PUSHUP_TIME &&
                         now - lastCountTime > COOLDOWN_MS) {
 
-                        setPullUpCount(prev => prev + 1);
+                        setPullUpCount(prev => {
+                            const newCount = prev + 1;
+                            Speech.stop();
+                            sayNumber(newCount);
+                            return newCount;
+                        });
                         setLastCountTime(now);
                         console.log("Pull-up counted!", duration);
+                    } else {
+                        Speech.stop();
+                        Speech.speak("Not counted!")
+                        console.log("Not counted");
                     }
 
                     setPullupState(PullupState.UP);

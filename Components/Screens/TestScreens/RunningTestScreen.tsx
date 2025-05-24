@@ -9,6 +9,7 @@ import { Theme } from '../../Branding/Theme';
 import { auth, db } from '../../../Firebase/Settings';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import LottieView from 'lottie-react-native';
+import * as Speech from "expo-speech";
 
 interface RunningTrackIprops {
     navigation: any;
@@ -81,6 +82,9 @@ const RunningTestScreen = ({
     const MIN_STEPS_PER_MINUTE: number = 150; // Minimum running cadence
     const runTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+    const sayNumber = (number: number) => {
+        Speech.speak(number.toString());
+    }
 
     useEffect(() => {
         if (isTracking) {
@@ -163,19 +167,25 @@ const RunningTestScreen = ({
             setIsRunning(true);
             setIsPrepModalVisible(true);
             setPrepTime(5);
+
+            let currentTime = 5; // initialize local variable for countdown
+            sayNumber(currentTime); // speak the initial number
+
             const countdownInterval = setInterval(() => {
-                setPrepTime(prevTime => {
-                    if (prevTime <= 1) {
-                        clearInterval(countdownInterval);
-                        setIsPrepModalVisible(false); // Hide modal
-                        setIsTracking(true);
-                        return 0;
-                    }
-                    return prevTime - 1;
-                });
+                currentTime -= 1;
+                if (currentTime <= 0) {
+                    clearInterval(countdownInterval);
+                    setPrepTime(0);
+                    setIsPrepModalVisible(false); // Hide modal
+                    setIsTracking(true);
+                } else {
+                    sayNumber(currentTime);
+                    setPrepTime(currentTime);
+                }
             }, 1000);
         }
     };
+
 
     useEffect(() => {
         // Request permissions on component mount

@@ -6,6 +6,7 @@ import Profile from '../Screens/Profile';
 import EditDetails from '../Screens/EditDetails';
 import History from '../Screens/History';
 import AdminDashboard from '../Screens/AdminDashboard';
+import About from '../LegalDocument/About';
 
 const Drawer = createDrawerNavigator<DrawerParamList>();
 
@@ -26,6 +27,7 @@ export const DrawerNavigator = () => {
       <Drawer.Screen name="AdminDashbaord" component={AdminDashboard} />
       <Drawer.Screen name="EditDetails" component={EditDetails} />
       <Drawer.Screen name="History" component={History} />
+      <Drawer.Screen name="About" component={About} />
     </Drawer.Navigator>
   );
 };

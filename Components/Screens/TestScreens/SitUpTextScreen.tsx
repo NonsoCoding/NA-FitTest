@@ -5,7 +5,7 @@ import { Accelerometer } from "expo-sensors";
 import { Switch } from "react-native-paper";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../../../Firebase/Settings";
-
+import * as Speech from "expo-speech";
 
 interface ITestProps {
     navigation?: any;
@@ -76,6 +76,11 @@ const SitUpTestScreen = ({
     // Track recent Z values for smoothing
     const recentZValues = useRef<number[]>([]);
     const MAX_HISTORY = 5;
+
+
+    const sayNumber = (number: number) => {
+        Speech.speak(number.toString());
+    }
 
 
     const saveRunResultToFirestore = async () => {
@@ -202,17 +207,25 @@ const SitUpTestScreen = ({
     // Preparation timer logic
     useEffect(() => {
         if (isRunning && prepTime > 0) {
+            sayNumber(prepTime);
             intervalRef.current = setInterval(() => {
                 setPrepTime(prev => {
-                    if (prev === 1) {
+                    const newTime = prev - 1;
+                    if (newTime > 0) {
+                        sayNumber(newTime);
+                    }
+
+                    if (newTime <= 0) {
                         clearInterval(intervalRef.current as NodeJS.Timeout);
                         setIsRunning(false);
                         setIsPrepModalVisible(false);
                         setTimeout(() => {
+                            Speech.speak("Begin!")
                             setIsStartModalVisible(true);
-                        }, 700);
+                        }, 700)
                     }
-                    return prev - 1;
+
+                    return newTime;
                 });
             }, 1000);
         }
@@ -242,6 +255,9 @@ const SitUpTestScreen = ({
 
                         setTimeout(() => {
                             if (isAutoDetectEnabled) {
+                                Speech.stop();
+                                Speech.speak("Time's up!");
+                                console.log("Times Up");
                                 setIsResultModalVisible(true);
                             } else {
                                 askForManualInputModal()
@@ -322,6 +338,8 @@ const SitUpTestScreen = ({
 
                         setSitUpCount(prev => {
                             const newCount = prev + 1;
+                            Speech.stop();
+                            sayNumber(newCount);
 
                             if (isFirstCalibration && newCount <= 3) {
                                 setCalibrationValues(prev => ({
@@ -336,6 +354,10 @@ const SitUpTestScreen = ({
 
                         setLastCountTime(now);
                         console.log("Sit-up counted!", duration);
+                    } else {
+                        Speech.stop();
+                        Speech.speak("Not counted!")
+                        console.log("Not counted");
                     }
 
                     setSitupState(SitupState.DOWN);

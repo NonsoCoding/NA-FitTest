@@ -8,6 +8,7 @@ import { auth, db } from '../../Firebase/Settings';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signOut } from 'firebase/auth';
+import { Feather } from '@expo/vector-icons';
 
 
 type CustomDrawerContentProps = DrawerContentComponentProps & {
@@ -268,6 +269,26 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                             resizeMode: "contain"
                         }}
                     />
+                </TouchableOpacity>
+                <View style={{
+                    borderWidth: 0.5,
+                    borderColor: Theme.colors.second_primary
+                }}></View>
+                <TouchableOpacity
+                    onPress={() => props.navigation.navigate('About')}
+                    style={[currentRoute === 'About' && styles.activeItem, {
+                        flexDirection: "row",
+                        alignItems: "center",
+                        paddingVertical: 10,
+                        paddingHorizontal: 15,
+                        justifyContent: "space-between"
+                    }]}
+                >
+                    <Text style={[
+                        styles.drawerItemText,
+                        currentRoute === 'About' && styles.activeText
+                    ]}>About</Text>
+                    <Feather name="info" size={20} />
                 </TouchableOpacity>
                 <View style={{
                     borderWidth: 0.5,

@@ -55,6 +55,9 @@ const IntroScreen = ({
                         }}
                     />
                 </TouchableOpacity>
+                <Text style={{
+                    alignSelf: "center"
+                }}>© 2025 404services. All rights reserved.</Text>
             </View>
         </View>
     )

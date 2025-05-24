@@ -5,7 +5,7 @@ import { Accelerometer } from "expo-sensors";
 import { Switch, ToggleButton } from "react-native-paper";
 import { auth, db } from "../../../Firebase/Settings";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-
+import * as Speech from "expo-speech";
 
 interface ITestProps {
     navigation?: any;
@@ -78,6 +78,9 @@ const PushUpsTestScreen = ({
     const recentYValues = useRef<number[]>([]);
     const MAX_HISTORY = 5;
 
+    const sayNumber = (number: number) => {
+        Speech.speak(number.toString());
+    }
 
     const saveRunResultToFirestore = async () => {
         const user = auth.currentUser;
@@ -199,17 +202,26 @@ const PushUpsTestScreen = ({
     // Preparation timer logic
     useEffect(() => {
         if (isRunning && prepTime > 0) {
+            sayNumber(prepTime);
+
             intervalRef.current = setInterval(() => {
                 setPrepTime(prev => {
-                    if (prev === 1) {
+                    const newTime = prev - 1;
+                    if (newTime > 0) {
+                        sayNumber(newTime);
+                    }
+
+                    if (newTime <= 0) {
                         clearInterval(intervalRef.current as NodeJS.Timeout);
                         setIsRunning(false);
                         setIsPrepModalVisible(false);
                         setTimeout(() => {
+                            Speech.speak("Begin!")
                             setIsStartModalVisible(true);
-                        }, 700);
+                        }, 700)
                     }
-                    return prev - 1;
+
+                    return newTime;
                 });
             }, 1000);
         }
@@ -239,6 +251,9 @@ const PushUpsTestScreen = ({
 
                         setTimeout(() => {
                             if (isAutoDetectEnabled) {
+                                Speech.stop();
+                                Speech.speak("Time's up!");
+                                console.log("Times Up");
                                 setIsResultModalVisible(true);
                             } else {
                                 askForManualInputModal()
@@ -254,7 +269,7 @@ const PushUpsTestScreen = ({
             if (startIntervalRef.current) clearInterval(startIntervalRef.current);
         };
     }, [isStartRunning]);
-    // Accelerometer setup
+
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
             setSensorData(accelerometerData);
@@ -308,9 +323,19 @@ const PushUpsTestScreen = ({
                         duration <= MAX_PUSHUP_TIME &&
                         now - lastCountTime > COOLDOWN_MS) {
 
-                        setPushUpCount(prev => prev + 1);
+                        setPushUpCount(prev => {
+                            const newCount = prev + 1;
+                            Speech.stop();
+                            sayNumber(newCount);
+                            return newCount;
+                        });
+
                         setLastCountTime(now);
                         console.log("Pull-up counted!", duration);
+                    } else {
+                        Speech.stop();
+                        Speech.speak("Not counted!")
+                        console.log("Not counted");
                     }
 
                     setPushupState(PushupState.UP);

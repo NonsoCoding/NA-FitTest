@@ -101,6 +101,9 @@ const LandingScreen = ({
                         <Text style={{ color: Theme.colors.primaryColor, fontSize: 16 }}>Sign Up</Text>
                     </TouchableOpacity>
                 </View>
+                <Text style={{
+                    alignSelf: "center"
+                }}>© 2025 404services. All rights reserved.</Text>
             </View>
         </View>
     )

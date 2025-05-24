@@ -6,13 +6,15 @@ export type DrawerParamList = {
     EditDetails: undefined;
   History: undefined;
   AdminDashbaord: undefined;
+  About: undefined;
   ResetPassword: undefined
   // Add more screens here if needed
 };
 
 export type RootStackParamList = {
     IntroScreen: undefined;
-    History: undefined;
+  History: undefined;
+  About: undefined;
   LandingScreen: undefined;
   LoginScreen: undefined;
   ResetPassword: undefined;
