@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Dapt",
-    "slug": "dapt",
+    "name": "NA FitTest",
+    "slug": "na-fittest",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,17 +19,17 @@
           "NSAllowsArbitraryLoads": true
         }
       },
-      "bundleIdentifier": "com.nonsoobi.dapt"
+      "bundleIdentifier": "com.nonsoobi.nafit"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.nonsoobi.dapt",
+      "package": "com.nonsoobi.nafit",
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "ACTIVITY_RECOGNITION"
+        "android.permission.ACTIVITY_RECOGNITION"
       ]
     },
     "web": {
@@ -42,7 +42,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "8961de1c-5518-48f1-ac7a-9e8286c0acbb"
+        "projectId": "bb0a91a5-d629-4a60-be08-524765171634"
       }
     },
     "owner": "nonsolovescoding"
