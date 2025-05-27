@@ -22,11 +22,30 @@ const LandingScreen = ({
                 gap: 20,
                 padding: 20,
             }}>
-                <Text style={{
-                    fontWeight: "600",
-                    fontSize: 45,
-                    color: "white"
-                }}>Dapt</Text>
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "center"
+                }}>
+                    <Text style={{
+                        fontWeight: "600",
+                        fontSize: 65,
+                        color: "white"
+                    }}>NA</Text>
+                    <View>
+                        <Text style={{
+                            fontSize: 13,
+                            fontWeight: '600'
+                        }}>PHYSICAL</Text>
+                        <Text style={{
+                            fontSize: 13,
+                            fontWeight: '600'
+                        }}>FITNESS</Text>
+                        <Text style={{
+                            fontSize: 13,
+                            fontWeight: '600'
+                        }}>TEST</Text>
+                    </View>
+                </View>
                 <Text style={{
                     fontWeight: "300",
                     color: "white",

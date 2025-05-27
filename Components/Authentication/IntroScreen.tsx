@@ -21,11 +21,13 @@ const IntroScreen = ({
                 gap: 20,
                 padding: 20
             }}>
+
                 <Text style={{
                     fontWeight: "600",
                     fontSize: 45,
                     color: "white"
-                }}>Dapt</Text>
+                }}>NA FitTest</Text>
+
                 <Text style={{
                     fontWeight: "300",
                     color: "white",

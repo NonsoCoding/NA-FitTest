@@ -1,5 +1,6 @@
 import {
     Image,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        paddingTop: 80,
+        paddingTop: Platform.OS === "android" ? 60 : 80,
         backgroundColor: "#121212", // Dark background
     },
     scroll: {
