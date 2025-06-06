@@ -8,7 +8,7 @@ import { auth, db } from '../../Firebase/Settings';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { signOut } from 'firebase/auth';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Octicons } from '@expo/vector-icons';
 
 
 type CustomDrawerContentProps = DrawerContentComponentProps & {
@@ -123,7 +123,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                             loop={true}
                             autoPlay={true}
                         />
-                        <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
+                        <Text style={{ color: "#fff", marginTop: 10 }}>Logging out...</Text>
                     </View>
                 </Modal>
             )}
@@ -179,13 +179,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                 <TouchableOpacity
                     onPress={() => navigation.closeDrawer()}
                 >
-                    <Image source={require("../../assets/downloadedIcons/close.png")}
-                        style={{
-                            width: 30,
-                            height: 30,
-                            resizeMode: "contain"
-                        }}
-                    />
+                    <Octicons name='x' size={30} />
                 </TouchableOpacity>
             </View>
             <View style={{

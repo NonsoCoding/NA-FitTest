@@ -561,7 +561,7 @@ const styles = StyleSheet.create({
         height: "25%",
         backgroundColor: Theme.colors.primaryColor,
         padding: 20,
-        paddingTop: Platform.OS === "android" ? 60 : 80,
+        paddingTop: Platform.OS === "android" ? 40 : 80,
         justifyContent: "space-between",
         gap: 20,
     },

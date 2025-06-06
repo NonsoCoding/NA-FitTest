@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "NA FitTest",
-    "slug": "na-fittest",
+    "name": "TactiXFit",
+    "slug": "tactix-fit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,7 +9,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "cover",
-      "backgroundColor": "#4B5320" 
+      "backgroundColor": "#1F1F1F"
     },
     "ios": {
       "supportsTablet": true,
@@ -29,7 +29,7 @@
         "android.permission.RECORD_AUDIO",
         "android.permission.ACTIVITY_RECOGNITION"
       ],
-      "package": "com.nonsolovescoding.nafittest"
+      "package": "com.nonsolovescoding.tactixfit"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -41,7 +41,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "bb0a91a5-d629-4a60-be08-524765171634"
+        "projectId": "bcc777a5-bc75-4e5a-a108-48fc2e1c990e"
       }
     },
     "owner": "nonsolovescoding"

@@ -15,8 +15,21 @@ interface IPersonalInfoProps {
 const validationSchema = yup.object().shape({
     firstName: yup.string().required("First name is required."),
     lastName: yup.string().required("Last name is required."),
-    serviceNumber: yup.string().required("Service number is a required.")
+    serviceNumber: yup.string().required("Service number is a required."),
+    gender: yup.string().required("Gender is required.")
 })
+
+// Custom Radio Button Component
+const RadioButton = ({ selected, onPress, label }: { selected: boolean; onPress: () => void; label: string }) => {
+    return (
+        <TouchableOpacity style={styles.radioContainer} onPress={onPress}>
+            <View style={[styles.radioCircle, selected && styles.selectedRadio]}>
+                {selected && <View style={styles.radioDot} />}
+            </View>
+            <Text style={styles.radioLabel}>{label}</Text>
+        </TouchableOpacity>
+    );
+};
 
 const PersonalInfo = ({
     navigation
@@ -24,7 +37,7 @@ const PersonalInfo = ({
 
     const [isLoading, setIsLoading] = useState(false);
 
-    const savePersonalInfo = async (values: { firstName: string; lastName: string; serviceNumber: string }) => {
+    const savePersonalInfo = async (values: { firstName: string; lastName: string; serviceNumber: string; gender: string }) => {
         setIsLoading(true);
         const user = auth.currentUser;
         if (!user) return;
@@ -34,6 +47,7 @@ const PersonalInfo = ({
                 firstName: values.firstName,
                 lastName: values.lastName,
                 serviceNumber: values.serviceNumber,
+                gender: values.gender,
                 createdAt: serverTimestamp(),
                 TacticalPoints: 0,
                 personalBest: 0,
@@ -44,7 +58,7 @@ const PersonalInfo = ({
                 SprintingMinRequirement: 60,
             });
             setIsLoading(false)
-            Alert.alert("Success", "Profile saved! Welcome to your dashboard.");
+            Alert.alert("Welcome to your dashboard.");
             navigation.navigate("MainDrawer")
         } catch (error) {
             setIsLoading(false)
@@ -73,11 +87,11 @@ const PersonalInfo = ({
                 </View>
             )}
             <Formik
-                initialValues={{ firstName: "", lastName: "", serviceNumber: "" }}
+                initialValues={{ firstName: "", lastName: "", serviceNumber: "", gender: "", }}
                 validationSchema={validationSchema}
                 onSubmit={(values) => savePersonalInfo(values)}
             >
-                {({ handleChange, handleBlur, handleSubmit, validateForm, values, errors, touched, setTouched }) => {
+                {({ handleChange, handleBlur, handleSubmit, validateForm, values, errors, touched, setTouched, setFieldValue }) => {
                     return (
                         <View style={{
                             flex: 1
@@ -158,6 +172,26 @@ const PersonalInfo = ({
                                                     color: "red"
                                                 }}>{errors.lastName}</Text>
                                             )}
+
+                                            {/* Gender Selection */}
+                                            <View style={styles.genderContainer}>
+                                                <View style={styles.radioGroup}>
+                                                    <RadioButton
+                                                        selected={values.gender === 'Male'}
+                                                        onPress={() => setFieldValue('gender', 'Male')}
+                                                        label="Male"
+                                                    />
+                                                    <RadioButton
+                                                        selected={values.gender === 'Female'}
+                                                        onPress={() => setFieldValue('gender', 'Female')}
+                                                        label="Female"
+                                                    />
+                                                </View>
+                                                {touched.gender && errors.gender && (
+                                                    <Text style={styles.errorText}>{errors.gender}</Text>
+                                                )}
+                                            </View>
+
                                             <View style={styles.textinput_container}>
                                                 <MaterialIcons
                                                     name="military-tech"
@@ -170,7 +204,6 @@ const PersonalInfo = ({
                                                     onChangeText={(text) => handleChange('serviceNumber')('N/A' + text)}
                                                     onBlur={handleBlur('serviceNumber')}
                                                     value={values.serviceNumber.replace(/^N\/A/, '')}
-
                                                 />
                                             </View>
                                             {touched.serviceNumber && errors.serviceNumber && (
@@ -185,8 +218,8 @@ const PersonalInfo = ({
                                             onPress={async () => {
                                                 console.log("Submit button pressed");
                                                 const errors = await validateForm();
-                                                setTouched({ firstName: true, lastName: true, serviceNumber: true });
-                                                if (!errors.firstName && !errors.lastName && !errors.serviceNumber) {
+                                                setTouched({ firstName: true, lastName: true, serviceNumber: true, gender: true });
+                                                if (!errors.firstName && !errors.lastName && !errors.serviceNumber && !errors.gender) {
                                                     console.log("Form is valid, submitting...");
                                                     handleSubmit();
                                                 } else {
@@ -218,7 +251,6 @@ const PersonalInfo = ({
 }
 
 export default PersonalInfo;
-
 
 const styles = StyleSheet.create({
     container: {
@@ -254,5 +286,53 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 9999,
+    },
+    // Gender Radio Button Styles
+    genderContainer: {
+        marginVertical: 10,
+    },
+    genderTitle: {
+        fontSize: 16,
+        fontWeight: '500',
+        marginBottom: 10,
+        color: '#333',
+    },
+    radioGroup: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: 5,
+    },
+    radioContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 20,
+    },
+    radioCircle: {
+        height: 20,
+        width: 20,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: Theme.colors.lightPrimary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 8,
+    },
+    selectedRadio: {
+        borderColor: Theme.colors.primaryColor,
+    },
+    radioDot: {
+        height: 10,
+        width: 10,
+        borderRadius: 5,
+        backgroundColor: Theme.colors.primaryColor,
+    },
+    radioLabel: {
+        fontSize: 14,
+        color: '#333',
+    },
+    errorText: {
+        color: "red",
+        fontSize: 14,
+        marginTop: 5,
     },
 })

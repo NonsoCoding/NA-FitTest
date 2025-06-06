@@ -1,4 +1,4 @@
-import { Image, ImageBackground, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, ImageBackground, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../Branding/Theme";
 import { useEffect, useRef, useState } from "react";
 import { Accelerometer } from "expo-sensors";
@@ -32,6 +32,7 @@ const SitUpTestScreen = ({
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isPrepModalVisible, setIsPrepModalVisible] = useState(false);
+    const [time, setTime] = useState(60);
     const [isStartModalVisible, setIsStartModalVisible] = useState(false);
     const [isResultModalVisible, setIsResultModalVisible] = useState(false);
     const [prepTime, setPrepTime] = useState(5);
@@ -188,7 +189,7 @@ const SitUpTestScreen = ({
     }, [isStartModalVisible]);
 
     const startMainCountdown = () => {
-        if (startTime > 0 && !isStartRunning) {
+        if (time > 0 && !isStartRunning) {
             setIsStartRunning(true);
             if (isAutoDetectEnabled) {
                 setIsCountingActive(true);
@@ -237,14 +238,14 @@ const SitUpTestScreen = ({
 
     // Main timer logic
     useEffect(() => {
-        if (isStartRunning && startTime > 0) {
+        if (isStartRunning && time > 0) {
             // Enable push-up counting when the timer starts
             if (isAutoDetectEnabled) {
                 setIsAutoDetectEnabled(true);
             }
 
             startIntervalRef.current = setInterval(() => {
-                setStartTime(prev => {
+                setTime(prev => {
                     if (prev === 1) {
                         clearInterval(startIntervalRef.current as NodeJS.Timeout);
                         setIsStartRunning(false);
@@ -272,7 +273,7 @@ const SitUpTestScreen = ({
         return () => {
             if (startIntervalRef.current) clearInterval(startIntervalRef.current);
         };
-    }, [isStartRunning, startTime, isAutoDetectEnabled]);
+    }, [isStartRunning, time, isAutoDetectEnabled]);
     // Accelerometer setup
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
@@ -420,6 +421,47 @@ const SitUpTestScreen = ({
     const stopTracking = async (): Promise<void> => {
         await saveRunResultToFirestore();
     };
+
+    const handleEndCountdown = () => {
+        Alert.alert(
+            'End Countdown',
+            'Are you sure you want to end the sit up count?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                },
+                {
+                    text: 'End',
+                    onPress: () => {
+                        if (startIntervalRef.current) {
+                            clearInterval(startIntervalRef.current)
+                            startIntervalRef.current = null;
+                        }
+
+                        Speech.stop();
+                        setIsStartRunning(false);
+                        setIsCountingActive(false);
+                        setIsStartModalVisible(false);
+                        setTime(60);
+                        setIsResultModalVisible(true);
+                    },
+                    style: 'destructive'
+                },
+            ],
+            { cancelable: true }
+        );
+    };
+
+
+    const formatTime = (seconds: number) => {
+        const min = Math.floor(seconds / 60);
+        const sec = seconds % 60;
+        return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
+    }
+
+    const increaseTime = () => setTime(prev => prev + 10);
+    const decreaseTime = () => setTime(prev => (prev > 10 ? prev - 10 : 0));
 
     return (
         <View style={{
@@ -585,7 +627,8 @@ const SitUpTestScreen = ({
 
                             }}
                                 onPress={() => {
-                                    setIsModalVisible(false)
+                                    setIsModalVisible(false);
+                                    setTime(60)
                                 }}
                             >
                                 <Text style={{
@@ -604,18 +647,45 @@ const SitUpTestScreen = ({
                             backgroundColor: "rgba(0, 0, 0, 0.3)"
                         }}>
                             <View style={{
-                                flexDirection: "row",
-                                alignItems: "flex-end",
+                                flexDirection: 'row',
+                                alignItems: "center",
+                                gap: 25
                             }}>
-                                <Text style={{
-                                    fontSize: 60,
-                                    color: "white",
-                                }}>01:00</Text>
-                                <Text style={{
-                                    fontSize: 17,
-                                    bottom: 10,
-                                    color: "white",
-                                }}>min</Text>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        increaseTime()
+                                    }}
+                                >
+                                    <Text style={{
+                                        fontSize: 30,
+                                        color: 'white'
+                                    }}>+</Text>
+                                </TouchableOpacity>
+                                <View style={{
+                                    flexDirection: "row",
+                                    alignItems: "flex-end",
+                                }}>
+                                    <Text style={{
+                                        fontSize: 40,
+                                        color: "white",
+
+                                    }}>{formatTime(time)}</Text>
+                                    <Text style={{
+                                        fontSize: 17,
+                                        bottom: 10,
+                                        color: "white",
+                                    }}>min</Text>
+                                </View>
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        decreaseTime()
+                                    }}
+                                >
+                                    <Text style={{
+                                        fontSize: 40,
+                                        color: "white"
+                                    }}>-</Text>
+                                </TouchableOpacity>
                             </View>
                             <TouchableOpacity
                                 onPress={() => {
@@ -768,7 +838,7 @@ const SitUpTestScreen = ({
                                     fontSize: 20,
                                     color: "white"
                                 }}>
-                                    {startTime}
+                                    {formatTime(time)}
                                 </Text>
                                 <Text style={{
                                     fontSize: 12,
@@ -787,12 +857,12 @@ const SitUpTestScreen = ({
                             </View>
                             <TouchableOpacity
                                 onPress={() => {
-
+                                    handleEndCountdown();
                                 }}
                             >
                                 <Text style={{
                                     color: "white"
-                                }}>G000000!!!</Text>
+                                }}>END SITUP</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -834,7 +904,7 @@ const SitUpTestScreen = ({
                                         clearInterval(intervalRef.current);
                                         intervalRef.current = null;
                                     }
-                                    setStartTime(60);
+                                    setTime(60);
                                     setIsStartRunning(false);
                                     if (startIntervalRef.current) {
                                         clearInterval(startIntervalRef.current);
@@ -883,7 +953,8 @@ const SitUpTestScreen = ({
                                 onPress={() => {
                                     setIsResultModalVisible(false);
                                     navigation.goBack();
-                                    stopTracking()
+                                    stopTracking();
+                                    setTime(60);
                                 }}
                             >
                                 <Text style={{
@@ -934,7 +1005,7 @@ const SitUpTestScreen = ({
                                     fontWeight: "200",
                                     fontSize: 16,
                                     textAlign: "center"
-                                }}>Input your push-up count</Text>
+                                }}>Input your Sit-up count</Text>
                             </View>
                         </View>
                         <TextInput

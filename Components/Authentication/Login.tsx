@@ -4,6 +4,7 @@ import {
     Animated,
     Image,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -199,9 +200,6 @@ const LoginScreen = ({
                                 <View style={{
                                     gap: 5
                                 }}>
-                                    <Text>
-                                        Email
-                                    </Text>
                                     <View style={[styles.textinput_container, {
                                         marginBottom: 5,
                                     }]}>
@@ -229,9 +227,6 @@ const LoginScreen = ({
                                 <View style={{
                                     gap: 5
                                 }}>
-                                    <Text>
-                                        Password
-                                    </Text>
                                     <View style={styles.textinput_container}>
                                         <Image source={require("../../assets/downloadedIcons/lock-2-fill.png")}
                                             style={{
@@ -477,7 +472,7 @@ const styles = StyleSheet.create({
     },
     textinput: {
         flex: 1,
-        paddingVertical: 20,
+        paddingVertical: Platform.OS === "android" ? 15 : 20,
         paddingHorizontal: 10,
         fontSize: 14,
     },

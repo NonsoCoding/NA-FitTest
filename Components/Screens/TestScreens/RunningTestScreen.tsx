@@ -531,21 +531,23 @@ const RunningTestScreen = ({
                     <Animated.View
                         style={{
                             position: 'absolute',
-                            left: -15, // centers the knob
+                            left: -33, // centers the knob
                             bottom: animatedProgress.interpolate({
                                 inputRange: [0, 1],
-                                outputRange: ['0%', '100%'],
+                                outputRange: ['5%', '100%'],
                             }),
                             width: 20,
                             height: 20,
                         }}
                     >
                         <LottieView
-                            source={require("../../../assets/downloadedIcons/Animation - 1746723631367.json")}
+                            source={require("../../../assets/ExerciseGifs/Animation - 1748355215939 (1).json")}
                             style={{
-                                height: 40,
-                                width: 40
+                                height: 80,
+                                width: 80
                             }}
+                            loop={true}
+                            autoPlay={true}
                         />
                     </Animated.View>
                 </View>

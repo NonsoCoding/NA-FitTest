@@ -29,15 +29,21 @@ const Profile = ({
     const [isDateOfBirthEditing, setIsDateOfBirthEditing] = useState(false);
     const [isFullNameEditing, setIsFullNameEditing] = useState(false);
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
-    const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; serviceNumber: string; dateOfBirth: string; profilePic: any } | null>(null);
+    const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; serviceNumber: string; dateOfBirth: string; profilePic: any; gender: string } | null>(null);
     const [height, setHeight] = useState("");
     const [weight, setWeight] = useState("");
     const [dateOfBirth, setDateOfBirth] = useState(new Date());
+    const [isFormEdited, setIsFormEdited] = useState(false)
     const [show, setShow] = useState(false);
     const [isCameraModalVisible, setIsCameraModalVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [previewProfilePictureeModal, setPreviewProfilePictureeModal] = useState(false);
     const inputRef = useRef<TextInput>(null); // 👈 create ref
+    const originalValues = useRef({
+        height: '',
+        weight: '',
+        dateOfBirth: new Date(),
+    });
 
     const onChange = (event: any, selectedDate?: Date) => {
         setShow(Platform.OS === 'ios');
@@ -66,15 +72,24 @@ const Profile = ({
                 setUserInfo({
                     firstName: data.firstName,
                     lastName: data.lastName,
+                    gender: data.gender,
                     serviceNumber: data.serviceNumber,
                     dateOfBirth: data.dateOfBirth,
                     profilePic: data.profilePic
                 });
 
-                if (data.height) setHeight(data.height);
-                if (data.weight) setWeight(data.weight);
+                if (data.height) {
+                    setHeight(data.height);
+                    originalValues.current.height = data.height;
+                };
+                if (data.weight) {
+                    setWeight(data.weight);
+                    originalValues.current.weight = data.weight;
+                };
                 if (data.dateOfBirth?.toDate) {
-                    setDateOfBirth(data.dateOfBirth.toDate());
+                    const dob = data.dateOfBirth.toDate();
+                    setDateOfBirth(dob);
+                    originalValues.current.dateOfBirth = dob;
                 }
             } else {
                 console.log("No such document");
@@ -199,6 +214,16 @@ const Profile = ({
             console.error("Failed to save image URL to Firestore ❌", err);
         }
     };
+
+    useEffect(() => {
+        const edited =
+            height !== originalValues.current.height ||
+            weight !== originalValues.current.weight ||
+            formatDate(dateOfBirth) !== formatDate(originalValues.current.dateOfBirth);
+
+        setIsFormEdited(edited);
+    }, [height, weight, dateOfBirth]);
+
 
     const handleSetProfilePic = async () => {
         try {
@@ -409,21 +434,21 @@ const Profile = ({
                                         fontSize: 12
                                     }}>SN: {userInfo?.serviceNumber}</Text>
                                     <Text style={{
+                                        fontSize: 12,
+                                        color: "white"
+                                    }}>{userInfo?.gender}</Text>
+                                    <Text style={{
                                         color: "white",
                                         fontWeight: "200"
                                     }}>{email}</Text>
                                 </View>
                             </View>
+
                             <View>
                                 <TouchableOpacity onPress={() => {
                                     navigation.navigate("EditDetails")
                                 }}>
-                                    <Image source={require("../../assets/downloadedIcons/edit.png")}
-                                        style={{
-                                            width: 40,
-                                            height: 40
-                                        }}
-                                    />
+                                    <Feather name="edit" size={30} color={'white'} />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -591,6 +616,7 @@ const Profile = ({
                             </View>
                         </View>
                         <TouchableOpacity
+                            disabled={!isFormEdited}
                             onPress={() => {
                                 updateProfileDetails({
                                     height: height,
@@ -599,7 +625,8 @@ const Profile = ({
                                 })
                             }}
                             style={[styles.continue_email_button, {
-                                padding: 20
+                                padding: 20,
+                                backgroundColor: !isFormEdited ? 'grey' : Theme.colors.primaryColor
                             }]}>
                             <Text style={styles.email_button_text}>Save changes</Text>
                             <Image source={require("../../assets/Icons/fast-forward.png")}
@@ -645,9 +672,9 @@ const Profile = ({
                                                 style={{
                                                     height: 40,
                                                     width: 40,
-                                                    resizeMode: "contain"
+                                                    borderRadius: 20,
                                                 }}
-                                                source={require("../../assets/downloadedIcons/profile.png")}
+                                                source={{ uri: userInfo?.profilePic || require("../../assets/downloadedIcons/profile.png") }}
                                             />
                                             <Text style={{
                                                 color: 'white',
@@ -660,7 +687,7 @@ const Profile = ({
                                                 setIsCameraModalVisible(false);
                                             }}
                                             style={{
-                                                backgroundColor: "#657432",
+                                                backgroundColor: "#292929",
                                                 padding: 5,
                                                 alignItems: "center",
                                                 justifyContent: "center",
@@ -676,7 +703,7 @@ const Profile = ({
                                         </TouchableOpacity>
                                     </View>
                                     <View style={{
-                                        backgroundColor: "#657432",
+                                        backgroundColor: "#292929",
                                         padding: 20,
                                         borderRadius: 5,
                                         gap: 30

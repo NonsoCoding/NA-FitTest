@@ -18,35 +18,16 @@ interface SignUpIprops {
     navigation?: any;
 }
 
-
-// Enhanced password rules regex
-const passwordRules = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
-
-// Email domain whitelist (add more as needed)
-const allowedDomains = ['com', 'net', 'org', 'io', 'co', 'edu', 'gov'];
-
 // Validation schema
 const signUpValidation = yup.object().shape({
     email: yup
         .string()
         .trim()
         .email("Invalid email format")
-        .test(
-            'valid-domain',
-            'We only accept .com, .net, .org, .io, .co, .edu, or .gov emails',
-            (value) => {
-                if (!value) return false;
-                const domain = value.split('.').pop()?.toLowerCase();
-                return domain ? allowedDomains.includes(domain) : false;
-            }
-        )
         .required("Email is required"),
     password: yup
         .string()
-        .matches(
-            passwordRules,
-            "Must contain: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special character"
-        )
+        .min(5, "must be at least 5 characters")
         .required("Password is required"),
 });
 
@@ -176,7 +157,7 @@ const SignUpScreen = ({
                                         fontWeight: "700",
                                         color: "white",
                                         lineHeight: 45,
-                                    }}>Sign up to create your account</Text>
+                                    }}>Create an account</Text>
                                 </View>
                                 <Text style={{
                                     fontSize: 16,

@@ -16,7 +16,7 @@ const About = ({ navigation }: IAboutProps) => {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>NA FitTest Legal Documentation</Text>
+                <Text style={styles.headerTitle}>TactiXFit Legal Documentation</Text>
                 <TouchableOpacity onPress={() => navigation.openDrawer()} style={styles.notificationIcon}>
                     <Image
                         source={require("../../assets/downloadedIcons/notification.png")}
@@ -30,7 +30,7 @@ const About = ({ navigation }: IAboutProps) => {
                     <Text style={styles.sectionTitle}>Copyright Notice</Text>
                     <View style={styles.item}>
                         <Text style={styles.label}>App Name:</Text>
-                        <Text style={styles.value}>NA FitTest</Text>
+                        <Text style={styles.value}>TactiXFit</Text>
                     </View>
                     <View style={styles.item}>
                         <Text style={styles.label}>Company:</Text>
@@ -48,7 +48,7 @@ const About = ({ navigation }: IAboutProps) => {
                     <Text style={styles.subtext}>© 2025 404services. All rights reserved.</Text>
 
                     <Text style={styles.paragraph}>
-                        NA FitTest, including but not limited to its source code, design,
+                        TactiXFit, including but not limited to its source code, design,
                         features, content, branding, and associated assets, is the exclusive
                         intellectual property of 404services. Unauthorized reproduction,
                         distribution, modification, or commercial use of any part of the
@@ -66,7 +66,7 @@ const About = ({ navigation }: IAboutProps) => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Disclaimer</Text>
                     <Text style={styles.paragraph}>
-                        NA FitTest is designed for general fitness assessment and educational
+                        TactiXFit is designed for general fitness assessment and educational
                         purposes only. It is not a substitute for professional medical advice,
                         diagnosis, or treatment.
                     </Text>
@@ -79,7 +79,7 @@ const About = ({ navigation }: IAboutProps) => {
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Terms of Service</Text>
-                    <Text style={styles.paragraph}>By using NA FitTest, you agree to:</Text>
+                    <Text style={styles.paragraph}>By using TactiXFit, you agree to:</Text>
                     <View style={styles.bulletList}>
                         <Text style={styles.bullet}>• Use the app only for lawful purposes.</Text>
                         <Text style={styles.bullet}>
@@ -99,7 +99,7 @@ const About = ({ navigation }: IAboutProps) => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Privacy Policy</Text>
                     <Text style={styles.paragraph}>
-                        NA FitTest does not collect any personally identifiable information
+                        TactiXFit does not collect any personally identifiable information
                         (PII) unless explicitly provided by the user through forms or features.
                     </Text>
                     <Text style={styles.paragraph}>

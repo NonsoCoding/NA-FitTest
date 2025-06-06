@@ -17,19 +17,41 @@ interface IProfileProps {
 const EditDetails = ({
 
 }: IProfileProps) => {
-
     const [isFirstNameEditing, setIsFirstNameEditing] = useState(false);
     const [isLastNameEditing, setIsLastNameEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isEmailEditing, setIsEmailEditing] = useState(false);
     const [isPasswordEditing, setIsPasswordEditing] = useState(false);
     const [isFullNameEditing, setIsFullNameEditing] = useState(false);
+    const [isGenderEditing, setIsGenderEditing] = useState(false);
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
+    const [isFormEdited, setIsFormEdited] = useState(false)
     const [email, setEmail] = useState('');
-    const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; } | null>(null);
+    const [gender, setGender] = useState('');
+    const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; gender: string; } | null>(null);
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
-    const inputRef = useRef<TextInput>(null);
+
+    // Separate refs for each input
+    const firstNameInputRef = useRef<TextInput>(null);
+    const lastNameInputRef = useRef<TextInput>(null);
+
+    const originalValues = useRef({
+        firstName: '',
+        lastName: '',
+        gender: '',
+    });
+
+    const RadioButton = ({ selected, onPress, label }: { selected: boolean; onPress: () => void; label: string }) => {
+        return (
+            <TouchableOpacity style={styles.radioContainer} onPress={onPress}>
+                <View style={[styles.radioCircle, selected && styles.selectedRadio]}>
+                    {selected && <View style={styles.radioDot} />}
+                </View>
+                <Text style={styles.radioLabel}>{label}</Text>
+            </TouchableOpacity>
+        );
+    };
 
     const fetchUserInfo = async () => {
         const user = auth.currentUser;
@@ -44,13 +66,28 @@ const EditDetails = ({
                 console.log("User Data: ", data);
 
                 setUserInfo({
-                    firstName: data.firstName,
-                    lastName: data.lastName,
+                    firstName: data.firstName || '',
+                    lastName: data.lastName || '',
+                    gender: data.gender || '',
                 });
-                if (data.firstName) setFirstName(data.firstName);
-                if (data.lastName) setLastName(data.lastName)
+
+                // Set state and original values
+                const userFirstName = data.firstName || '';
+                const userLastName = data.lastName || '';
+                const userGender = data.gender || '';
+
+                setFirstName(userFirstName);
+                setLastName(userLastName);
+                setGender(userGender);
+
+                originalValues.current = {
+                    firstName: userFirstName,
+                    lastName: userLastName,
+                    gender: userGender,
+                };
+
             } else {
-                console.log("So such document")
+                console.log("No such document")
             }
         } catch (error) {
             console.log("Error fetching user data: ", error);
@@ -65,28 +102,59 @@ const EditDetails = ({
         fetchUserInfo();
     }, []);
 
-    const updateProfileDetails = async (values: { firstName: string; lastName: string; }) => {
+    useEffect(() => {
+        console.log('Checking form changes:', {
+            firstName,
+            lastName,
+            gender,
+            original: originalValues.current
+        });
+
+        const edited =
+            firstName !== originalValues.current.firstName ||
+            lastName !== originalValues.current.lastName ||
+            gender !== originalValues.current.gender;
+
+        console.log('Form edited:', edited);
+        setIsFormEdited(edited);
+    }, [firstName, lastName, gender]);
+
+    const updateProfileDetails = async (values: { firstName: string; lastName: string; gender: string }) => {
         setIsLoading(true)
         const user = auth.currentUser;
-        if (!user) return;
+        if (!user) {
+            setIsLoading(false);
+            return;
+        }
 
         try {
             const userDocRef = doc(db, "UserDetails", user.uid);
             await updateDoc(userDocRef, {
                 firstName: values.firstName,
                 lastName: values.lastName,
-            })
-            setIsLoading(false);
+                gender: values.gender
+            });
+
+            // Update original values after successful save
+            originalValues.current = {
+                firstName: values.firstName,
+                lastName: values.lastName,
+                gender: values.gender
+            };
+
             console.log("Profile updated successfully");
-            Alert.alert("success", "Profile updated successfully")
+            Alert.alert("Success", "Profile updated successfully");
+
+            // Force re-evaluation of form edited state
+            setIsFormEdited(false);
+
         } catch (error) {
-            setIsLoading(false)
             console.log("Error updating profile: ", error);
+            Alert.alert("Error", "Failed to update profile");
         } finally {
             setIsLoading(false);
         }
     }
-
 
     return (
         <View style={styles.container}>
@@ -171,7 +239,7 @@ const EditDetails = ({
                             borderWidth: isFirstNameEditing ? 2 : 1
                         }]}>
                             <TextInput
-                                ref={inputRef}
+                                ref={firstNameInputRef}
                                 placeholder={userInfo?.firstName || "FirstName"}
                                 placeholderTextColor={Theme.colors.second_primary}
                                 style={styles.textinput}
@@ -183,7 +251,7 @@ const EditDetails = ({
                                 setIsFirstNameEditing(prev => {
                                     const newState = !prev;
                                     if (!prev) {
-                                        setTimeout(() => inputRef.current?.focus(), 700);
+                                        setTimeout(() => firstNameInputRef.current?.focus(), 100);
                                     }
                                     return newState;
                                 })
@@ -207,7 +275,7 @@ const EditDetails = ({
                             borderWidth: isLastNameEditing ? 2 : 1
                         }]}>
                             <TextInput
-                                ref={inputRef}
+                                ref={lastNameInputRef}
                                 placeholder={userInfo?.lastName || "LastName"}
                                 placeholderTextColor={Theme.colors.second_primary}
                                 style={styles.textinput}
@@ -219,7 +287,7 @@ const EditDetails = ({
                                 setIsLastNameEditing(prev => {
                                     const newState = !prev;
                                     if (!prev) {
-                                        setTimeout(() => inputRef.current?.focus(), 700);
+                                        setTimeout(() => lastNameInputRef.current?.focus(), 100);
                                     }
                                     return newState;
                                 })
@@ -230,6 +298,20 @@ const EditDetails = ({
                                     size={25}
                                 />
                             </TouchableOpacity>
+                        </View>
+                    </View>
+                    <View style={styles.genderContainer}>
+                        <View style={styles.radioGroup}>
+                            <RadioButton
+                                selected={gender === 'Male'}
+                                onPress={() => setGender('Male')}
+                                label="Male"
+                            />
+                            <RadioButton
+                                selected={gender === 'Female'}
+                                onPress={() => setGender('Female')}
+                                label="Female"
+                            />
                         </View>
                     </View>
                     <View style={{
@@ -245,7 +327,7 @@ const EditDetails = ({
                                 style={styles.textinput}
                                 editable={isEmailEditing}
                             />
-                            <TouchableOpacity onPress={() => setIsEmailEditing(prev => !prev)}>
+                            <TouchableOpacity onPress={() => setIsEmailEditing(false)}>
                                 <Image source={require("../../assets/downloadedIcons/edit-line.png")}
                                     style={{
                                         height: 25,
@@ -281,14 +363,17 @@ const EditDetails = ({
                     </View>
                 </View>
                 <TouchableOpacity
+                    disabled={!isFormEdited}
                     onPress={() => {
                         updateProfileDetails({
                             firstName: firstName,
-                            lastName: lastName
+                            lastName: lastName,
+                            gender: gender
                         })
                     }}
                     style={[styles.continue_email_button, {
-                        padding: 20
+                        padding: 20,
+                        backgroundColor: !isFormEdited ? 'grey' : Theme.colors.primaryColor
                     }]}>
                     <Text style={styles.email_button_text}>Save changes</Text>
                     <Image source={require("../../assets/Icons/fast-forward.png")}
@@ -340,5 +425,52 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 9999,
+    },
+    genderContainer: {
+        marginVertical: 10,
+    },
+    genderTitle: {
+        fontSize: 16,
+        fontWeight: '500',
+        marginBottom: 10,
+        color: '#333',
+    },
+    radioGroup: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: 5,
+    },
+    radioContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 20,
+    },
+    radioCircle: {
+        height: 20,
+        width: 20,
+        borderRadius: 10,
+        borderWidth: 2,
+        borderColor: Theme.colors.lightPrimary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 8,
+    },
+    selectedRadio: {
+        borderColor: Theme.colors.primaryColor,
+    },
+    radioDot: {
+        height: 10,
+        width: 10,
+        borderRadius: 5,
+        backgroundColor: Theme.colors.primaryColor,
+    },
+    radioLabel: {
+        fontSize: 14,
+        color: '#333',
+    },
+    errorText: {
+        color: "red",
+        fontSize: 14,
+        marginTop: 5,
     },
 })

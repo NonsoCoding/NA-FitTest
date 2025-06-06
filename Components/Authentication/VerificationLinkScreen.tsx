@@ -93,7 +93,7 @@ const VerificationLinkScreen = ({
                         loop={true}
                         autoPlay={true}
                     />
-                    <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
+                    <Text style={{ color: "#fff", marginTop: 10 }}>Verifying...</Text>
                 </View>
             )}
             <View style={{
@@ -159,11 +159,15 @@ const VerificationLinkScreen = ({
                         }}>Click to resend</Text>
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    alignSelf: "center"
-                }}>
+                <TouchableOpacity
+                    onPress={() => {
+                        navigation.goBack()
+                    }}
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        alignSelf: "center"
+                    }}>
                     <Image source={require("../../assets/downloadedIcons/arrow-left.png")} />
                     <Text>Back to log in</Text>
                 </TouchableOpacity>
@@ -176,7 +180,7 @@ export default VerificationLinkScreen;
 
 const styles = StyleSheet.create({
     btn: {
-        backgroundColor: "#4B5320",
+        backgroundColor: "#1F1F1F",
         padding: 20,
         borderRadius: 5,
         alignItems: "center",

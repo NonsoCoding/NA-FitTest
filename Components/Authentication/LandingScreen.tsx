@@ -19,7 +19,7 @@ const LandingScreen = ({
                 flex: 1,
                 justifyContent: "center",
                 alignItems: "center",
-                gap: 20,
+                gap: 5,
                 padding: 20,
             }}>
                 <View style={{
@@ -28,35 +28,21 @@ const LandingScreen = ({
                 }}>
                     <Text style={{
                         fontWeight: "600",
-                        fontSize: 65,
+                        fontSize: 40,
                         color: "white"
-                    }}>NA</Text>
-                    <View>
-                        <Text style={{
-                            fontSize: 13,
-                            fontWeight: '600'
-                        }}>PHYSICAL</Text>
-                        <Text style={{
-                            fontSize: 13,
-                            fontWeight: '600'
-                        }}>FITNESS</Text>
-                        <Text style={{
-                            fontSize: 13,
-                            fontWeight: '600'
-                        }}>TEST</Text>
-                    </View>
+                    }}>TactiXFit</Text>
                 </View>
                 <Text style={{
                     fontWeight: "300",
                     color: "white",
-                    fontSize: 18,
+                    fontSize: 15,
                     textAlign: "center"
                 }}>Proceed to your account or create a new one by signing up if you do not have an account.</Text>
             </View>
             <View style={{
                 backgroundColor: "white",
                 height: "35%",
-                gap: 15,
+                gap: 5,
                 padding: 30,
                 justifyContent: "center",
             }}>

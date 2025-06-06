@@ -88,11 +88,11 @@ const ResetPassword = ({
                 <View>
                     <View>
                         <Text style={{
-                            fontSize: 40,
+                            fontSize: 30,
                             fontWeight: "700",
                             color: "white",
                             lineHeight: 45,
-                        }}>Reset password</Text>
+                        }}>Change password</Text>
                     </View>
                     <Text style={{
                         fontSize: 16,

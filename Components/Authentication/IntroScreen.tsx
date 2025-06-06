@@ -26,14 +26,14 @@ const IntroScreen = ({
                     fontWeight: "600",
                     fontSize: 45,
                     color: "white"
-                }}>NA FitTest</Text>
+                }}>TactiXFit</Text>
 
                 <Text style={{
                     fontWeight: "300",
                     color: "white",
                     fontSize: 18,
                     textAlign: "center"
-                }}>Official Personal Traning App of the Army for National Defense</Text>
+                }}>Official Personal Traning App for the Military</Text>
             </View>
             <View style={{
                 height: "20%",
