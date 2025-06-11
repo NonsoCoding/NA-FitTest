@@ -6,27 +6,11 @@ import { Switch, ToggleButton } from "react-native-paper";
 import { auth, db } from "../../../Firebase/Settings";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import * as Speech from "expo-speech";
-import YoutubePlayer from 'react-native-youtube-iframe';
-import YoutubeIframe from "react-native-youtube-iframe";
+import Proximity from "react-native-proximity";
 
 interface ITestProps {
     navigation?: any;
 }
-
-enum PushupState {
-    READY,       // Starting position, waiting for movement
-    GOING_DOWN,  // User is moving downward
-    DOWN,        // User is in the down position
-    GOING_UP,    // User is moving upward
-    UP           // User has completed a rep
-}
-
-interface SensorData {
-    z?: number;
-    x?: number;
-    y?: number;
-}
-
 
 const PushUpsTestScreen = ({
     navigation
@@ -39,47 +23,31 @@ const PushUpsTestScreen = ({
     const [prepTime, setPrepTime] = useState(5);
     const [time, setTime] = useState(60);
     const [isStartRunning, setIsStartRunning] = useState(false);
-    const [startTime, setStartTime] = useState(60);
-    const [sensorData, setSensorData] = useState<SensorData>({});
     const [pushUpCount, setPushUpCount] = useState(0);
     const [isAutoDetectEnabled, setIsAutoDetectEnabled] = useState(true);
     const [showManualInputModal, setShowManualInputModal] = useState(false);
-    const [pushupState, setPushupState] = useState<PushupState>(PushupState.READY);
-    const [isFirstCalibration, setIsFirstCalibration] = useState(true);
-    const [personalBest, setPersonalBest] = useState(0);
-    const [calibrationValues, setCalibrationValues] = useState({
-        downThreshold: 0.04,   // was 0.08
-        upThreshold: -0.05,    // was -0.1
-        midThreshold: -0.2
-    });
-    const [lastCountTime, setLastCountTime] = useState<number>(0);
     const [isRunning, setIsRunning] = useState(false);
-    const [isGoingDown, setIsGoingDown] = useState(false);
-    const [isCountingActive, setIsCountingActive] = useState(false);
-
-    // const startIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    // const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-
-    const MIN_PUSHUP_TIME = 500; // Minimum time for a valid push-up (ms)
-    const MAX_PUSHUP_TIME = 5000; // Maximum time for a valid push-up (ms)
-    const COOLDOWN_MS = 200; // Reduced cooldown for better responsiveness
-
-    // Track timestamps for each state transition
-    const [stateTimestamps, setStateTimestamps] = useState({
-        downStart: 0,
-        downEnd: 0,
-        upStart: 0,
-        upEnd: 0
-    });
-
-    // Refs for intervals
     const startIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const [count, setCount] = useState(0);
+    const [isNear, setIsNear] = useState(false);
 
-    // Track recent Z values for smoothing
-    const recentYValues = useRef<number[]>([]);
-    const MAX_HISTORY = 5;
+    useEffect(() => {
+        const handleProximity = (data: any) => {
+            // Trigger only when it becomes near
+            if (data.proximity && !isNear) {
+                setCount((prev) => prev + 1);
+            }
+            setIsNear(data.proximity);
+        };
+
+        Proximity.addListener(handleProximity);
+
+        return () => {
+            Proximity.removeListener(handleProximity);
+        };
+    }, [isNear]);
+
 
     const sayNumber = (number: number) => {
         Speech.speak(number.toString());
@@ -138,22 +106,6 @@ const PushUpsTestScreen = ({
         }
     };
 
-
-    // Function to get smoothed Z value
-    const getSmoothedY = () => {
-        if (recentYValues.current.length === 0) return 0;
-        const sum = recentYValues.current.reduce((a, b) => a + b, 0);
-        return sum / recentYValues.current.length;
-    };
-
-    // Add new Z value and maintain limited history
-    const addYValue = (y: number) => {
-        recentYValues.current.push(y);
-        if (recentYValues.current.length > MAX_HISTORY) {
-            recentYValues.current.shift();
-        }
-    };
-
     // Start preparation countdown
     const startPrepCountdown = () => {
         if (prepTime > 0 && !isRunning) {
@@ -180,8 +132,8 @@ const PushUpsTestScreen = ({
             startMainCountdown();
             // Reset push-up counter when starting the test
             setPushUpCount(0);
-            setPushupState(PushupState.READY);
-            setIsFirstCalibration(true);
+            // setPushupState(PushupState.READY);
+            // setIsFirstCalibration(true);
         }
     }, [isStartModalVisible]);
 
@@ -189,7 +141,7 @@ const PushUpsTestScreen = ({
         if (time > 0 && !isStartRunning) {
             setIsStartRunning(true);
             if (isAutoDetectEnabled) {
-                setIsCountingActive(true);
+                // setIsCountingActive(true);
             }
         }
     };
@@ -251,7 +203,7 @@ const PushUpsTestScreen = ({
                         setIsStartModalVisible(false);
 
                         // Disable push-up counting when the timer ends
-                        setIsCountingActive(false);
+                        // setIsCountingActive(false);
 
                         setTimeout(() => {
                             if (isAutoDetectEnabled) {
@@ -274,98 +226,6 @@ const PushUpsTestScreen = ({
         };
     }, [isStartRunning]);
 
-    useEffect(() => {
-        const subscription = Accelerometer.addListener(accelerometerData => {
-            setSensorData(accelerometerData);
-        });
-
-        Accelerometer.setUpdateInterval(100);
-
-        return () => subscription.remove();
-    }, []);
-
-
-    useEffect(() => {
-        if (!isCountingActive || sensorData.y === undefined || !isAutoDetectEnabled) return;
-
-        const now = Date.now();
-        const y = sensorData.y;
-
-        addYValue(y);
-        const smoothedY = getSmoothedY();
-
-        switch (pushupState) {
-            case PushupState.READY:
-                if (smoothedY < calibrationValues.midThreshold) {
-                    setPushupState(PushupState.GOING_DOWN); // Pulling down
-                    setStateTimestamps(prev => ({ ...prev, downStart: now }));
-                    console.log("Pulling down");
-                }
-                break;
-
-            case PushupState.GOING_DOWN:
-                if (smoothedY < calibrationValues.downThreshold) {
-                    setPushupState(PushupState.DOWN);
-                    setStateTimestamps(prev => ({ ...prev, downEnd: now }));
-                    console.log("Reached bottom");
-                }
-                break;
-
-            case PushupState.DOWN:
-                if (smoothedY > calibrationValues.midThreshold) {
-                    setPushupState(PushupState.GOING_UP);
-                    setStateTimestamps(prev => ({ ...prev, upStart: now }));
-                    console.log("Pulling up");
-                }
-                break;
-
-            case PushupState.GOING_UP:
-                if (smoothedY > calibrationValues.upThreshold) {
-                    const duration = now - stateTimestamps.downEnd;
-
-                    if (duration >= MIN_PUSHUP_TIME &&
-                        duration <= MAX_PUSHUP_TIME &&
-                        now - lastCountTime > COOLDOWN_MS) {
-
-                        setPushUpCount(prev => {
-                            const newCount = prev + 1;
-                            Speech.stop();
-                            sayNumber(newCount);
-                            return newCount;
-                        });
-
-                        setLastCountTime(now);
-                        console.log("Pull-up counted!", duration);
-                    } else {
-                        Speech.stop();
-                        Speech.speak("Not counted!")
-                        console.log("Not counted");
-                    }
-
-                    setPushupState(PushupState.UP);
-                    setStateTimestamps(prev => ({ ...prev, upEnd: now }));
-                }
-                break;
-
-            case PushupState.UP:
-                if (now - stateTimestamps.upEnd > 300) {
-                    setPushupState(PushupState.READY);
-                }
-                break;
-        }
-    }, [sensorData, isCountingActive, isAutoDetectEnabled]);
-
-
-    // const pullUpsPlayer = useVideoPlayer(VideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-
-    // const startPrepCountdown = () => {
-    //     if (prepTime > 0 && !isRunning) {
-    //         setIsRunning(true);
-    //     }
-    // };
 
     const handleEndCountdown = () => {
         Alert.alert(
@@ -386,7 +246,7 @@ const PushUpsTestScreen = ({
 
                         Speech.stop();
                         setIsStartRunning(false);
-                        setIsCountingActive(false);
+                        // setIsCountingActive(false);
                         setIsStartModalVisible(false);
                         setTime(60);
                         setIsResultModalVisible(true);
@@ -404,24 +264,10 @@ const PushUpsTestScreen = ({
         }
     }, [isStartModalVisible])
 
-    // const startMainCountdown = () => {
-    //     if (startTime > 0 && !isStartRunning) {
-    //         setIsStartRunning(true);
-    //     }
-    // };
-
-    // const modalToPrepModal = () => {
-    //     setIsModalVisible(false);
-    //     setTimeout(() => {
-    //         setIsPrepModalVisible(true);
-    //         startPrepCountdown();
-    //     }, 700);
-    // }
-
 
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
-            setSensorData(accelerometerData);
+            // setSensorData(accelerometerData);
         });
 
         Accelerometer.setUpdateInterval(100);
@@ -1027,7 +873,6 @@ const PushUpsTestScreen = ({
                             onPress={() => {
                                 setShowManualInputModal(false);
                                 setPrepTime(5);
-                                setStartTime(60);
                                 saveRunResultToFirestore();
                                 setIsRunning(false);
                                 if (intervalRef.current) {
