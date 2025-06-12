@@ -1,16 +1,20 @@
 import { Alert, Image, ImageBackground, KeyboardAvoidingView, Linking, Modal, Platform, StyleSheet, Text, TextInput, Touchable, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../Branding/Theme";
 import { useEffect, useRef, useState } from "react";
-import { Accelerometer } from "expo-sensors";
+import { Accelerometer, LightSensor } from "expo-sensors";
 import { Switch, ToggleButton } from "react-native-paper";
 import { auth, db } from "../../../Firebase/Settings";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import * as Speech from "expo-speech";
-import Proximity from "react-native-proximity";
+import { LightSensorMeasurement } from "expo-sensors/build/LightSensor";
+import { Camera, CameraDevice, useCameraDevice } from 'react-native-vision-camera';
 
 interface ITestProps {
     navigation?: any;
 }
+
+type PermissionStatus = 'authorized' | 'denied' | 'not-determined' | 'restricted';
+
 
 const PushUpsTestScreen = ({
     navigation
@@ -31,22 +35,99 @@ const PushUpsTestScreen = ({
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const [count, setCount] = useState(0);
     const [isNear, setIsNear] = useState(false);
+    const [subscription, setSubscription] = useState<null | { remove: () => void }>(null);
+    const [lightLevel, setLightLevel] = useState<number>(1000);
+    const [isClose, setIsClose] = useState<boolean>(false);
+    const [baseline, setBaseline] = useState<number | null>(null);
+    // Add this near your other useRef declarations
+    const isCloseRef = useRef(isClose);
+    const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+    const [isRecording, setIsRecording] = useState(false);
+    const cameraRef = useRef<Camera>(null);
+    const device = useCameraDevice('back');
+    const [isCameraReady, setIsCameraReady] = useState(false);
 
     useEffect(() => {
-        const handleProximity = (data: any) => {
-            // Trigger only when it becomes near
-            if (data.proximity && !isNear) {
-                setCount((prev) => prev + 1);
+        // Check if device is available
+        if (device) {
+            setIsCameraReady(true);
+        }
+    }, [device]);
+
+    useEffect(() => {
+        const requestPermissions = async () => {
+            try {
+                const cameraPermission = await Camera.requestCameraPermission();
+                const microphonePermission = await Camera.requestMicrophonePermission();
+
+                console.log('Camera permission:', cameraPermission);
+                console.log('Microphone permission:', microphonePermission);
+
+                if (cameraPermission === 'granted' && microphonePermission === 'granted') {
+                    setHasPermission(true);
+                } else {
+                    setHasPermission(false);
+                    // Show alert to user about permissions
+                    Alert.alert(
+                        'Permissions Required',
+                        'Camera and microphone permissions are required for video recording.',
+                        [
+                            { text: 'Cancel', style: 'cancel' },
+                            { text: 'Open Settings', onPress: () => Linking.openSettings() }
+                        ]
+                    );
+                }
+            } catch (error) {
+                console.error('Permission request failed:', error);
+                setHasPermission(false);
             }
-            setIsNear(data.proximity);
         };
 
-        Proximity.addListener(handleProximity);
+        requestPermissions();
+    }, []);
+
+
+    useEffect(() => {
+        isCloseRef.current = isClose;
+    }, [isClose]);
+
+    useEffect(() => {
+        const readings: number[] = [];
+
+        const listener = LightSensor.addListener((data: LightSensorMeasurement) => {
+            const { illuminance } = data;
+            setLightLevel(illuminance);
+
+            // Calibrate baseline during the first few readings
+            if (baseline === null && readings.length < 10) {
+                readings.push(illuminance);
+                if (readings.length === 10) {
+                    const avg = readings.reduce((sum, v) => sum + v, 0) / 10;
+                    setBaseline(avg);
+                }
+                return; // Wait until baseline is set
+            }
+
+            if (baseline !== null) {
+                const thresholdDrop = baseline * 0.4; // 40% drop triggers close
+                const thresholdRise = baseline * 0.7; // 70% rise releases
+
+                if (illuminance < thresholdDrop && !isCloseRef.current) {
+                    setPushUpCount(prev => prev + 1);
+                    setIsClose(true);
+                } else if (illuminance > thresholdRise && isCloseRef.current) {
+                    setIsClose(false);
+                }
+            }
+        });
+
+        LightSensor.setUpdateInterval(200);
 
         return () => {
-            Proximity.removeListener(handleProximity);
+            listener.remove();
         };
-    }, [isNear]);
+    }, [baseline]);
+
 
 
     const sayNumber = (number: number) => {
@@ -428,7 +509,20 @@ const PushUpsTestScreen = ({
                         </TouchableOpacity>
 
                     </View>
+                    <Text>light level: {lightLevel.toFixed(2)} lux</Text>
+                    <Text>Push-ups: {pushUpCount}</Text>
+                    {isCameraReady && device && hasPermission && (
+                        <Camera
+                            ref={cameraRef}
+                            style={{ flex: 1 }}
+                            device={device}
+                            isActive={true}
+                            video={true}
+                            audio={true}
+                        />
+                    )}
                 </View>
+
                 <TouchableOpacity style={styles.getStartedBtn}
                     onPress={() => {
                         hanldleGetStarted();

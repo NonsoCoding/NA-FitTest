@@ -18,7 +18,8 @@
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
         }
-      }
+      },
+      "bundleIdentifier": "com.nonsolovescoding.tactixfit"
     },
     "android": {
       "adaptiveIcon": {
