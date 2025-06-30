@@ -95,7 +95,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                 setIsLoading(false);
                 navigation.reset({
                     index: 1,
-                    routes: [{ name: "LandingScreen" }]
+                    routes: [{ name: "IntroScreen" }]
                 })
             }, 5000);
         } catch (e) {
@@ -256,7 +256,7 @@ const CustomDrawerContent = (props: DrawerContentComponentProps) => {
                         styles.drawerItemText,
                         currentRoute === 'History' && styles.activeText
                     ]}>History</Text>
-                    <Image source={require("../../assets/downloadedIcons/history-line (1).png")}
+                    <Image source={require("../../assets/downloadedIcons/history-line.png")}
                         style={{
                             width: 20,
                             height: 20,

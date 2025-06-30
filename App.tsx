@@ -3,16 +3,25 @@ import { View, StyleSheet } from 'react-native';
 import StackNavigation from './Components/Navigation/StackNavigator';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { MD3LightTheme as DefaultTheme } from 'react-native-paper';
+import { TourGuideProvider } from "rn-tourguide";
 
-export default function App() {
+function App() {
 
     return (
-        <PaperProvider theme={DefaultTheme}>
-            <View style={{ flex: 1 }}>
-                <StackNavigation />
-            </View>
-        </PaperProvider>
+        <TourGuideProvider {...{ borderRadius: 16 }}>
+            <PaperProvider theme={DefaultTheme}>
+                <View style={styles.container}>
+                    <StackNavigation />
+                </View>
+            </PaperProvider>
+        </TourGuideProvider>
     );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+});
+
+export default App;

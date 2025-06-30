@@ -1,15 +1,16 @@
-import { Image, ImageBackground, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Dimensions, Image, ImageBackground, ImageBase, Modal, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import LottieView from "lottie-react-native";
 import { useEffect, useState } from "react";
 import { auth, db } from "../../Firebase/Settings";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { async } from "@firebase/util";
+import { async } from "@firebase/util"
 interface IHomePageProps {
     navigation: any;
 }
 
+const { width } = Dimensions.get('window')
 
 const pushUpsVideoSource = require('../../assets/ExerciseGifs/pushUps.mp4');
 const pullUpVideoSource = require('../../assets/ExerciseGifs/pullUps.mp4');
@@ -221,9 +222,11 @@ const HomePage = ({
     }, [])
 
     return (
-        <View style={{
-            flex: 1
-        }}>
+        <View
+            style={{
+                flex: 1
+            }}
+        >
             {isLoading && (
                 <View style={styles.loadingOverlay}>
                     <LottieView
@@ -243,45 +246,8 @@ const HomePage = ({
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "space-between"
-                }}>
-                    <View style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10
-                    }}>
-                        <Image source={require("../../assets/downloadedIcons/Frame.png")}
-                            style={{
-                                width: 20,
-                                height: 20,
-                                resizeMode: "contain"
-                            }}
-                        />
-                        <Text style={{
-                            color: "white"
-                        }}>{formattedDate}</Text>
-                    </View>
-                    <TouchableOpacity style={{
-                        backgroundColor: "white",
-                        borderRadius: 10
-                    }}
-                        // onPress={() => {
-                        //     setIsLogOutModalVisible(true);
-                        // }}
-                        onPress={() => navigation.openDrawer()}
-                    >
-                        <Image source={require("../../assets/downloadedIcons/notification.png")}
-                            style={{
-                                width: 30,
-                                height: 30
-                            }}
-                        />
-                    </TouchableOpacity>
-                </View>
-                <View style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 10
+                    gap: 10,
+                    top: "8%"
                 }}>
                     <View>
                         {userInfo?.profilePic ? (
@@ -311,12 +277,12 @@ const HomePage = ({
                         <Text style={{
                             color: "white",
                             fontSize: 20,
-                            fontWeight: '300'
+                            fontWeight: '700'
                         }}>{userInfo?.firstName} {userInfo?.lastName}</Text>
                         <Text style={{
                             color: "white",
                             fontSize: 12,
-                            fontWeight: '200'
+                            fontWeight: '500'
                         }}>SN: {userInfo?.serviceNumber}</Text>
                         <View style={{
                             flexDirection: 'row',
@@ -330,13 +296,324 @@ const HomePage = ({
                             />
                             <Text style={{
                                 color: 'white',
-                                fontWeight: '200'
+                                fontWeight: '500'
                             }}>{userInfo?.TacticalPoints ?? 0}</Text>
                         </View>
                     </View>
                 </View>
             </View>
             <View style={{
+                padding: 20,
+                gap: 30
+            }}>
+                <View style={{
+                    padding: 10,
+                    backgroundColor: 'white',
+                    borderRadius: 16,
+                    justifyContent: "center",
+                    // iOS shadow
+                    shadowColor: '#000',
+                    shadowOffset: {
+                        width: 0,
+                        height: 4,
+                    },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+
+                    // Android shadow
+                    elevation: 5,
+                }}>
+                    <View style={{
+                        flexDirection: "row",
+                        gap: 10,
+                        alignItems: "center"
+                    }}>
+                        <Image
+                            style={{
+                                height: 20,
+                                width: 20
+                            }}
+                            source={require("../../assets/Icons/steps-icon.png")} />
+                        <Text style={{
+                            color: "#6C659C"
+                        }}>STEPS</Text>
+                    </View>
+                    <View style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between"
+                    }}>
+                        <Text style={{
+                            fontSize: 35
+                        }}>10000</Text>
+                        <Image
+                            style={{
+                                height: 100,
+                                width: 180,
+                                resizeMode: "contain"
+                            }}
+                            source={require("../../assets/Icons/Graph.png")}
+                        />
+                    </View>
+                </View>
+                <View style={{
+                    padding: 10,
+                    gap: 20,
+                    backgroundColor: 'white',
+                    borderRadius: 16,
+                    justifyContent: "center",
+                    // iOS shadow
+                    shadowColor: '#000',
+                    shadowOffset: {
+                        width: 0,
+                        height: 4,
+                    },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+
+                    // Android shadow
+                    elevation: 5,
+                }}>
+                    <View style={{
+                        flexDirection: "row",
+                        gap: 10,
+                        alignItems: "center"
+                    }}>
+                        <Image
+                            style={{
+                                height: 20,
+                                width: 20
+                            }}
+                            source={require("../../assets/Icons/workout_icon.png")} />
+                        <Text style={{
+                            color: "#188649"
+                        }}>WORKOUT</Text>
+                    </View>
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: "center",
+                        justifyContent: "space-between"
+                    }}>
+                        <TouchableOpacity onPress={() => {
+                            navigation.navigate("RunningScreen")
+                        }}>
+                            <Image
+                                source={require("../../assets/Icons/exercise_icon.png")}
+                                style={{
+                                    height: 50,
+                                    width: 50,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate("SitUpScreen")
+                            }}
+                            style={{
+                                borderWidth: 1,
+                                padding: 10,
+                                borderRadius: 50,
+                                borderColor: "#D3D3D3"
+                            }}>
+                            <Image
+                                source={require("../../assets/Icons/sit-up-icon.png")}
+                                style={{
+                                    height: 25,
+                                    width: 25,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate("PushUpsScreen")
+                            }}
+                            style={{
+                                borderWidth: 1,
+                                padding: 10,
+                                borderRadius: 50,
+                                borderColor: "#D3D3D3"
+                            }}>
+                            <Image
+                                source={require("../../assets/Icons/boy-doing-pushups-.png")}
+                                style={{
+                                    height: 25,
+                                    width: 25,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate("SprintScreen")
+                            }}
+                            style={{
+                                borderWidth: 1,
+                                padding: 10,
+                                borderRadius: 50,
+                                borderColor: "#D3D3D3"
+                            }}>
+                            <Image
+                                source={require("../../assets/Icons/sport.png")}
+                                style={{
+                                    height: 25,
+                                    width: 25,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate("PullUpScreen")
+                            }}
+                            style={{
+                                borderWidth: 1,
+                                padding: 10,
+                                borderRadius: 50,
+                                borderColor: "#D3D3D3"
+                            }}>
+                            <Image
+                                source={require("../../assets/Icons/pull.png")}
+                                style={{
+                                    height: 25,
+                                    width: 25,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+                <View style={{
+                    padding: 10,
+                    gap: 20,
+                    backgroundColor: 'white',
+                    borderRadius: 16,
+                    justifyContent: "center",
+                    // iOS shadow
+                    shadowColor: '#000',
+                    shadowOffset: {
+                        width: 0,
+                        height: 4,
+                    },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 8,
+
+                    // Android shadow
+                    elevation: 5,
+                }}>
+                    <View style={{
+                        flexDirection: "row",
+                        gap: 10,
+                        alignItems: "center"
+                    }}>
+                        <Image
+                            style={{
+                                height: 20,
+                                width: 20
+                            }}
+                            source={require("../../assets/Icons/workout_icon.png")} />
+                        <Text style={{
+                            color: "#188649"
+                        }}>TACTIXFIT POINTS</Text>
+                    </View>
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: "center",
+                        justifyContent: "space-between"
+                    }}>
+                        <TouchableOpacity onPress={() => {
+                            navigation.navigate("RunningScreen")
+                        }}>
+                            <Image
+                                source={require("../../assets/Icons/exercise_icon.png")}
+                                style={{
+                                    height: 50,
+                                    width: 50,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate("SitUpScreen")
+                            }}
+                            style={{
+                                borderWidth: 1,
+                                padding: 10,
+                                borderRadius: 50,
+                                borderColor: "#D3D3D3"
+                            }}>
+                            <Image
+                                source={require("../../assets/Icons/sit-up-icon.png")}
+                                style={{
+                                    height: 25,
+                                    width: 25,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate("PushUpsScreen")
+                            }}
+                            style={{
+                                borderWidth: 1,
+                                padding: 10,
+                                borderRadius: 50,
+                                borderColor: "#D3D3D3"
+                            }}>
+                            <Image
+                                source={require("../../assets/Icons/boy-doing-pushups-.png")}
+                                style={{
+                                    height: 25,
+                                    width: 25,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate("SprintScreen")
+                            }}
+                            style={{
+                                borderWidth: 1,
+                                padding: 10,
+                                borderRadius: 50,
+                                borderColor: "#D3D3D3"
+                            }}>
+                            <Image
+                                source={require("../../assets/Icons/sport.png")}
+                                style={{
+                                    height: 25,
+                                    width: 25,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate("PullUpScreen")
+                            }}
+                            style={{
+                                borderWidth: 1,
+                                padding: 10,
+                                borderRadius: 50,
+                                borderColor: "#D3D3D3"
+                            }}>
+                            <Image
+                                source={require("../../assets/Icons/pull.png")}
+                                style={{
+                                    height: 25,
+                                    width: 25,
+                                    resizeMode: 'contain'
+                                }}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+            {/* <View style={{
                 flex: 3
             }}>
                 <ScrollView
@@ -546,7 +823,7 @@ const HomePage = ({
                         </View>
                     </View>
                 </ScrollView>
-            </View>
+            </View> */}
 
         </View>
     )
@@ -558,12 +835,10 @@ const styles = StyleSheet.create({
     container: {
     },
     top_container: {
-        height: "25%",
-        backgroundColor: Theme.colors.primaryColor,
-        padding: 20,
-        paddingTop: Platform.OS === "android" ? 40 : 80,
-        justifyContent: "space-between",
-        gap: 20,
+        backgroundColor: "#FFD700",
+        height: "20%",
+        justifyContent: "center",
+        padding: 20
     },
     exercise_btn: {
         flexDirection: "row",

@@ -1,6 +1,6 @@
 
 import * as React from 'react'
-import { Alert, Image, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import { useState } from "react";
 import * as stream from "node:stream";
@@ -37,6 +37,17 @@ interface SignUpValues {
     password: string;
     auth?: any;
 }
+
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
+// Define your view dimensions (manually or based on your design)
+const VIEW_WIDTH = 300;
+const VIEW_HEIGHT = 150;
+
+// Calculate offset
+const offsetX = (screenWidth - VIEW_WIDTH) / 2;
+const offsetY = (screenHeight - VIEW_HEIGHT) / 3.8;
 
 
 const SignUpScreen = ({
@@ -114,9 +125,11 @@ const SignUpScreen = ({
     }
 
     return (
-        <View style={{
-            flex: 1
-        }}>
+        <ImageBackground
+            source={require("../../assets/BackgroundImages/Background.png")}
+            style={{
+                flex: 1
+            }}>
             {isLoading && (
                 <View style={styles.loadingOverlay}>
                     <LottieView
@@ -139,99 +152,110 @@ const SignUpScreen = ({
             >
                 {({ handleChange, handleBlur, handleSubmit, validateForm, values, errors, touched, setTouched }) => (
                     <View style={{
-                        flex: 1
+                        flex: 1,
+                        justifyContent: "flex-end"
                     }}>
                         <View style={{
-                            flex: 1,
-                            backgroundColor: Theme.colors.primaryColor,
-                            padding: 20,
-                            paddingBottom: 30,
-                            justifyContent: "flex-end"
+                            position: "absolute",
+                            width: VIEW_WIDTH,
+                            height: VIEW_HEIGHT,
+                            top: offsetY,
+                            left: offsetX,
+                            alignItems: "center",
+                            justifyContent: "center",
                         }}>
-                            <View style={{
-                                gap: 5
-                            }}>
-                                <View>
-                                    <Text style={{
-                                        fontSize: 30,
-                                        fontWeight: "700",
-                                        color: "white",
-                                        lineHeight: 45,
-                                    }}>Create an account</Text>
-                                </View>
-                                <Text style={{
-                                    fontSize: 16,
-                                    fontWeight: "200",
-                                    color: "white"
-                                }}>Let us create an account for you</Text>
-                            </View>
+                            <Text style={{
+                                fontWeight: "700",
+                                fontSize: 40
+                            }}>SIGN UP</Text>
+                            <Text style={{
+                                fontWeight: "300"
+                            }}>LET US CREATE AN ACCOUNT FOR YOU</Text>
                         </View>
                         <View style={{
-                            flex: 3,
                             padding: 20,
+                            bottom: 40,
+                            gap: 20
                         }}>
+                            <View style={{
+                                backgroundColor: "white",
+                                overflow: "hidden",
+                                borderRadius: 10,
+                                bottom: 80,
+                            }}>
+                                <View style={{
+                                    backgroundColor: "rgba(0, 0, 0, 0.1)",
+                                    gap: 10,
+                                    paddingHorizontal: 20,
+                                    paddingTop: 20,
+                                    paddingBottom: 30
+                                }}>
+                                    <View style={{
+                                        gap: 5
+                                    }}>
+                                        <View style={[styles.textinput_container, {
+                                            marginBottom: 5
+                                        }]}>
+                                            <Image source={require("../../assets/BackgroundImages/email-icon.png")}
+                                                style={{
+                                                    height: 20,
+                                                    width: 20
+                                                }}
+                                                resizeMode='contain'
+                                            />
+                                            <TextInput
+                                                style={styles.textinput}
+                                                placeholderTextColor={"#8c8c8e"}
+                                                placeholder="Dapt@gmail.com"
+                                                value={values.email}
+                                                onChangeText={handleChange("email")}
+                                                onBlur={handleBlur("email")}
+                                            />
+                                        </View>
+                                        {touched.email && errors.email && (
+                                            <Text style={{ color: "red" }}>{errors.email}</Text>
+                                        )}
+                                    </View>
+                                    <View style={{
+                                        gap: 5
+                                    }}>
+                                        <View style={styles.textinput_container}>
+                                            <Image source={require("../../assets/BackgroundImages/Password-icon.png")}
+                                                style={{
+                                                    height: 20,
+                                                    width: 20
+                                                }}
+                                                resizeMode='contain'
+                                            />
+                                            <TextInput
+                                                placeholderTextColor={"#8c8c8e"}
+                                                style={styles.textinput}
+                                                value={values.password}
+                                                secureTextEntry={!togglePasswordVisibility}
+                                                placeholder='***********'
+                                                onChangeText={handleChange("password")}
+                                                onBlur={handleBlur("password")}
+                                            />
+                                            <TouchableOpacity style={{
+                                            }}
+                                                onPress={() => {
+                                                    setTogglePasswordVisibility(!togglePasswordVisibility)
+                                                }}
+                                            >
+                                                <Feather name={togglePasswordVisibility ? 'eye' : 'eye-off'} size={20} color={"#FA8128"} />
+                                            </TouchableOpacity>
+                                        </View>
+                                        {touched.password && errors.password && (
+                                            <Text style={{ color: "red" }}>{errors.password}</Text>
+                                        )}
+
+                                    </View>
+
+                                </View>
+                            </View>
                             <View style={{
                                 gap: 10
                             }}>
-                                <View style={{
-                                    gap: 5
-                                }}>
-                                    <View style={[styles.textinput_container, {
-                                        marginBottom: 5
-                                    }]}>
-                                        <Image source={require("../../assets/downloadedIcons/mail-fill-black.png")}
-                                            style={{
-                                                height: 20,
-                                                width: 20
-                                            }}
-                                            resizeMode='contain'
-                                        />
-                                        <TextInput
-                                            style={styles.textinput}
-                                            placeholderTextColor={"#8c8c8e"}
-                                            placeholder="Dapt@gmail.com"
-                                            value={values.email}
-                                            onChangeText={handleChange("email")}
-                                            onBlur={handleBlur("email")}
-                                        />
-                                    </View>
-                                    {touched.email && errors.email && (
-                                        <Text style={{ color: "red" }}>{errors.email}</Text>
-                                    )}
-                                </View>
-                                <View style={{
-                                    gap: 5
-                                }}>
-                                    <View style={styles.textinput_container}>
-                                        <Image source={require("../../assets/downloadedIcons/lock-2-fill.png")}
-                                            style={{
-                                                height: 20,
-                                                width: 20
-                                            }}
-                                            resizeMode='contain'
-                                        />
-                                        <TextInput
-                                            placeholderTextColor={"#8c8c8e"}
-                                            style={styles.textinput}
-                                            value={values.password}
-                                            secureTextEntry={!togglePasswordVisibility}
-                                            placeholder='***********'
-                                            onChangeText={handleChange("password")}
-                                            onBlur={handleBlur("password")}
-                                        />
-                                        <TouchableOpacity style={{
-                                        }}
-                                            onPress={() => {
-                                                setTogglePasswordVisibility(!togglePasswordVisibility)
-                                            }}
-                                        >
-                                            <Feather name={togglePasswordVisibility ? 'eye' : 'eye-off'} size={20} color={Theme.colors.primaryColor} />
-                                        </TouchableOpacity>
-                                    </View>
-                                    {touched.password && errors.password && (
-                                        <Text style={{ color: "red" }}>{errors.password}</Text>
-                                    )}
-                                </View>
                                 <TouchableOpacity
                                     onPress={async () => {
                                         console.log("Submit button pressed"); // Add this
@@ -246,55 +270,16 @@ const SignUpScreen = ({
                                         }
                                     }}
                                     style={[styles.continue_email_button, {
-                                        padding: 20
+                                        padding: 25
                                     }]}>
                                     <Text style={styles.email_button_text}>Sign Up</Text>
-                                    <Image source={require("../../assets/Icons/fast-forward.png")}
+                                    <Image source={require("../../assets/BackgroundImages/VectorRight.png")}
                                         style={[styles.button_icon, {
                                             height: 20,
                                             width: 20
                                         }]}
                                     />
                                 </TouchableOpacity>
-                                <View style={styles.dividerContainer}>
-                                    <View style={styles.line} />
-                                    <Text style={styles.dividerText}>Or create an account with</Text>
-                                    <View style={styles.line} />
-                                </View>
-                                <View style={{
-                                    flexDirection: "row",
-                                    gap: 20
-                                }}>
-                                    <TouchableOpacity style={{
-                                        borderWidth: 1,
-                                        alignItems: "center",
-                                        padding: 5,
-                                        flex: 1,
-                                        borderRadius: 5,
-                                        borderColor: Theme.colors.lightPrimary,
-                                        flexDirection: "row",
-                                        justifyContent: "center"
-                                    }}
-                                    // onPress={() => {
-                                    //     navigation.navigate("MainDrawer");
-                                    // }}
-                                    >
-                                        <Text style={{
-                                            color: Theme.colors.primaryColor,
-                                            fontSize: 18
-                                        }}>GOOGLE</Text>
-                                        <LottieView
-                                            source={require("../../assets/downloadedIcons/google3.json")}
-                                            style={{
-                                                height: 40,
-                                                width: 40
-                                            }}
-                                            resizeMode="contain"
-                                            autoPlay={true}
-                                            loop={true}
-                                        />
-                                    </TouchableOpacity>
-                                </View>
                                 <View style={{ flexDirection: 'row', gap: 6, alignSelf: "center" }}>
                                     <Text style={{ color: '#333', fontSize: 16 }}>Already have an account?</Text>
                                     <TouchableOpacity
@@ -305,7 +290,7 @@ const SignUpScreen = ({
                                             })
                                         }}
                                     >
-                                        <Text style={{ color: Theme.colors.primaryColor, fontSize: 16 }}>Log in</Text>
+                                        <Text style={{ color: "#FFD125", fontSize: 16 }}>Log in</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -313,7 +298,7 @@ const SignUpScreen = ({
                     </View>
                 )}
             </Formik>
-        </View>
+        </ImageBackground>
     )
 }
 
@@ -326,7 +311,7 @@ const styles = StyleSheet.create({
         marginVertical: 10,
     },
     continue_email_button: {
-        backgroundColor: Theme.colors.primaryColor,
+        backgroundColor: "white",
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
@@ -339,8 +324,8 @@ const styles = StyleSheet.create({
         fontWeight: "300"
     },
     email_button_text: {
-        fontSize: 15,
-        color: "white"
+        fontSize: 18,
+        fontWeight: "500"
     },
     button_icon: {
         height: 40,
@@ -353,7 +338,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         paddingHorizontal: 10,
-        borderWidth: 1,
+        borderBottomWidth: 1,
         borderColor: Theme.colors.lightPrimary,
         position: 'relative',
     },

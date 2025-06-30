@@ -484,7 +484,7 @@ const SitUpTestScreen = ({
                             navigation.goBack();
                         }}
                     >
-                        <Image source={require("../../../assets/downloadedIcons/back 1.png")}
+                        <Image source={require("../../../assets/downloadedIcons/back1.png")}
                             style={{
                                 width: 20,
                                 height: 20

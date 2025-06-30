@@ -4,7 +4,6 @@ import IntroScreen from "../Authentication/IntroScreen";
 import { Theme } from "../Branding/Theme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import LandingScreen from "../Authentication/LandingScreen";
-import { DrawerNavigator } from "./DrawerNavigation";
 import LoginScreen from "../Authentication/Login";
 import SignUpScreen from "../Authentication/SignUp";
 import OTPScreen from "../Authentication/Otp";
@@ -25,6 +24,9 @@ import PersonalInfo from "../Screens/PersonalInfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import Profile from "../Screens/Profile";
+import CameraViewScreen from "../../Facedetector/CameraView";
+import { BottomTabNavigator } from "./DrawerNavigation";
+
 
 const Stack = createStackNavigator();
 
@@ -35,7 +37,7 @@ const StackNavigation: React.FC = () => {
     useEffect(() => {
         const checkLoginStatus = async () => {
             const uid = await AsyncStorage.getItem('userUid');
-            setinitialRoute(uid ? 'MainDrawer' : 'LandingScreen');
+            setinitialRoute(uid ? 'MainDrawer' : 'IntroScreen');
         }
         checkLoginStatus();
     }, []);
@@ -58,7 +60,7 @@ const StackNavigation: React.FC = () => {
                 >
                     <Stack.Screen name="IntroScreen" component={IntroScreen} />
                     <Stack.Screen name="LandingScreen" component={LandingScreen} />
-                    <Stack.Screen name="MainDrawer" component={DrawerNavigator} />
+                    <Stack.Screen name="MainDrawer" component={BottomTabNavigator} />
                     <Stack.Screen name="LoginScreen" component={LoginScreen} />
                     <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
                     <Stack.Screen name="OTPScreen" component={OTPScreen} />
@@ -66,7 +68,7 @@ const StackNavigation: React.FC = () => {
                     <Stack.Screen name="PullUpScreen" component={PullUpTestScreen} />
                     <Stack.Screen name="ForgottenPassword" component={ForgottenPassword} />
                     <Stack.Screen name="ResetPassword" component={ResetPassword} />
-                    <Stack.Screen name="PushUpsScreen" component={PushUpsTestScreen} />
+                    <Stack.Screen name="PushUpsScreen" component={CameraViewScreen} />
                     <Stack.Screen name="SprintScreen" component={SprintTestScreen} />
                     <Stack.Screen name="SitUpScreen" component={SitUpTestScreen} />
                     <Stack.Screen name="Profile" component={Profile} />

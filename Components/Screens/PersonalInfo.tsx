@@ -1,4 +1,4 @@
-import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, Image, ImageBackground, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import LottieView from "lottie-react-native";
 import { Feather, MaterialIcons } from "@expo/vector-icons";
@@ -11,6 +11,17 @@ import { useState } from "react";
 interface IPersonalInfoProps {
     navigation?: any;
 }
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
+// Define your view dimensions (manually or based on your design)
+const VIEW_WIDTH = 300;
+const VIEW_HEIGHT = 150;
+
+// Calculate offset
+const offsetX = (screenWidth - VIEW_WIDTH) / 2;
+const offsetY = (screenHeight - VIEW_HEIGHT) / 4.8;
+
 
 const validationSchema = yup.object().shape({
     firstName: yup.string().required("First name is required."),
@@ -70,7 +81,10 @@ const PersonalInfo = ({
     }
 
     return (
-        <View style={styles.container}>
+        <ImageBackground
+            source={require("../../assets/BackgroundImages/Background.png")}
+            style={styles.container}
+        >
             {isLoading && (
                 <View style={styles.loadingOverlay}>
                     <LottieView
@@ -94,38 +108,47 @@ const PersonalInfo = ({
                 {({ handleChange, handleBlur, handleSubmit, validateForm, values, errors, touched, setTouched, setFieldValue }) => {
                     return (
                         <View style={{
-                            flex: 1
+                            flex: 1,
+                            justifyContent: "flex-end"
                         }}>
-                            <View style={{
-                                flex: 1,
-                                backgroundColor: Theme.colors.primaryColor,
-                                padding: 20,
-                                justifyContent: "flex-end"
-                            }}>
-                                <View>
-                                    <Text style={{
-                                        fontWeight: '600',
-                                        color: "white",
-                                        fontSize: 35,
-                                    }}>Personal Info</Text>
-                                    <Text style={{
-                                        color: "white",
-                                        fontSize: 15,
-                                        fontWeight: "200"
-                                    }}>Fill in your infomation</Text>
-                                </View>
+
+                            <View
+                                style={{
+                                    position: "absolute",
+                                    width: VIEW_WIDTH,
+                                    height: VIEW_HEIGHT,
+                                    top: offsetY,
+                                    left: offsetX,
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <Text style={{
+                                    fontWeight: '600',
+                                    fontSize: 35,
+                                }}>PERSONAL INFO</Text>
+                                <Text style={{
+                                    fontSize: 15,
+                                    fontWeight: "300"
+                                }}>FILL IN YOUR PERSONAL INFO</Text>
                             </View>
+
                             <View style={{
-                                flex: 3,
-                                padding: 20
+                                padding: 20,
+                                paddingTop: 20,
+                                gap: 20,
+                                bottom: 40
                             }}>
                                 <View style={{
-                                    paddingBottom: 30,
-                                    justifyContent: "space-between",
-                                    flex: 1
+                                    backgroundColor: "white",
+                                    overflow: "hidden",
+                                    borderRadius: 10,
+                                    bottom: 80
                                 }}>
                                     <View style={{
-                                        gap: 10
+
+                                        gap: 10,
+                                        padding: 20
                                     }}>
                                         <View style={{
                                             gap: 5
@@ -136,6 +159,7 @@ const PersonalInfo = ({
                                                 <Feather
                                                     name="user"
                                                     size={20}
+                                                    color={"#FFD125"}
                                                 />
                                                 <TextInput
                                                     style={styles.textinput}
@@ -157,6 +181,7 @@ const PersonalInfo = ({
                                                 <Feather
                                                     name="user"
                                                     size={20}
+                                                    color={"#FFD125"}
                                                 />
                                                 <TextInput
                                                     style={styles.textinput}
@@ -196,6 +221,7 @@ const PersonalInfo = ({
                                                 <MaterialIcons
                                                     name="military-tech"
                                                     size={20}
+                                                    color={"#FFD125"}
                                                 />
                                                 <TextInput
                                                     placeholderTextColor={"#8c8c8e"}
@@ -213,32 +239,32 @@ const PersonalInfo = ({
                                             )}
                                         </View>
                                     </View>
-                                    <View>
-                                        <TouchableOpacity style={styles.btn}
-                                            onPress={async () => {
-                                                console.log("Submit button pressed");
-                                                const errors = await validateForm();
-                                                setTouched({ firstName: true, lastName: true, serviceNumber: true, gender: true });
-                                                if (!errors.firstName && !errors.lastName && !errors.serviceNumber && !errors.gender) {
-                                                    console.log("Form is valid, submitting...");
-                                                    handleSubmit();
-                                                } else {
-                                                    console.log("Form errors:", errors);
-                                                }
+                                </View>
+                                <View>
+                                    <TouchableOpacity style={styles.btn}
+                                        onPress={async () => {
+                                            console.log("Submit button pressed");
+                                            const errors = await validateForm();
+                                            setTouched({ firstName: true, lastName: true, serviceNumber: true, gender: true });
+                                            if (!errors.firstName && !errors.lastName && !errors.serviceNumber && !errors.gender) {
+                                                console.log("Form is valid, submitting...");
+                                                handleSubmit();
+                                            } else {
+                                                console.log("Form errors:", errors);
+                                            }
+                                        }}
+                                    >
+                                        <Text style={{
+                                            color: "white"
+                                        }}>Continue</Text>
+                                        <Image
+                                            source={require("../../assets/downloadedIcons/fast.png")}
+                                            style={{
+                                                height: 24,
+                                                width: 24
                                             }}
-                                        >
-                                            <Text style={{
-                                                color: "white"
-                                            }}>Continue</Text>
-                                            <Image
-                                                source={require("../../assets/downloadedIcons/fast.png")}
-                                                style={{
-                                                    height: 24,
-                                                    width: 24
-                                                }}
-                                            />
-                                        </TouchableOpacity>
-                                    </View>
+                                        />
+                                    </TouchableOpacity>
                                 </View>
                             </View>
                         </View>
@@ -246,7 +272,7 @@ const PersonalInfo = ({
                 }}
 
             </Formik>
-        </View>
+        </ImageBackground>
     )
 }
 
@@ -270,8 +296,8 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         paddingHorizontal: 10,
-        borderWidth: 1,
-        borderColor: Theme.colors.lightPrimary,
+        borderBottomWidth: 1,
+        borderColor: "#FFD125",
         position: 'relative',
     },
     textinput: {

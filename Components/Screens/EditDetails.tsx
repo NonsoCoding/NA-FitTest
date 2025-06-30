@@ -32,7 +32,6 @@ const EditDetails = ({
     const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; gender: string; } | null>(null);
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
 
-    // Separate refs for each input
     const firstNameInputRef = useRef<TextInput>(null);
     const lastNameInputRef = useRef<TextInput>(null);
 

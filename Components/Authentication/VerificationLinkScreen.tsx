@@ -1,4 +1,4 @@
-import { Alert, Image, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, Image, ImageBackground, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { getAuth, reload, sendEmailVerification } from 'firebase/auth';
 import { Theme } from '../Branding/Theme';
 import { auth } from '../../Firebase/Settings';
@@ -77,10 +77,12 @@ const VerificationLinkScreen = ({
     }
 
     return (
-        <View style={{
+        <ImageBackground style={{
             flex: 1,
             justifyContent: "center",
-        }}>
+        }}
+            source={require("../../assets/BackgroundImages/Background.png")}
+        >
             {isLoading && (
                 <View style={styles.loadingOverlay}>
                     <LottieView
@@ -172,7 +174,7 @@ const VerificationLinkScreen = ({
                     <Text>Back to log in</Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </ImageBackground>
     )
 }
 

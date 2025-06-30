@@ -1,4 +1,4 @@
-import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, Image, ImageBackground, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import { Formik } from "formik";
 import { FontAwesome6, Fontisto } from "@expo/vector-icons";
@@ -14,6 +14,18 @@ interface IForgottenPasswordProps {
 const emailValidation = yup.object().shape({
     email: yup.string().required().email('email is a required field.')
 })
+
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
+
+// Define your view dimensions (manually or based on your design)
+const VIEW_WIDTH = 300;
+const VIEW_HEIGHT = 150;
+
+// Calculate offset
+const offsetX = (screenWidth - VIEW_WIDTH) / 4;
+const offsetY = (screenHeight - VIEW_HEIGHT) / 3.8;
+
 
 const ForgottenPassword = ({
     navigation
@@ -38,9 +50,14 @@ const ForgottenPassword = ({
     }
 
     return (
-        <View style={{
-            flex: 1
-        }}>
+        <ImageBackground style={{
+            flex: 1,
+            padding: 20,
+            marginTop: Platform.OS === "android" ? StatusBar.currentHeight : null
+        }}
+            source={require("../../assets/BackgroundImages/Background.png")}
+            resizeMode="cover"
+        >
             {isLoading && (
                 <View style={styles.loadingOverlay}>
                     <LottieView
@@ -64,42 +81,46 @@ const ForgottenPassword = ({
                 {({ handleChange, handleSubmit, touched, errors, isSubmitting, values, handleBlur, setTouched }) => {
                     return (
                         <View style={{
-                            flex: 1
+                            flex: 1,
+                            justifyContent: "flex-end",
                         }}>
                             <View style={{
-                                flex: 1,
-                                backgroundColor: Theme.colors.primaryColor,
-                                padding: 20,
-                                paddingBottom: 30,
-                                justifyContent: "flex-end"
+                                position: "absolute",
+                                width: VIEW_WIDTH,
+                                height: VIEW_HEIGHT,
+                                top: offsetY,
+                                left: offsetX,
+                                alignItems: "center",
+                                gap: 10,
+                                justifyContent: "center",
                             }}>
-                                <View>
-                                    <View>
-                                        <Text style={{
-                                            fontSize: 30,
-                                            fontWeight: "700",
-                                            color: "white",
-                                            lineHeight: 45,
-                                        }}>Forgotten Password</Text>
-                                    </View>
+                                <Text style={{
+                                    fontSize: 28,
+                                    fontWeight: "500"
+                                }}>RESET PASSWORD</Text>
+                                <View style={{
+                                    maxWidth: 400,
+                                }}>
                                     <Text style={{
-                                        fontSize: 16,
-                                        fontWeight: "300",
-                                        color: "white"
-                                    }}>Fill in your email to get a new password reset link</Text>
+                                        fontWeight: "300"
+                                    }}>A 4 DIGIT CODE HAS BEEN SENT TO THE EMAIL CONNECTED TO YOUR ACCOUNT</Text>
                                 </View>
                             </View>
                             <View style={{
-                                flex: 3,
-                                padding: 20,
-                                paddingTop: 20
+                                bottom: 40
                             }}>
                                 <View style={{
-                                    gap: 10
+                                    backgroundColor: "white",
+                                    overflow: "hidden",
+                                    borderRadius: 10,
+                                    bottom: 80,
                                 }}>
                                     <View style={{
-                                        gap: 5
+                                        backgroundColor: "rgba(0, 0, 0, 0.1)",
+                                        gap: 10,
+                                        padding: 20
                                     }}>
+
                                         <View style={[styles.textinput_container, {
                                             marginBottom: 5
                                         }]}>
@@ -129,19 +150,23 @@ const ForgottenPassword = ({
                                         alignItems: "flex-end"
                                     }}>
                                     </View>
+                                </View>
+                                <View style={{
+                                    gap: 15,
+                                }}>
                                     <TouchableOpacity
                                         onPress={() => {
                                             handleSubmit();
                                         }}
                                         disabled={isSubmitting}
                                         style={[styles.continue_email_button, {
-                                            padding: 20
+                                            padding: 25
                                         }]}>
                                         <Text style={styles.email_button_text}>continue</Text>
-                                        <Image source={require("../../assets/Icons/fast-forward.png")}
+                                        <Image source={require("../../assets/BackgroundImages/VectorRight.png")}
                                             style={[styles.button_icon, {
-                                                height: 15,
-                                                width: 15
+                                                height: 20,
+                                                width: 20
                                             }]}
                                         />
                                     </TouchableOpacity>
@@ -155,7 +180,7 @@ const ForgottenPassword = ({
                                                 })
                                             }}
                                         >
-                                            <Text style={{ color: Theme.colors.primaryColor, fontSize: 16 }}>Login</Text>
+                                            <Text style={{ color: "#FFD125", fontSize: 16 }}>Login</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -164,7 +189,7 @@ const ForgottenPassword = ({
                     )
                 }}
             </Formik>
-        </View>
+        </ImageBackground>
     )
 }
 
@@ -186,7 +211,7 @@ const styles = StyleSheet.create({
         marginVertical: 10,
     },
     continue_email_button: {
-        backgroundColor: Theme.colors.primaryColor,
+        backgroundColor: "white",
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
@@ -200,7 +225,7 @@ const styles = StyleSheet.create({
     },
     email_button_text: {
         fontSize: 15,
-        color: "white"
+        color: "black"
     },
     button_icon: {
         height: 40,
@@ -213,8 +238,8 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         paddingHorizontal: 10,
-        borderWidth: 1,
-        borderColor: Theme.colors.lightPrimary,
+        borderBottomWidth: 1,
+        borderColor: "#FA8128",
         position: 'relative',
     },
     textinput: {
