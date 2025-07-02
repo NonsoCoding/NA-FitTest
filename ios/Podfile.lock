@@ -112,6 +112,8 @@ PODS:
     - ExpoModulesCore
   - ExpoKeepAwake (12.8.2):
     - ExpoModulesCore
+  - ExpoLinearGradient (12.7.2):
+    - ExpoModulesCore
   - ExpoModulesCore (1.11.14):
     - glog
     - RCT-Folly (= 2022.05.16.00)
@@ -1277,7 +1279,7 @@ PODS:
     - RCT-Folly (= 2022.05.16.00)
     - React-Core
     - ReactCommon/turbomodule/core
-  - RNSVG (15.12.0):
+  - RNSVG (14.1.0):
     - React-Core
   - SocketRocket (0.6.1)
   - Yoga (1.14.0)
@@ -1311,6 +1313,7 @@ DEPENDENCIES:
   - ExpoFileSystem (from `../node_modules/expo-file-system/ios`)
   - ExpoImagePicker (from `../node_modules/expo-image-picker/ios`)
   - ExpoKeepAwake (from `../node_modules/expo-keep-awake/ios`)
+  - ExpoLinearGradient (from `../node_modules/expo-linear-gradient/ios`)
   - ExpoModulesCore (from `../node_modules/expo-modules-core`)
   - ExpoSecureStore (from `../node_modules/expo-secure-store/ios`)
   - ExpoSensors (from `../node_modules/expo-sensors/ios`)
@@ -1447,6 +1450,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-image-picker/ios"
   ExpoKeepAwake:
     :path: "../node_modules/expo-keep-awake/ios"
+  ExpoLinearGradient:
+    :path: "../node_modules/expo-linear-gradient/ios"
   ExpoModulesCore:
     :path: "../node_modules/expo-modules-core"
   ExpoSecureStore:
@@ -1601,6 +1606,7 @@ SPEC CHECKSUMS:
   ExpoFileSystem: df58e1eb2a4d6f1006a1ca70bddfbbf63e52fa4f
   ExpoImagePicker: d06822d74f1f0e7fe7cb070ece0fff6e678fa3eb
   ExpoKeepAwake: 3b8cf8533b9212500565a1e41fb080fc5af29918
+  ExpoLinearGradient: 501f9bbd83f3ec1d0e0425862b9ef4693605fc1c
   ExpoModulesCore: 43ebd65adf2c0e6ffb0de24a41f8f7de12829331
   ExpoSecureStore: 4cec57fd2c40dcff05ce2186c39afc1af39d213c
   ExpoSensors: 7101785175140e8be722797b501987a44893bff6
@@ -1679,7 +1685,7 @@ SPEC CHECKSUMS:
   RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
   RNGestureHandler: dd5543af5c344cb2bdd8de81a8ec85adb5ec4b4b
   RNReanimated: 8adb252a83153bb04b99abf93a09b47d4cac8f92
-  RNSVG: 70d9f7add64092eb33e975b75ee5fa04295318cc
+  RNSVG: 6d5ed33b6635ed6d6ecb50744dcf127580c39ed5
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 805bf71192903b20fc14babe48080582fee65a80
   ZXingObjC: 8898711ab495761b2dbbdec76d90164a6d7e14c5

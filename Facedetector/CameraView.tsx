@@ -1,14 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Text, View, StyleSheet, Button, TouchableOpacity, Image, ImageBackground, Switch, Modal, SafeAreaView, TextInput } from "react-native";
+import { Text, View, StyleSheet, Button, TouchableOpacity, Image, ImageBackground, Modal, SafeAreaView, TextInput, Dimensions } from "react-native";
 import { Camera, CameraType } from "expo-camera";
 import * as FaceDetector from "expo-face-detector";
 import { TourGuideZone, useTourGuideController } from "rn-tourguide";
 import * as Speech from "expo-speech";
 import { Theme } from "../Components/Branding/Theme";
+import LottieView from "lottie-react-native";
+import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { Switch } from "react-native-paper";
 
 interface PushUpTrackerIProps {
     navigation: any;
 }
+
+const { width: screenWidth } = Dimensions.get('window');
 
 const PushUpsScreen = ({
     navigation
@@ -64,6 +69,31 @@ const PushUpsScreen = ({
             eventEmitter.off('stepChange', handleOnStepChange)
         }
     }, [])
+
+    const createBottomCurvedPath = () => {
+        const height = 450;
+        const waveHeight = 45;
+
+        return `M 0 0 
+        L 0 ${height} 
+        Q ${screenWidth * 0.25} ${height + waveHeight} ${screenWidth * 0.5} ${height}
+        Q ${screenWidth * 0.75} ${height - waveHeight} ${screenWidth} ${height}
+        L ${screenWidth} 0 
+        Z`;
+    };
+
+    const createTopCurvedPath = () => {
+        const height = 400;
+        const waveHeight = 45;
+
+        return `M 0 0
+            L 0 ${waveHeight}
+            Q ${screenWidth * 0.25} ${waveHeight * 2} ${screenWidth * 0.5} ${waveHeight}
+            Q ${screenWidth * 0.75} 0 ${screenWidth} ${waveHeight}
+            L ${screenWidth} ${height}
+            L 0 ${height}
+            Z`;
+    };
 
     React.useEffect(() => {
         (async () => {
@@ -242,167 +272,259 @@ const PushUpsScreen = ({
     const decreaseTime = () => setTime(prev => (prev > 10 ? prev - 10 : 0));
 
     return (
-        <ImageBackground
-            style={styles.container}
-            source={require("../assets/BackgroundImages/Background.png")}
+        <View
+            style={[styles.container, {
+                backgroundColor: "white"
+            }]}
         >
-            <SafeAreaView style={{
-                flex: 1
-            }}>
-                <View style={styles.topBar}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            navigation.goBack();
-                            resetTimers();
-                        }}
-                    >
-                        <Image source={require("../assets/downloadedIcons/back1.png")}
-                            style={{
-                                width: 20,
-                                height: 20
-                            }}
+            <View style={styles.shadowWrapper}>
+                <View style={styles.headerContainer}>
+                    <Svg height="500" width={screenWidth} style={styles.svg}>
+                        <Defs>
+                            <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                            </SvgLinearGradient>
+                        </Defs>
+                        <Path
+                            d={createBottomCurvedPath()}
+                            fill="url(#grad)"
                         />
-                    </TouchableOpacity>
-                    <Text style={{
+                    </Svg>
 
-                    }}>PULL-UPS (TEST MODE)</Text>
-                    <TouchableOpacity style={{
-
-                    }}
-                        onPress={() => {
-                            navigation.navigate("PullUpsHistory")
-                        }}
-                    >
-                        <Image source={require("../assets/downloadedIcons/notification.png")}
-                            style={{
-                                height: 30,
-                                width: 30,
-                                resizeMode: "contain"
-                            }}
-                        />
-                    </TouchableOpacity>
-                </View>
-                <Camera
-                    type={CameraType.front}
-                    style={styles.camera}
-                    onFacesDetected={handleFaceDetected}
-                    faceDetectorSettings={{
-                        mode: FaceDetector.FaceDetectorMode.fast,
-                        detectLandmarks: FaceDetector.FaceDetectorLandmarks.none,
-                        runClassification: FaceDetector.FaceDetectorClassifications.none,
-                        minDetectionInterval: 100,
-                        tracking: true
-                    }}
-                >
-                    {faceData.length === 0 && (
-                        <Text style={styles.statusText}>No face detected!</Text>
-                    )}
-                    {recordingStarted && (
-                        <View style={styles.recordingIndicator}>
-                            <Text style={styles.recordingText}>●</Text>
+                    {/* Content overlay - positioned absolutely to center over SVG */}
+                    <View style={styles.contentOverlay}>
+                        <View style={{
+                            alignItems: "center",
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                        }}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    navigation.goBack();
+                                }}
+                            >
+                                <Image source={require("../assets/downloadedIcons/back1.png")}
+                                    style={{
+                                        width: 20,
+                                        height: 20
+                                    }}
+                                />
+                            </TouchableOpacity>
+                            <Text style={{
+                                color: "white"
+                            }}>PUSH UPS</Text>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    navigation.navigate("SitUpHistory")
+                                }}
+                            >
+                                <Image
+                                    source={require("../assets/downloadedIcons/notification.png")}
+                                    style={{
+                                        height: 30,
+                                        width: 30,
+                                        resizeMode: "contain"
+                                    }}
+                                />
+                            </TouchableOpacity>
                         </View>
-                    )}
-                </Camera>
+                        <Camera
+                            type={CameraType.front}
+                            style={[styles.camera, {
+                                height: "55%"
+                            }]}
+                            onFacesDetected={handleFaceDetected}
+                            faceDetectorSettings={{
+                                mode: FaceDetector.FaceDetectorMode.fast,
+                                detectLandmarks: FaceDetector.FaceDetectorLandmarks.none,
+                                runClassification: FaceDetector.FaceDetectorClassifications.none,
+                                minDetectionInterval: 100,
+                                tracking: true
+                            }}
+                        >
+                            {/* {faceData.length === 0 && (
+                                <Text style={styles.statusText}>No face detected!</Text>
+                            )} */}
+                            {recordingStarted && (
+                                <View style={styles.recordingIndicator}>
+                                    <Text style={styles.recordingText}>●</Text>
+                                </View>
+                            )}
+                        </Camera>
+                    </View>
+                </View>
+            </View>
+            <View style={{
+                flex: 1,
+                zIndex: 999
+            }}>
                 <View style={{
                     flex: 1,
+                    paddingBottom: 20,
+                    justifyContent: "space-between"
                 }}>
                     <View style={{
-                        top: "10%",
+                        gap: 20,
                         flex: 1,
-                        paddingBottom: 50,
-                        justifyContent: "space-between"
                     }}>
                         <View style={{
-                            gap: 20
+                            padding: 20,
+                            flex: 1,
+                            zIndex: 999
                         }}>
-
-                            <TourGuideZone
-                                zone={1}
-                                shape="circle"
-                                text="Here is a quick tour guide of how the push up procedure works."
-                            >
-                                <Text style={{
-                                    alignSelf: "center",
-                                    fontWeight: "200"
-                                }}>
-                                    Maximum number of sit-ups in one minute
-                                </Text>
-                            </TourGuideZone>
-                            <View style={{
-                                paddingHorizontal: 0,
-                                alignItems: "center",
-                                borderRadius: 25,
-                                flexDirection: "row",
-                                justifyContent: "space-between",
+                            <SafeAreaView style={{
+                                padding: 20,
+                                flex: 1,
+                                justifyContent: "space-between"
                             }}>
-                                <TourGuideZone
-                                    zone={4}
-                                    shape="rectangle"
-                                    text="You have a minimum push-ups of 38 reps to pass."
-                                >
+                                <View style={{
+                                    bottom: 60,
+                                    gap: 20
+                                }}>
                                     <View style={{
-                                        alignItems: "center"
-                                    }}>
-                                        <Text style={{
-                                            fontSize: 25,
-                                        }}>
-                                            38
-                                        </Text>
-                                        <Text style={{
-                                            fontSize: 10,
-                                            fontWeight: "200"
-                                        }}>MINIMUM</Text>
-                                    </View>
-                                </TourGuideZone>
-                                <TourGuideZone
-                                    zone={3}
-                                    shape="rectangle"
-                                    text="You have a start timer of 1 minute to finish the minimum reps."
-                                    tooltipBottomOffset={70}
-                                >
-                                    <View style={{
-                                        backgroundColor: "white",
-                                        alignItems: "center",
-                                        padding: 5,
-                                        gap: 5,
+                                        padding: 20,
+                                        gap: 20,
+                                        backgroundColor: 'white',
+                                        borderRadius: 16,
                                         justifyContent: "center",
-                                        flexDirection: "row"
+                                        // iOS shadow
+                                        shadowColor: '#000',
+                                        shadowOffset: {
+                                            width: 0,
+                                            height: 10,
+                                        },
+                                        shadowOpacity: 0.3,
+                                        shadowRadius: 8,
                                     }}>
-                                        <TourGuideZone
-                                            zone={5}
-                                            text="click here to decrease the push-up time."
-                                            shape="rectangle"
-                                        >
-                                            <TouchableOpacity style={{
-                                                height: 30,
-                                                width: 30,
-                                                justifyContent: "center",
-                                                alignItems: "center",
-                                                backgroundColor: "black"
-                                            }}
-                                                onPress={() => {
-                                                    decreaseTime();
-                                                }}>
-                                                <Text style={{
-                                                    color: "white",
-                                                    fontSize: 20
-                                                }}>-</Text>
-                                            </TouchableOpacity>
-                                        </TourGuideZone>
+                                        {/* <VideoView
+                        style={{
+                            alignSelf: "center",
+                            width: 280,
+                            height: 280,
+                            borderRadius: 20
+                        }}
+                        player={sitUpsPlayer}
+                    /> */}
                                         <Text style={{
-                                            fontSize: 17
-                                        }}>{formatTime(time)}</Text>
-                                        <TourGuideZone
-                                            zone={6}
-                                            shape="rectangle"
-                                            text="click here to increase the push-up time."
-                                        >
+                                            alignSelf: "center",
+                                            fontWeight: "400",
+                                            textAlign: "center",
+                                            fontSize: 14
+                                        }}>
+                                            Maximum number of push-ups
+                                        </Text>
+                                        <View style={{
+                                            paddingHorizontal: 10,
+                                            alignItems: "center",
+                                            borderRadius: 25,
+                                            flexDirection: "row",
+                                            justifyContent: "space-between",
+                                        }}>
+                                            <View style={{
+                                                alignItems: "center"
+                                            }}>
+                                                <Text style={{
+                                                    fontSize: 35,
+                                                    fontWeight: "600"
+                                                }}>
+                                                    38
+                                                </Text>
+                                                <Text style={{
+                                                    fontSize: 10,
+                                                    fontWeight: "400"
+                                                }}>MINIMUM</Text>
+                                            </View>
+                                            <View style={{
+                                                alignItems: "center",
+                                                gap: 10
+                                            }}>
+                                                <Switch
+                                                    color={"#FA812890"}
+                                                    value={autoDetect}
+                                                    onValueChange={(value) => setAutoDetect(value)}
+                                                />
+                                                <Text style={{
+                                                    fontSize: 10,
+                                                    fontWeight: "400"
+                                                }}>AUTO DETECT</Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                    <View style={{
+                                        padding: 20,
+                                        gap: 20,
+                                        backgroundColor: 'white',
+                                        borderRadius: 16,
+                                        justifyContent: "center",
+                                        // iOS shadow
+                                        shadowColor: '#000',
+                                        shadowOffset: {
+                                            width: 0,
+                                            height: 10,
+                                        },
+                                        shadowOpacity: 0.3,
+                                        shadowRadius: 8,
+                                    }}>
+                                        {/* <VideoView
+                        style={{
+                            alignSelf: "center",
+                            width: 280,
+                            height: 280,
+                            borderRadius: 20
+                        }}
+                        player={sitUpsPlayer}
+                    /> */}
+                                        <Text style={{
+                                            alignSelf: "center",
+                                            fontWeight: "400",
+                                            textAlign: "center",
+                                            fontSize: 14
+                                        }}>
+                                            Set your preferred time limit
+                                        </Text>
+                                        <View style={{
+                                            paddingHorizontal: 10,
+                                            alignItems: "center",
+                                            borderRadius: 25,
+                                            flexDirection: "row",
+                                            justifyContent: "space-between",
+                                        }}>
                                             <TouchableOpacity
                                                 style={{
                                                     height: 30,
                                                     width: 30,
                                                     alignItems: "center",
-                                                    backgroundColor: "black"
+                                                    backgroundColor: "#FA812890"
+                                                }}
+                                                onPress={() => {
+                                                    decreaseTime();
+                                                }}
+                                            >
+                                                <Text style={{
+                                                    color: "white",
+                                                    fontSize: 20
+                                                }}>-</Text>
+                                            </TouchableOpacity>
+                                            <View style={{
+                                                alignItems: "center"
+                                            }}>
+                                                <Text style={{
+                                                    fontSize: 35,
+                                                    fontWeight: "600"
+                                                }}>
+                                                    {formatTime(time)}
+                                                </Text>
+                                                <Text style={{
+                                                    fontSize: 10
+                                                }}>MINUTE</Text>
+                                            </View>
+                                            <TouchableOpacity
+                                                style={{
+                                                    height: 30,
+                                                    width: 30,
+                                                    alignItems: "center",
+                                                    backgroundColor: "#FA812890"
                                                 }}
                                                 onPress={() => {
                                                     increaseTime();
@@ -413,290 +535,314 @@ const PushUpsScreen = ({
                                                     fontSize: 20
                                                 }}>+</Text>
                                             </TouchableOpacity>
-                                        </TourGuideZone>
+                                        </View>
+                                    </View>
+                                </View>
+                                <TourGuideZone
+                                    zone={7}
+                                    shape="rectangle"
+                                    text="Begin push up count you'll be given a preparation time of 10 seconds get ready."
+                                >
+                                    <View style={{
+                                    }}>
+                                        <TouchableOpacity style={{
+                                            backgroundColor: sessionActive ? "red" : "#FA812890",
+                                            justifyContent: "space-between",
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            padding: 20,
+                                            borderRadius: 5
+                                        }}
+                                            onPress={() => {
+                                                if (!sessionActive) {
+                                                    startCountdown();
+                                                    setTimerModal(true);
+                                                    setBeginModal(true)
+                                                } else {
+                                                    endSession();
+                                                }
+                                            }}
+                                        >
+                                            <Text style={{
+                                                color: sessionActive ? "white" : "black"
+                                            }}>{sessionActive ? "END" : "BEGIN"}</Text>
+                                            <Image source={require("../assets/BackgroundImages/VectorRight.png")}
+                                                style={{
+                                                    height: 20,
+                                                    width: 20
+                                                }}
+                                            />
+                                        </TouchableOpacity>
                                     </View>
                                 </TourGuideZone>
-                                <TourGuideZone
-                                    zone={2}
-                                    shape="rectangle"
-                                    text="Toggle switch to auto-detect push-ups reps."
+                            </SafeAreaView>
+                        </View>
+                        {/* <View style={styles.overlay}>
+                            <View style={{
+                                alignItems: "center",
+                                gap: 0
+                            }}>
+                                <TouchableOpacity onPress={() => {
+                                    setShowDemoModal(true)
+                                }}
+                                    style={{
+                                        justifyContent: "center",
+                                        alignItems: "center"
+                                    }}
                                 >
+                                    <Image
+                                        style={{
+                                            height: 30,
+                                            width: 40,
+                                            resizeMode: "contain"
+                                        }}
+                                        source={require("../assets/Icons/sit-up.png")}
+                                    />
+                                    <Text style={{
+                                        fontSize: 15
+                                    }}>View Demo</Text>
+                                </TouchableOpacity>
+                                <Text style={styles.countText}>{pushUpCount}</Text>
+                                {countdownFinished && mainTimer !== null && (
                                     <View style={{
                                         alignItems: "center"
                                     }}>
-                                        <Switch
-                                            value={autoDetect}
-                                            onValueChange={(value) => setAutoDetect(value)}
-                                        />
                                         <Text style={{
-                                            fontSize: 10,
-                                            fontWeight: "200"
-                                        }}>AUTO DETECT</Text>
+                                            fontSize: 13,
+                                            color: "black"
+                                        }}>Time left</Text>
+                                        <Text style={{
+                                            fontWeight: "700",
+                                            color: "white",
+                                            fontSize: 30
+                                        }}>{mainTimer !== null ? formatTime(mainTimer) : formatTime(time)}</Text>
                                     </View>
-                                </TourGuideZone>
+                                )}
                             </View>
-                            <View style={styles.overlay}>
-                                <View style={{
-                                    alignItems: "center",
-                                    gap: 0
-                                }}>
-                                    <TouchableOpacity onPress={() => {
-                                        setShowDemoModal(true)
-                                    }}
+                        </View> */}
+                    </View>
+                </View>
+                <Modal
+                    visible={beginModal}
+                    animationType="slide"
+                    transparent={true}
+                    onRequestClose={() => {
+                        setBeginModal(beginModal);
+                    }}
+                >
+                    <View style={{
+                        flex: 1,
+                        justifyContent: "flex-end",
+                    }}>
+                        <View style={[styles.shadowTopWrapper, {
+                            top: 100,
+                        }]}>
+                            <View style={styles.headerContainer}>
+                                <Svg height="500" width={screenWidth} style={styles.svg}>
+                                    <Defs>
+                                        <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                            <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                                        </SvgLinearGradient>
+                                    </Defs>
+                                    <Path
+                                        d={createTopCurvedPath()}
+                                        fill="url(#grad)"
+                                    />
+                                </Svg>
+                                {/* Content overlay - positioned absolutely to center over SVG */}
+                                <View style={styles.contentOverlay}>
+                                    <View
                                         style={{
+                                            height: 300,
+                                            width: "100%",
+                                            alignSelf: "center",
+                                            alignItems: "center",
                                             justifyContent: "center",
-                                            alignItems: "center"
-                                        }}
-                                    >
-                                        <Image
-                                            style={{
-                                                height: 30,
-                                                width: 40,
-                                                resizeMode: "contain"
-                                            }}
-                                            source={require("../assets/Icons/sit-up.png")}
-                                        />
-                                        <Text style={{
-                                            fontSize: 15
-                                        }}>View Demo</Text>
-                                    </TouchableOpacity>
-                                    <Text style={styles.countText}>{pushUpCount}</Text>
-                                    {countdownFinished && mainTimer !== null && (
-                                        <View style={{
-                                            alignItems: "center"
+                                            borderRadius: 15
                                         }}>
-                                            <Text style={{
-                                                fontSize: 13,
-                                                color: "black"
-                                            }}>Time left</Text>
-                                            <Text style={{
-                                                fontWeight: "700",
-                                                color: "white",
-                                                fontSize: 30
-                                            }}>{mainTimer !== null ? formatTime(mainTimer) : formatTime(time)}</Text>
+                                        <View style={{
+                                            position: "absolute",
+                                            top: 0,
+                                            right: 0,
+                                            paddingHorizontal: 20
+                                        }}>
+                                            <TouchableOpacity style={{
+
+                                            }}
+                                                onPress={() => {
+                                                    setBeginModal(false)
+                                                    setPrepTime(5);
+
+                                                }}
+                                            >
+                                                <Text style={{
+                                                    fontSize: 17,
+                                                    color: "white",
+                                                }}>close</Text>
+                                            </TouchableOpacity>
                                         </View>
-                                    )}
+                                        <View style={{
+                                            height: 150,
+                                            width: '70%',
+                                            borderRadius: 5,
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: 10,
+                                        }}>
+                                            <View style={{
+                                                flexDirection: "row",
+                                                alignItems: "flex-end",
+                                            }}>
+                                                <View>
+                                                    {countdown !== null && (
+                                                        <Text style={styles.countdownText}>{countdown > 0 ? countdown : "Begin!"}</Text>
+                                                    )}
+                                                </View>
+                                                <Text style={{
+                                                    fontSize: 17,
+                                                    bottom: 10,
+                                                    color: "white",
+                                                }}>sec</Text>
+                                            </View>
+                                            <TouchableOpacity
+                                                onPress={() => {
+
+                                                }}
+                                            >
+                                                <Text style={{
+                                                    color: "white"
+                                                }}>GET READY</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
                                 </View>
                             </View>
                         </View>
                     </View>
-                    <TourGuideZone
-                        zone={7}
-                        shape="rectangle"
-                        text="Begin push up count you'll be given a preparation time of 10 seconds get ready."
-                        style={{
-                            bottom: 10,
-                        }}
-                    >
-                        <View style={{
-                        }}>
-                            <TouchableOpacity style={{
-                                backgroundColor: sessionActive ? "red" : "white",
-                                justifyContent: "space-between",
-                                flexDirection: "row",
+                </Modal>
+
+                <Modal
+                    visible={showDemoModal}
+                    animationType="slide"
+                    transparent={true}
+                    onRequestClose={() => {
+                        setShowDemoModal(showDemoModal);
+                    }}
+                >
+                    <View style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        alignItems: "center"
+                    }}>
+                        <View
+                            style={{
+                                height: "40%",
+                                width: "90%",
+                                backgroundColor: "white",
+                                justifyContent: "center",
                                 alignItems: "center",
-                                padding: 20,
-                                borderRadius: 5
+                                borderRadius: 10,
+                                borderTopLeftRadius: 10,
+                                gap: 10,
+                                padding: 20
+                            }}
+                        >
+                            <TouchableOpacity style={{
+                                position: "absolute",
+                                top: 10,
+                                right: 10,
+                                height: 30,
+                                width: 30,
+                                borderRadius: 15,
+                                justifyContent: "center",
+                                alignItems: "center",
+                                backgroundColor: "black"
                             }}
                                 onPress={() => {
-                                    if (!sessionActive) {
-                                        startCountdown();
-                                        setTimerModal(true);
-                                        setBeginModal(true)
-                                    } else {
-                                        endSession();
-                                    }
+                                    setShowDemoModal(false);
+                                }}>
+                                <Text style={{
+                                    color: "white"
+                                }}>X</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+                <Modal
+                    visible={manualInputModal}
+                    animationType="slide"
+                    transparent={true}
+                    onRequestClose={() => {
+                        setManualInputModal(false);
+                    }}
+                >
+                    <View style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        backgroundColor: "rgba(0, 0, 0, 0.6)",
+                        padding: 20
+                    }}>
+                        <View style={{
+                            height: 300,
+                            padding: 20,
+                            justifyContent: "center",
+                            backgroundColor: Theme.colors.backgroundColor,
+                            gap: 20
+                        }}>
+                            <View style={{
+                                gap: 10
+                            }}>
+                                <Text style={{
+                                    textAlign: "center",
+                                    fontWeight: "600"
+                                }}>TIME OVER!!!</Text>
+                                <View>
+                                    <Text style={{
+                                        fontWeight: "200",
+                                        fontSize: 16,
+                                        textAlign: "center"
+                                    }}>Input your pull-up count</Text>
+                                </View>
+                            </View>
+                            <TextInput
+                                keyboardType="numeric"
+                                placeholderTextColor="#aaa"
+                                style={{
+                                    borderWidth: 1,
+                                    borderColor: '#ccc',
+                                    borderRadius: 10,
+                                    alignSelf: "center",
+                                    width: "30%",
+                                    padding: 15,
+                                    fontSize: 16,
+                                    backgroundColor: '#f9f9f9',
+                                    color: '#000',
+                                }}
+                            />
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setManualInputModal(false);
+                                    setPrepTime(5);
+                                    setTime(60);
+                                    resetTimers();
                                 }}
                             >
                                 <Text style={{
-                                    color: sessionActive ? "white" : "black"
-                                }}>{sessionActive ? "END" : "BEGIN"}</Text>
-                                <Image source={require("../assets/BackgroundImages/VectorRight.png")}
+                                    color: "white"
+                                }}>SUBMIT</Text>
+                                <Image source={require("../assets/downloadedIcons/fast.png")}
                                     style={{
-                                        height: 20,
-                                        width: 20
+                                        height: 24,
+                                        width: 24
                                     }}
                                 />
                             </TouchableOpacity>
                         </View>
-                    </TourGuideZone>
-                    <Modal
-                        visible={beginModal}
-                        animationType="slide"
-                        transparent={true}
-                        onRequestClose={() => {
-                            setBeginModal(beginModal);
-                        }}
-                    >
-                        <View style={{
-                            flex: 1,
-                            justifyContent: "center",
-                            alignItems: "center"
-                        }}>
-                            <View
-                                style={{
-                                    height: "20%",
-                                    width: "50%",
-                                    backgroundColor: "white",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    borderRadius: 10,
-                                    borderTopLeftRadius: 10,
-                                    gap: 10,
-                                    padding: 20
-                                }}
-                            >
-                                <TouchableOpacity style={{
-                                    position: "absolute",
-                                    top: 10,
-                                    right: 10,
-                                    height: 30,
-                                    width: 30,
-                                    borderRadius: 15,
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    backgroundColor: "black"
-                                }}
-                                    onPress={() => {
-                                        stopCountdown();
-                                        setBeginModal(false);
-                                        setCountdownFinished(false);
-                                        resetTimers();
-                                    }}>
-                                    <Text style={{
-                                        color: "white"
-                                    }}>X</Text>
-                                </TouchableOpacity>
-                                <View>
-                                    {countdown !== null && (
-                                        <Text style={styles.countdownText}>{countdown > 0 ? countdown : "Begin!"}</Text>
-                                    )}
-                                </View>
-                            </View>
-                        </View>
-                    </Modal>
-                    <Modal
-                        visible={showDemoModal}
-                        animationType="slide"
-                        transparent={true}
-                        onRequestClose={() => {
-                            setShowDemoModal(showDemoModal);
-                        }}
-                    >
-                        <View style={{
-                            flex: 1,
-                            justifyContent: "center",
-                            alignItems: "center"
-                        }}>
-                            <View
-                                style={{
-                                    height: "40%",
-                                    width: "90%",
-                                    backgroundColor: "white",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    borderRadius: 10,
-                                    borderTopLeftRadius: 10,
-                                    gap: 10,
-                                    padding: 20
-                                }}
-                            >
-                                <TouchableOpacity style={{
-                                    position: "absolute",
-                                    top: 10,
-                                    right: 10,
-                                    height: 30,
-                                    width: 30,
-                                    borderRadius: 15,
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    backgroundColor: "black"
-                                }}
-                                    onPress={() => {
-                                        setShowDemoModal(false);
-                                    }}>
-                                    <Text style={{
-                                        color: "white"
-                                    }}>X</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </Modal>
-                    <Modal
-                        visible={manualInputModal}
-                        animationType="slide"
-                        transparent={true}
-                        onRequestClose={() => {
-                            setManualInputModal(false);
-                        }}
-                    >
-                        <View style={{
-                            flex: 1,
-                            justifyContent: "center",
-                            backgroundColor: "rgba(0, 0, 0, 0.6)",
-                            padding: 20
-                        }}>
-                            <View style={{
-                                height: 300,
-                                padding: 20,
-                                justifyContent: "center",
-                                backgroundColor: Theme.colors.backgroundColor,
-                                gap: 20
-                            }}>
-                                <View style={{
-                                    gap: 10
-                                }}>
-                                    <Text style={{
-                                        textAlign: "center",
-                                        fontWeight: "600"
-                                    }}>TIME OVER!!!</Text>
-                                    <View>
-                                        <Text style={{
-                                            fontWeight: "200",
-                                            fontSize: 16,
-                                            textAlign: "center"
-                                        }}>Input your pull-up count</Text>
-                                    </View>
-                                </View>
-                                <TextInput
-                                    keyboardType="numeric"
-                                    placeholderTextColor="#aaa"
-                                    style={{
-                                        borderWidth: 1,
-                                        borderColor: '#ccc',
-                                        borderRadius: 10,
-                                        alignSelf: "center",
-                                        width: "30%",
-                                        padding: 15,
-                                        fontSize: 16,
-                                        backgroundColor: '#f9f9f9',
-                                        color: '#000',
-                                    }}
-                                />
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        setManualInputModal(false);
-                                        setPrepTime(5);
-                                        setTime(60);
-                                        resetTimers();
-                                    }}
-                                >
-                                    <Text style={{
-                                        color: "white"
-                                    }}>SUBMIT</Text>
-                                    <Image source={require("../assets/downloadedIcons/fast.png")}
-                                        style={{
-                                            height: 24,
-                                            width: 24
-                                        }}
-                                    />
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </Modal>
-                </View>
-            </SafeAreaView>
-        </ImageBackground>
+                    </View>
+                </Modal>
+            </View>
+        </View>
     );
 }
 
@@ -705,8 +851,6 @@ export default PushUpsScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
-        backgroundColor: Theme.colors.backgroundColor,
     },
     camera: {
         height: "30%",
@@ -840,7 +984,7 @@ const styles = StyleSheet.create({
     countdownText: {
         fontSize: 48,
         fontWeight: "bold",
-        color: "#333",
+        color: "white",
     },
     inputField: {
         borderWidth: 1,
@@ -853,5 +997,50 @@ const styles = StyleSheet.create({
         color: "#000",
         marginBottom: 20,
         textAlign: "center",
+    },
+    headerContainer: {
+        position: 'relative',
+        justifyContent: "center",
+        backgroundColor: 'transparent'
+    },
+    contentOverlay: {
+        position: 'absolute',
+        top: 60,
+        left: 0,
+        right: 0,
+        padding: 20,
+        bottom: 0,
+        flex: 1,
+        justifyContent: 'flex-start',
+        gap: 20,
+    },
+    svg: {
+        padding: 20,
+    },
+    shadowWrapper: {
+        flex: 1,
+        justifyContent: "center",
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.8,
+        shadowRadius: 15,
+        elevation: 12,
+        zIndex: 1,
+    },
+    shadowTopWrapper: {
+        flex: 1,
+        justifyContent: "flex-end",
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.8,
+        shadowRadius: 15,
+        elevation: 12,
+        zIndex: 1,
     },
 });

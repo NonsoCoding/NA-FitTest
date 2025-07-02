@@ -6,6 +6,12 @@ import { auth, db } from "../../Firebase/Settings";
 import { doc, getDoc, onSnapshot } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { async } from "@firebase/util"
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import * as Progress from "react-native-progress";
+
+const { width: screenWidth } = Dimensions.get('window');
+
 interface IHomePageProps {
     navigation: any;
 }
@@ -24,6 +30,7 @@ const HomePage = ({
 }: IHomePageProps) => {
 
     const [isLoading, setIsLoading] = useState(false);
+    const [progress, setProgress] = useState(0);
     const [userInfo, setUserInfo] = useState<{
         firstName: string;
         lastName: string;
@@ -45,26 +52,21 @@ const HomePage = ({
         day: 'numeric'
     });
 
-    // const pushUpsPlayer = useVideoPlayer(pushUpsVideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-    // const pullUpsPlayer = useVideoPlayer(pullUpVideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-    // const sprintPlayer = useVideoPlayer(sprintVideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-    // const sitUpPlayer = useVideoPlayer(sitUpVideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-    // const runningPlayer = useVideoPlayer(runningVideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
+    const barWidth = screenWidth * 0.7;
+
+    // This creates the curved path - the key part!
+    const createCurvedPath = () => {
+        const height = 160;
+        const waveHeight = 45;
+
+        // Simple single wave - one dip down, one peak up
+        return `M 0 0 
+        L 0 ${height} 
+        Q ${screenWidth * 0.25} ${height + waveHeight} ${screenWidth * 0.5} ${height}
+        Q ${screenWidth * 0.75} ${height - waveHeight} ${screenWidth} ${height}
+        L ${screenWidth} 0 
+        Z`;
+    };
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -139,6 +141,16 @@ const HomePage = ({
         }
     };
 
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setProgress(prev => {
+                const next = prev + 0.1;
+                return next > 1 ? 1 : next;
+            });
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         checkStoredUser();
@@ -171,8 +183,6 @@ const HomePage = ({
 
         loadPersonalBestsFromStorage();
     }, []);
-
-
 
     useEffect(() => {
         const user = auth.currentUser;
@@ -242,12 +252,28 @@ const HomePage = ({
                     <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
                 </View>
             )}
-            <View style={styles.top_container}>
+            <View style={styles.shadowWrapper}>
+                <View style={styles.headerContainer}>
+                    <Svg height="200" width={screenWidth} style={styles.svg}>
+                        <Defs>
+                            <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                            </SvgLinearGradient>
+                        </Defs>
+                        <Path
+                            d={createCurvedPath()}
+                            fill="url(#grad)"
+                        />
+                    </Svg>
+                </View>
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
+                    position: "absolute",
                     gap: 10,
-                    top: "8%"
+                    padding: 20,
+                    top: "25%"
                 }}>
                     <View>
                         {userInfo?.profilePic ? (
@@ -357,7 +383,8 @@ const HomePage = ({
                     </View>
                 </View>
                 <View style={{
-                    padding: 10,
+                    paddingHorizontal: 15,
+                    paddingVertical: 30,
                     gap: 20,
                     backgroundColor: 'white',
                     borderRadius: 16,
@@ -485,7 +512,8 @@ const HomePage = ({
                     </View>
                 </View>
                 <View style={{
-                    padding: 10,
+                    paddingHorizontal: 15,
+                    paddingVertical: 30,
                     gap: 20,
                     backgroundColor: 'white',
                     borderRadius: 16,
@@ -510,7 +538,7 @@ const HomePage = ({
                         <Image
                             style={{
                                 height: 20,
-                                width: 20
+                                width: 20,
                             }}
                             source={require("../../assets/Icons/workout_icon.png")} />
                         <Text style={{
@@ -518,313 +546,41 @@ const HomePage = ({
                         }}>TACTIXFIT POINTS</Text>
                     </View>
                     <View style={{
-                        flexDirection: 'row',
                         alignItems: "center",
-                        justifyContent: "space-between"
+                        flexDirection: "row",
+                        alignSelf: "center",
+                        gap: 20,
+                        justifyContent: "center",
                     }}>
-                        <TouchableOpacity onPress={() => {
-                            navigation.navigate("RunningScreen")
-                        }}>
-                            <Image
-                                source={require("../../assets/Icons/exercise_icon.png")}
+                        <View style={styles.wrapper}>
+                            <Progress.Bar
+                                progress={progress}
+                                width={barWidth}
+                                height={50}
+                                color="#FA8128"
+                                borderRadius={15}
+                                unfilledColor="#E0E0E0"
+                                borderWidth={0}
+                            />
+                            <View style={styles.textContainer}>
+                                <Text style={styles.progressText}>{Math.round(progress * 100)}% COMPLETED</Text>
+                            </View>
+                        </View>
+                        <View>
+                            <Image source={require("../../assets/Icons/Gold-Badge1.png")}
                                 style={{
-                                    height: 50,
-                                    width: 50,
-                                    resizeMode: 'contain'
+                                    height: 30,
+                                    width: 30
                                 }}
                             />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => {
-                                navigation.navigate("SitUpScreen")
-                            }}
-                            style={{
-                                borderWidth: 1,
-                                padding: 10,
-                                borderRadius: 50,
-                                borderColor: "#D3D3D3"
-                            }}>
-                            <Image
-                                source={require("../../assets/Icons/sit-up-icon.png")}
-                                style={{
-                                    height: 25,
-                                    width: 25,
-                                    resizeMode: 'contain'
-                                }}
-                            />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => {
-                                navigation.navigate("PushUpsScreen")
-                            }}
-                            style={{
-                                borderWidth: 1,
-                                padding: 10,
-                                borderRadius: 50,
-                                borderColor: "#D3D3D3"
-                            }}>
-                            <Image
-                                source={require("../../assets/Icons/boy-doing-pushups-.png")}
-                                style={{
-                                    height: 25,
-                                    width: 25,
-                                    resizeMode: 'contain'
-                                }}
-                            />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => {
-                                navigation.navigate("SprintScreen")
-                            }}
-                            style={{
-                                borderWidth: 1,
-                                padding: 10,
-                                borderRadius: 50,
-                                borderColor: "#D3D3D3"
-                            }}>
-                            <Image
-                                source={require("../../assets/Icons/sport.png")}
-                                style={{
-                                    height: 25,
-                                    width: 25,
-                                    resizeMode: 'contain'
-                                }}
-                            />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => {
-                                navigation.navigate("PullUpScreen")
-                            }}
-                            style={{
-                                borderWidth: 1,
-                                padding: 10,
-                                borderRadius: 50,
-                                borderColor: "#D3D3D3"
-                            }}>
-                            <Image
-                                source={require("../../assets/Icons/pull.png")}
-                                style={{
-                                    height: 25,
-                                    width: 25,
-                                    resizeMode: 'contain'
-                                }}
-                            />
-                        </TouchableOpacity>
+                            <Text style={{
+                                color: "#FFD125",
+                                fontWeight: "900"
+                            }}>Gold</Text>
+                        </View>
                     </View>
                 </View>
             </View>
-            {/* <View style={{
-                flex: 3
-            }}>
-                <ScrollView
-                    showsVerticalScrollIndicator={false}
-                    style={{
-
-                    }}
-                >
-                    <View style={{
-                        padding: 10,
-                        gap: 10,
-
-                    }}>
-                        <View style={{
-                            padding: 20,
-                            borderRadius: 5,
-                            backgroundColor: "rgba(0, 0, 0, 0.05)"
-                        }}>
-                            <TouchableOpacity style={styles.exercise_btn}
-                                onPress={() => {
-                                    navigation.navigate("PushUpsScreen")
-                                }}
-                            >
-
-                                <View style={{
-                                    gap: 4
-                                }}>
-                                    <Text style={{
-                                        fontSize: 24,
-                                        fontWeight: "300",
-
-                                    }}>Push-Ups</Text>
-                                    <Text style={{
-                                        fontWeight: '200'
-                                    }}>Minimum Requirement: 38</Text>
-                                    <View style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        gap: 7,
-                                    }}>
-                                        <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
-                                            style={{
-                                                width: 15,
-                                                height: 15
-                                            }}
-                                        />
-                                        <Text style={{
-                                            fontWeight: '200'
-                                        }}>Personal Best: {personalBests.pushUps}</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={{
-                            padding: 20,
-                            borderRadius: 5,
-                            backgroundColor: "rgba(0, 0, 0, 0.05)"
-                        }}>
-                            <TouchableOpacity style={styles.exercise_btn}
-                                onPress={() => {
-                                    navigation.navigate("SprintScreen")
-                                }}
-                            >
-                                <View style={{
-                                    gap: 4
-                                }}>
-                                    <Text style={{
-                                        fontSize: 24,
-                                        fontWeight: "300",
-
-                                    }}>300 Meter Sprint</Text>
-                                    <Text style={{
-                                        fontWeight: '200'
-                                    }}>Minimum Requirement: 60s</Text>
-                                    <View style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        gap: 7,
-                                    }}>
-                                        <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
-                                            style={{
-                                                width: 15,
-                                                height: 15
-                                            }}
-                                        />
-                                        <Text style={{
-                                            fontWeight: '200'
-                                        }}>Personal Best: {formatTime(personalBests.sprintTime)}</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={{
-                            padding: 20,
-                            borderRadius: 5,
-                            backgroundColor: "rgba(0, 0, 0, 0.05)"
-                        }}>
-                            <TouchableOpacity style={styles.exercise_btn}
-                                onPress={() => {
-                                    navigation.navigate("SitUpScreen")
-                                }}
-                            >
-                                <View style={{
-                                    gap: 4
-                                }}>
-                                    <Text style={{
-                                        fontSize: 24,
-                                        fontWeight: "300",
-
-                                    }}>Sit-Ups</Text>
-                                    <Text style={{
-                                        fontWeight: '200'
-                                    }}>Minimum Requirement: 38</Text>
-                                    <View style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        gap: 7,
-                                    }}>
-                                        <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
-                                            style={{
-                                                width: 15,
-                                                height: 15
-                                            }}
-                                        />
-                                        <Text style={{
-                                            fontWeight: '200'
-                                        }}>Personal Best: {personalBests.sitUps}</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={{
-                            padding: 20,
-                            borderRadius: 5,
-                            backgroundColor: "rgba(0, 0, 0, 0.05)"
-                        }}>
-                            <TouchableOpacity style={styles.exercise_btn}
-                                onPress={() => {
-                                    navigation.navigate("RunningScreen")
-                                }}
-                            >
-                                <View style={{
-                                    gap: 4
-                                }}>
-                                    <Text style={{
-                                        fontSize: 24,
-                                        fontWeight: "300",
-                                    }}>1.5 Mile Run</Text>
-                                    <Text style={{
-                                        fontWeight: '200'
-                                    }}>Minimum Requirement: 10:00 min</Text>
-                                    <View style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        gap: 7,
-                                    }}>
-                                        <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
-                                            style={{
-                                                width: 15,
-                                                height: 15
-                                            }}
-                                        />
-                                        <Text style={{
-                                            fontWeight: '200'
-                                        }}>Personal Best: {formatTime(personalBests.runTime)}</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={{
-                            padding: 20,
-                            borderRadius: 5,
-                            backgroundColor: "rgba(0, 0, 0, 0.05)"
-                        }}>
-                            <TouchableOpacity style={styles.exercise_btn}
-                                onPress={() => {
-                                    navigation.navigate("PullUpScreen")
-                                }}
-                            >
-                                <View style={{
-                                    gap: 4
-                                }}>
-                                    <Text style={{
-                                        fontSize: 24,
-                                        fontWeight: "300",
-                                    }}>Pull-Ups</Text>
-                                    <Text style={{
-                                        fontWeight: '200'
-                                    }}>Minimum Requirement: 38</Text>
-                                    <View style={{
-                                        flexDirection: "row",
-                                        alignItems: "center",
-                                        gap: 7,
-                                    }}>
-                                        <Image source={require("../../assets/downloadedIcons/medalIcon.png")}
-                                            style={{
-                                                width: 15,
-                                                height: 15
-                                            }}
-                                        />
-                                        <Text style={{
-                                            fontWeight: '200'
-                                        }}>Personal Best: {personalBests.pullUps}</Text>
-                                    </View>
-                                </View>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </ScrollView>
-            </View> */}
-
         </View>
     )
 }
@@ -833,6 +589,13 @@ export default HomePage;
 
 const styles = StyleSheet.create({
     container: {
+    },
+    headerContainer: {
+        justifyContent: "center",
+        backgroundColor: 'transparent',
+    },
+    svg: {
+        padding: 20,
     },
     top_container: {
         backgroundColor: "#FFD700",
@@ -860,5 +623,35 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 9999,
-    }
+    },
+    wrapper: {
+        height: 50,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    textContainer: {
+        position: "absolute",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    progressText: {
+        color: "white",
+        fontWeight: "bold",
+        fontSize: 16,
+    },
+    shadowWrapper: {
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.8,
+        shadowRadius: 15,
+
+        // Android shadow
+        elevation: 12,
+
+        // Ensure shadow doesn't get clipped
+        zIndex: 1,
+    },
 })

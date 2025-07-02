@@ -1,11 +1,16 @@
-import { Alert, Image, ImageBackground, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, Image, ImageBackground, Modal, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../Branding/Theme";
 import { useEffect, useRef, useState } from "react";
 import { Accelerometer } from "expo-sensors";
 import { Switch } from "react-native-paper";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { LinearGradient } from "expo-linear-gradient";
 import { auth, db } from "../../../Firebase/Settings";
 import * as Speech from "expo-speech";
+import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import LottieView from "lottie-react-native";
+import * as Progress from "react-native-progress";
 
 interface ITestProps {
     navigation?: any;
@@ -24,6 +29,8 @@ interface SensorData {
     x?: number;
     y?: number;
 }
+
+const { width: screenWidth } = Dimensions.get('window');
 
 
 const SitUpTestScreen = ({
@@ -44,6 +51,7 @@ const SitUpTestScreen = ({
     const [sitUpCount, setSitUpCount] = useState(0);
     const [situpState, setSitupState] = useState<SitupState>(SitupState.READY);
     const [isFirstCalibration, setIsFirstCalibration] = useState(true);
+    const [progress, setProgress] = useState(0);
     const [calibrationValues, setCalibrationValues] = useState({
         downThreshold: -0.6,
         upThreshold: -0.18,
@@ -53,10 +61,32 @@ const SitUpTestScreen = ({
     const [isRunning, setIsRunning] = useState(false);
     const [isGoingDown, setIsGoingDown] = useState(false);
     const [isCountingActive, setIsCountingActive] = useState(false);
+    const insets = useSafeAreaInsets();
 
-    // const startIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    // const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const createBottomCurvedPath = () => {
+        const height = 450;
+        const waveHeight = 45;
 
+        return `M 0 0 
+        L 0 ${height} 
+        Q ${screenWidth * 0.25} ${height + waveHeight} ${screenWidth * 0.5} ${height}
+        Q ${screenWidth * 0.75} ${height - waveHeight} ${screenWidth} ${height}
+        L ${screenWidth} 0 
+        Z`;
+    };
+
+    const createTopCurvedPath = () => {
+        const height = 400;
+        const waveHeight = 45;
+
+        return `M 0 0
+            L 0 ${waveHeight}
+            Q ${screenWidth * 0.25} ${waveHeight * 2} ${screenWidth * 0.5} ${waveHeight}
+            Q ${screenWidth * 0.75} 0 ${screenWidth} ${waveHeight}
+            L ${screenWidth} ${height}
+            L 0 ${height}
+            Z`;
+    };
 
     const MIN_PUSHUP_TIME = 500; // Minimum time for a valid push-up (ms)
     const MAX_PUSHUP_TIME = 5000; // Maximum time for a valid push-up (ms)
@@ -235,6 +265,17 @@ const SitUpTestScreen = ({
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, [isRunning]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setProgress(prev => {
+                const next = prev + 0.1;
+                return next > 1 ? 1 : next;
+            });
+        }, 500);
+
+        return () => clearInterval(interval);
+    }, []);
 
     // Main timer logic
     useEffect(() => {
@@ -466,59 +507,126 @@ const SitUpTestScreen = ({
     return (
         <View style={{
             flex: 1,
+            backgroundColor: "white"
+
         }}>
-            <View style={{
-                backgroundColor: Theme.colors.primaryColor,
-                justifyContent: "flex-end",
-                gap: 20,
-                padding: 20,
-                height: "14%"
-            }}>
-                <View style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between"
-                }}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            navigation.goBack();
-                        }}
-                    >
-                        <Image source={require("../../../assets/downloadedIcons/back1.png")}
-                            style={{
-                                width: 20,
-                                height: 20
-                            }}
+            <View style={styles.shadowWrapper}>
+                <View style={styles.headerContainer}>
+                    <Svg height="500" width={screenWidth} style={styles.svg}>
+                        <Defs>
+                            <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                            </SvgLinearGradient>
+                        </Defs>
+                        <Path
+                            d={createBottomCurvedPath()}
+                            fill="url(#grad)"
                         />
-                    </TouchableOpacity>
-                    <Text style={{
-                        color: "white"
-                    }}>SIT-UPS (TEST MODE)</Text>
-                    <TouchableOpacity
-                        onPress={() => {
-                            navigation.navigate("SitUpHistory")
-                        }}
-                    >
-                        <Image source={require("../../../assets/downloadedIcons/notification.png")}
-                            style={{
-                                height: 30,
-                                width: 30,
-                                resizeMode: "contain"
-                            }}
-                        />
-                    </TouchableOpacity>
+                    </Svg>
+
+                    {/* Content overlay - positioned absolutely to center over SVG */}
+                    <View style={styles.contentOverlay}>
+                        <View style={{
+                            alignItems: "center",
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            padding: 20,
+                        }}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    navigation.goBack();
+                                }}
+                            >
+                                <Image source={require("../../../assets/downloadedIcons/back1.png")}
+                                    style={{
+                                        width: 20,
+                                        height: 20
+                                    }}
+                                />
+                            </TouchableOpacity>
+                            <Text style={{
+                                color: "white"
+                            }}>SIT-UPS (TEST MODE)</Text>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    navigation.navigate("SitUpHistory")
+                                }}
+                            >
+                                <Image source={require("../../../assets/downloadedIcons/notification.png")}
+                                    style={{
+                                        height: 30,
+                                        width: 30,
+                                        resizeMode: "contain"
+                                    }}
+                                />
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{
+                            paddingHorizontal: 20,
+                            shadowColor: '#000',
+                            shadowOffset: {
+                                width: 0,
+                                height: 1,
+                            },
+                            shadowOpacity: 0.6,
+                            shadowRadius: 15,
+                            // Android shadow
+                            elevation: 6,
+                            // Ensure shadow doesn't get clipped
+                            zIndex: 1,
+                        }}>
+                            <View style={{
+                                backgroundColor: 'white',
+                                borderRadius: 10,
+                                height: "70%",
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}>
+                                <LottieView
+                                    source={require("../../../assets/ExerciseGifs/push-ups.json")}
+                                    style={{
+                                        height: 150,
+                                        width: 150
+                                    }}
+                                    autoPlay={true}
+                                    loop={true}
+                                />
+                            </View>
+                        </View>
+                    </View>
                 </View>
             </View>
             <View style={{
                 padding: 20,
                 flex: 1,
-                paddingBottom: 50,
-                justifyContent: "space-between"
+                zIndex: 999
             }}>
-                <View style={{
-                    gap: 20
+                <SafeAreaView style={{
+                    padding: 20,
+                    flex: 1,
+                    justifyContent: "space-between"
                 }}>
-                    {/* <VideoView
+                    <View style={{
+                        bottom: 60,
+                        gap: 20
+                    }}>
+                        <View style={{
+                            padding: 20,
+                            gap: 20,
+                            backgroundColor: 'white',
+                            borderRadius: 16,
+                            justifyContent: "center",
+                            // iOS shadow
+                            shadowColor: '#000',
+                            shadowOffset: {
+                                width: 0,
+                                height: 10,
+                            },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 8,
+                        }}>
+                            {/* <VideoView
                         style={{
                             alignSelf: "center",
                             width: 280,
@@ -527,179 +635,156 @@ const SitUpTestScreen = ({
                         }}
                         player={sitUpsPlayer}
                     /> */}
-                    <Text style={{
-                        alignSelf: "center",
-                        fontWeight: "200"
-                    }}>
-                        Maximum number of sit-ups in one minute
-                    </Text>
-                    <View style={{
-                        paddingHorizontal: 30,
-                        alignItems: "center",
-                        borderRadius: 25,
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                    }}>
-                        <View style={{
-                            alignItems: "center"
-                        }}>
                             <Text style={{
-                                fontSize: 25,
+                                alignSelf: "center",
+                                fontWeight: "400",
+                                textAlign: "center",
+                                fontSize: 14
                             }}>
-                                38
+                                Maximum number of push-ups
                             </Text>
-                            <Text style={{
-                                fontSize: 10,
-                                fontWeight: "200"
-                            }}>MINIMUM</Text>
-                        </View>
-                        <View style={{
-                            left: 10,
-                            alignItems: "center"
-                        }}>
-                            <Text style={{
-                                fontSize: 25,
-                            }}>
-                                01:00
-                            </Text>
-                            <Text style={{
-                                fontSize: 10
-                            }}>MINUTE</Text>
-                        </View>
-                        <View style={{
-                            alignItems: "center"
-                        }}>
-                            <Switch
-                                color={Theme.colors.primaryColor}
-                                value={isAutoDetectEnabled}
-                                onValueChange={(value) => setIsAutoDetectEnabled(value)}
-                            />
-                            <Text style={{
-                                fontSize: 10,
-                                fontWeight: "200"
-                            }}>AUTO DETECT</Text>
-                        </View>
-                    </View>
-                </View>
-                <TouchableOpacity style={styles.getStartedBtn}
-                    onPress={() => {
-                        hanldleGetStarted();
-                    }}
-                >
-                    <Text style={{
-                        color: "white"
-                    }}>GET STARTED</Text>
-                    <Image source={require("../../../assets/downloadedIcons/fast.png")}
-                        style={{
-                            width: 25,
-                            height: 25,
-                            resizeMode: "contain"
-                        }}
-                    />
-                </TouchableOpacity>
-            </View>
-            <Modal
-                visible={isModalVisible}
-                animationType="slide"
-                transparent={true}
-                onRequestClose={() => {
-                    setIsModalVisible(false);
-                }}
-            >
-                <View style={{
-                    flex: 1,
-                    justifyContent: "flex-end"
-                }}>
-                    <View style={{
-                        height: 300,
-                        backgroundColor: Theme.colors.primaryColor,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: 5
-                    }}>
-                        <View style={{
-                            position: "absolute",
-                            top: 0,
-                            right: 0,
-                            padding: 20
-                        }}>
-                            <TouchableOpacity style={{
-
-                            }}
-                                onPress={() => {
-                                    setIsModalVisible(false);
-                                    setTime(60)
-                                }}
-                            >
-                                <Text style={{
-                                    fontSize: 17,
-                                    color: "white",
-                                }}>close</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={{
-                            height: 150,
-                            width: '70%',
-                            borderRadius: 5,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 10,
-                            backgroundColor: "rgba(0, 0, 0, 0.3)"
-                        }}>
                             <View style={{
-                                flexDirection: 'row',
+                                paddingHorizontal: 10,
                                 alignItems: "center",
-                                gap: 25
+                                borderRadius: 25,
+                                flexDirection: "row",
+                                justifyContent: "space-between",
                             }}>
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        increaseTime()
-                                    }}
-                                >
-                                    <Text style={{
-                                        fontSize: 30,
-                                        color: 'white'
-                                    }}>+</Text>
-                                </TouchableOpacity>
                                 <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "flex-end",
+                                    alignItems: "center"
                                 }}>
                                     <Text style={{
-                                        fontSize: 40,
-                                        color: "white",
-
-                                    }}>{formatTime(time)}</Text>
+                                        fontSize: 35,
+                                        fontWeight: "600"
+                                    }}>
+                                        38
+                                    </Text>
                                     <Text style={{
-                                        fontSize: 17,
-                                        bottom: 10,
-                                        color: "white",
-                                    }}>min</Text>
+                                        fontSize: 10,
+                                        fontWeight: "400"
+                                    }}>MINIMUM</Text>
                                 </View>
+                                <View style={{
+                                    alignItems: "center",
+                                    gap: 10
+                                }}>
+                                    <Switch
+                                        color={"#FA812890"}
+                                        value={isAutoDetectEnabled}
+                                        onValueChange={(value) => setIsAutoDetectEnabled(value)}
+                                    />
+                                    <Text style={{
+                                        fontSize: 10,
+                                        fontWeight: "400"
+                                    }}>AUTO DETECT</Text>
+                                </View>
+                            </View>
+                        </View>
+                        <View style={{
+                            padding: 20,
+                            gap: 20,
+                            backgroundColor: 'white',
+                            borderRadius: 16,
+                            justifyContent: "center",
+                            // iOS shadow
+                            shadowColor: '#000',
+                            shadowOffset: {
+                                width: 0,
+                                height: 10,
+                            },
+                            shadowOpacity: 0.3,
+                            shadowRadius: 8,
+                        }}>
+                            {/* <VideoView
+                        style={{
+                            alignSelf: "center",
+                            width: 280,
+                            height: 280,
+                            borderRadius: 20
+                        }}
+                        player={sitUpsPlayer}
+                    /> */}
+                            <Text style={{
+                                alignSelf: "center",
+                                fontWeight: "400",
+                                textAlign: "center",
+                                fontSize: 14
+                            }}>
+                                Set your preferred time limit
+                            </Text>
+                            <View style={{
+                                paddingHorizontal: 10,
+                                alignItems: "center",
+                                borderRadius: 25,
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                            }}>
                                 <TouchableOpacity
+                                    style={{
+                                        height: 30,
+                                        width: 30,
+                                        alignItems: "center",
+                                        backgroundColor: "#FA812890"
+                                    }}
                                     onPress={() => {
-                                        decreaseTime()
+                                        decreaseTime();
                                     }}
                                 >
                                     <Text style={{
-                                        fontSize: 40,
-                                        color: "white"
+                                        color: "white",
+                                        fontSize: 20
                                     }}>-</Text>
                                 </TouchableOpacity>
+                                <View style={{
+                                    alignItems: "center"
+                                }}>
+                                    <Text style={{
+                                        fontSize: 35,
+                                        fontWeight: "600"
+                                    }}>
+                                        {formatTime(time)}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 10
+                                    }}>MINUTE</Text>
+                                </View>
+                                <TouchableOpacity
+                                    style={{
+                                        height: 30,
+                                        width: 30,
+                                        alignItems: "center",
+                                        backgroundColor: "#FA812890"
+                                    }}
+                                    onPress={() => {
+                                        increaseTime();
+                                    }}
+                                >
+                                    <Text style={{
+                                        color: "white",
+                                        fontSize: 20
+                                    }}>+</Text>
+                                </TouchableOpacity>
                             </View>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    modalToPrepModal();
-                                }}
-                            >
-                                <Text style={{
-                                    color: "white"
-                                }}>Start</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
-                </View>
-            </Modal>
+                    <TouchableOpacity style={styles.getStartedBtn}
+                        onPress={() => {
+                            modalToPrepModal();
+                        }}
+                    >
+                        <Text style={{
+                            color: "black"
+                        }}>GET STARTED</Text>
+                        <Image source={require("../../../assets/Icons/fast-forward.png")}
+                            style={{
+                                width: 15,
+                                height: 15,
+                                resizeMode: "contain"
+                            }}
+                        />
+                    </TouchableOpacity>
+                </SafeAreaView>
+            </View>
             <Modal
                 visible={isPrepModalVisible}
                 animationType="slide"
@@ -710,74 +795,95 @@ const SitUpTestScreen = ({
             >
                 <View style={{
                     flex: 1,
-                    justifyContent: "center",
-                    backgroundColor: "rgba(0, 0, 0, 0.6)"
+                    justifyContent: "flex-end",
                 }}>
-                    <View style={{
-                        height: 200,
-                        width: "60%",
-                        alignSelf: "center",
-                        backgroundColor: Theme.colors.primaryColor,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: 5
-                    }}>
-                        <View style={{
-                            position: "absolute",
-                            top: 0,
-                            right: 0,
-                            padding: 20
-                        }}>
-                            <TouchableOpacity style={{
+                    <View style={[styles.shadowTopWrapper, {
+                        top: 100,
+                    }]}>
+                        <View style={styles.headerContainer}>
+                            <Svg height="500" width={screenWidth} style={styles.svg}>
+                                <Defs>
+                                    <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                        <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                                    </SvgLinearGradient>
+                                </Defs>
+                                <Path
+                                    d={createTopCurvedPath()}
+                                    fill="url(#grad)"
+                                />
+                            </Svg>
 
-                            }}
-                                onPress={() => {
-                                    setIsPrepModalVisible(false);
-                                    setPrepTime(5);
-                                    setIsRunning(false);
-                                    if (intervalRef.current) {
-                                        clearInterval(intervalRef.current);
-                                        intervalRef.current = null;
-                                    }
-                                }}
-                            >
-                                <Text style={{
-                                    fontSize: 17,
-                                    color: "white",
-                                }}>close</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={{
-                            height: 150,
-                            width: '70%',
-                            borderRadius: 5,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 10,
-                        }}>
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "flex-end",
-                            }}>
-                                <Text style={{
-                                    fontSize: 60,
-                                    color: "white",
-                                }}>{prepTime}</Text>
-                                <Text style={{
-                                    fontSize: 17,
-                                    bottom: 10,
-                                    color: "white",
-                                }}>sec</Text>
+                            {/* Content overlay - positioned absolutely to center over SVG */}
+                            <View style={styles.contentOverlay}>
+                                <View
+                                    style={{
+                                        height: 300,
+                                        width: "100%",
+                                        alignSelf: "center",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        borderRadius: 15
+                                    }}>
+                                    <View style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        right: 0,
+                                        padding: 20
+                                    }}>
+                                        <TouchableOpacity style={{
+
+                                        }}
+                                            onPress={() => {
+                                                setIsPrepModalVisible(false);
+                                                setPrepTime(5);
+                                                setIsRunning(false);
+                                                if (intervalRef.current) {
+                                                    clearInterval(intervalRef.current);
+                                                    intervalRef.current = null;
+                                                }
+                                            }}
+                                        >
+                                            <Text style={{
+                                                fontSize: 17,
+                                                color: "white",
+                                            }}>close</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={{
+                                        height: 150,
+                                        width: '70%',
+                                        borderRadius: 5,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 10,
+                                    }}>
+                                        <View style={{
+                                            flexDirection: "row",
+                                            alignItems: "flex-end",
+                                        }}>
+                                            <Text style={{
+                                                fontSize: 60,
+                                                color: "white",
+                                            }}>{prepTime}</Text>
+                                            <Text style={{
+                                                fontSize: 17,
+                                                bottom: 10,
+                                                color: "white",
+                                            }}>sec</Text>
+                                        </View>
+                                        <TouchableOpacity
+                                            onPress={() => {
+
+                                            }}
+                                        >
+                                            <Text style={{
+                                                color: "white"
+                                            }}>GET READY</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
                             </View>
-                            <TouchableOpacity
-                                onPress={() => {
-
-                                }}
-                            >
-                                <Text style={{
-                                    color: "white"
-                                }}>GET READY</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
@@ -794,76 +900,99 @@ const SitUpTestScreen = ({
                     flex: 1,
                     justifyContent: "flex-end"
                 }}>
-                    <View style={{
-                        height: 300,
-                        backgroundColor: Theme.colors.primaryColor,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: 5
-                    }}>
-                        {/* <View style={{
-                                position: "absolute",
-                                top: 0,
-                                right: 0,
-                                padding: 20
-                            }}>
-                                <TouchableOpacity style={{
+                    <View style={[styles.shadowTopWrapper, {
+                        top: 100,
+                    }]}>
+                        <View style={styles.headerContainer}>
+                            <Svg height="500" width={screenWidth} style={styles.svg}>
+                                <Defs>
+                                    <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                        <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                                    </SvgLinearGradient>
+                                </Defs>
+                                <Path
+                                    d={createTopCurvedPath()}
+                                    fill="url(#grad)"
+                                />
+                            </Svg>
 
-                                }}
-                                    onPress={() => {
-                                        setIsStartModalVisible(false)
+                            {/* Content overlay - positioned absolutely to center over SVG */}
+                            <View style={styles.contentOverlay}>
+                                <View
+                                    style={{
+                                        height: 300,
+                                        width: "100%",
+                                        alignSelf: "center",
+                                        gap: 20,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        borderRadius: 15
                                     }}
                                 >
-                                    <Text style={{
-                                        fontSize: 17,
-                                        color: "white",
-                                    }}>close</Text>
-                                </TouchableOpacity>
-                            </View> */}
-                        <View style={{
-                            height: 150,
-                            width: '70%',
-                            borderRadius: 5,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 10,
-                            backgroundColor: "rgba(0, 0, 0, 0.3)"
-                        }}>
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "flex-end",
+                                    <View style={{
+                                        height: 120,
+                                        width: '70%',
+                                        borderRadius: 5,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 10,
+                                        backgroundColor: "rgba(0, 0, 0, 0.3)"
+                                    }}>
+                                        <View style={{
+                                            flexDirection: "row",
+                                            alignItems: "flex-end",
 
-                            }}>
-                                <Text style={{
-                                    fontSize: 20,
-                                    color: "white"
-                                }}>
-                                    {formatTime(time)}
-                                </Text>
-                                <Text style={{
-                                    fontSize: 12,
-                                    color: "white",
-                                }}>sec</Text>
-                            </View>
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "flex-end",
-                            }}>
-                                <Text style={{
-                                    fontSize: 50,
-                                    color: "white",
-                                }}>{sitUpCount}</Text>
+                                        }}>
+                                            <Text style={{
+                                                fontSize: 20,
+                                                color: "white"
+                                            }}>
+                                                {formatTime(time)}
+                                            </Text>
+                                            <Text style={{
+                                                fontSize: 12,
+                                                color: "white",
+                                            }}>sec</Text>
+                                        </View>
+                                        <View style={{
+                                            flexDirection: "row",
+                                            alignItems: "flex-end",
+                                        }}>
+                                            <Text style={{
+                                                fontSize: 50,
+                                                color: "white",
+                                            }}>{sitUpCount}</Text>
+
+                                        </View>
+                                    </View>
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: "rgba(0, 0, 0, 0.3)",
+                                            padding: 20,
+                                            width: "70%",
+                                            justifyContent: "space-between",
+                                            flexDirection: "row",
+                                            alignItems: "center"
+                                        }}
+                                        onPress={() => {
+                                            handleEndCountdown();
+                                        }}
+                                    >
+                                        <Text style={{
+                                            color: "white"
+                                        }}>END SITUP</Text>
+                                        <Image source={require("../../../assets/Icons/fast-forward.png")}
+                                            style={{
+                                                width: 15,
+                                                height: 15,
+                                                resizeMode: "contain"
+                                            }}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
 
                             </View>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    handleEndCountdown();
-                                }}
-                            >
-                                <Text style={{
-                                    color: "white"
-                                }}>END SITUP</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
                 </View>
@@ -880,96 +1009,130 @@ const SitUpTestScreen = ({
                     flex: 1,
                     justifyContent: "flex-end"
                 }}>
-                    <View style={{
-                        height: 360,
-                        backgroundColor: Theme.colors.primaryColor,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: 5
-                    }}>
-                        <View style={{
-                            position: "absolute",
-                            top: 0,
-                            right: 0,
-                            padding: 20
-                        }}>
-                            <TouchableOpacity style={{
+                    <View style={[styles.shadowTopWrapper, {
+                        top: 100,
+                    }]}>
+                        <View style={styles.headerContainer}>
+                            <Svg height="500" width={screenWidth} style={styles.svg}>
+                                <Defs>
+                                    <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                        <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                                    </SvgLinearGradient>
+                                </Defs>
+                                <Path
+                                    d={createTopCurvedPath()}
+                                    fill="url(#grad)"
+                                />
+                            </Svg>
 
-                            }}
-                                onPress={() => {
-                                    setIsResultModalVisible(false);
-                                    setPrepTime(5);
-                                    setIsRunning(false);
-                                    if (intervalRef.current) {
-                                        clearInterval(intervalRef.current);
-                                        intervalRef.current = null;
-                                    }
-                                    setTime(60);
-                                    setIsStartRunning(false);
-                                    if (startIntervalRef.current) {
-                                        clearInterval(startIntervalRef.current);
-                                        startIntervalRef.current = null;
-                                    }
-                                }}
+                            {/* Content overlay - positioned absolutely to center over SVG */}
+                            <View style={styles.contentOverlay}
                             >
-                                <Text style={{
-                                    fontSize: 17,
-                                    color: "white",
-                                }}>close</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <View style={{
-                            height: 200,
-                            width: '70%',
-                            borderRadius: 5,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 10,
-                            backgroundColor: "rgba(0, 0, 0, 0.3)"
-                        }}>
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "flex-end",
-                            }}>
-                                <Text style={{
-                                    fontSize: 60,
-                                    color: "white",
-                                }}>{sitUpCount}</Text>
-                                {/* <Text style={{
+                                <View
+                                    style={{
+                                        height: 300,
+                                        width: "100%",
+                                        alignSelf: "center",
+                                        gap: 20,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        borderRadius: 15
+                                    }}
+                                >
+                                    <View style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        right: 0,
+                                        paddingHorizontal: 20
+                                    }}>
+                                        <TouchableOpacity style={{
+
+                                        }}
+                                            onPress={() => {
+                                                setIsResultModalVisible(false);
+                                                setPrepTime(5);
+                                                setIsRunning(false);
+                                                if (intervalRef.current) {
+                                                    clearInterval(intervalRef.current);
+                                                    intervalRef.current = null;
+                                                }
+                                                setTime(60);
+                                                setIsStartRunning(false);
+                                                if (startIntervalRef.current) {
+                                                    clearInterval(startIntervalRef.current);
+                                                    startIntervalRef.current = null;
+                                                }
+                                            }}
+                                        >
+                                            <Text style={{
+                                                fontSize: 17,
+                                                color: "white",
+                                            }}>close</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={{
+                                        height: 100,
+                                        width: '70%',
+                                        borderRadius: 5,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 10,
+                                        backgroundColor: "rgba(0, 0, 0, 0.3)"
+                                    }}>
+                                        <View style={{
+                                            flexDirection: "row",
+                                            alignItems: "flex-end",
+                                        }}>
+                                            <Text style={{
+                                                fontSize: 40,
+                                                color: "white",
+                                            }}>{sitUpCount}</Text>
+                                            {/* <Text style={{
                                         fontSize: 17,
                                         bottom: 10,
                                         color: "white",
                                     }}>min</Text> */}
-                            </View>
-                            <View
-                            >
-                                <Text style={{
-                                    color: "white"
-                                }}>Correct Sit Ups</Text>
-                            </View>
-                            <TouchableOpacity style={[styles.getStartedBtn, {
-                                width: "70%"
-                            }]}
-                                onPress={() => {
-                                    setIsResultModalVisible(false);
-                                    navigation.goBack();
-                                    stopTracking();
-                                    setTime(60);
-                                }}
-                            >
-                                <Text style={{
-                                    color: "white"
-                                }}>SUBMIT</Text>
-                                <Image source={require("../../../assets/downloadedIcons/fast.png")}
-                                    style={{
-                                        width: 25,
-                                        height: 25,
-                                        resizeMode: "contain"
+                                        </View>
+                                        <View
+                                        >
+                                            <Text style={{
+                                                color: "white"
+                                            }}>Correct Sit Ups</Text>
+                                        </View>
+                                    </View>
+                                    <TouchableOpacity style={{
+                                        width: "70%",
+                                        backgroundColor: "rgba(0, 0, 0, 0.3)",
+                                        justifyContent: "space-between",
+                                        flexDirection: "row",
+                                        padding: 20,
+                                        borderRadius: 5,
+                                        alignItems: "center"
                                     }}
-                                />
-                            </TouchableOpacity>
+                                        onPress={() => {
+                                            setIsResultModalVisible(false);
+                                            navigation.goBack();
+                                            stopTracking();
+                                            setTime(60);
+                                        }}
+                                    >
+                                        <Text style={{
+                                            color: "white"
+                                        }}>SUBMIT</Text>
+                                        <Image source={require("../../../assets/downloadedIcons/fast.png")}
+                                            style={{
+                                                width: 25,
+                                                height: 25,
+                                                resizeMode: "contain"
+                                            }}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
                         </View>
                     </View>
+
                 </View>
             </Modal>
             <Modal
@@ -1063,8 +1226,8 @@ const styles = StyleSheet.create({
     container: {
     },
     getStartedBtn: {
-        padding: 15,
-        backgroundColor: Theme.colors.primaryColor,
+        padding: 20,
+        backgroundColor: "#FA812890",
         alignItems: "center",
         justifyContent: "space-between",
         width: "100%",
@@ -1072,5 +1235,49 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         gap: 10,
         flexDirection: "row"
-    }
+    },
+    headerContainer: {
+        position: 'relative',
+        justifyContent: "center",
+        backgroundColor: 'transparent'
+    },
+    contentOverlay: {
+        position: 'absolute',
+        top: 60,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        flex: 1,
+        justifyContent: 'flex-start',
+        gap: 20,
+    },
+    svg: {
+        padding: 20,
+    },
+    shadowWrapper: {
+        flex: 1,
+        justifyContent: "center",
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.8,
+        shadowRadius: 15,
+        elevation: 12,
+        zIndex: 1,
+    },
+    shadowTopWrapper: {
+        flex: 1,
+        justifyContent: "flex-end",
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.8,
+        shadowRadius: 15,
+        elevation: 12,
+        zIndex: 1,
+    },
 })
