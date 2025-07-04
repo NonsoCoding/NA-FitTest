@@ -1,6 +1,6 @@
 import { Alert, Dimensions, Image, ImageBackground, Modal, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../Branding/Theme";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Accelerometer } from "expo-sensors";
 import { Switch } from "react-native-paper";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -10,6 +10,7 @@ import * as Speech from "expo-speech";
 import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LottieView from "lottie-react-native";
+import { TourGuideZone, useTourGuideController } from "rn-tourguide";
 import * as Progress from "react-native-progress";
 
 interface ITestProps {
@@ -17,11 +18,11 @@ interface ITestProps {
 }
 
 enum SitupState {
-    READY,       // Starting position, waiting for movement
-    GOING_DOWN,  // User is moving downward
-    DOWN,        // User is in the down position
-    GOING_UP,    // User is moving upward
-    UP           // User has completed a rep
+    READY,       // Starting position (lying down)
+    GOING_UP,    // User is sitting up
+    UP,          // User is in the up position
+    GOING_DOWN,  // User is going back down
+    DOWN         // User has completed a rep (back to lying position)
 }
 
 interface SensorData {
@@ -31,7 +32,6 @@ interface SensorData {
 }
 
 const { width: screenWidth } = Dimensions.get('window');
-
 
 const SitUpTestScreen = ({
     navigation
@@ -52,16 +52,46 @@ const SitUpTestScreen = ({
     const [situpState, setSitupState] = useState<SitupState>(SitupState.READY);
     const [isFirstCalibration, setIsFirstCalibration] = useState(true);
     const [progress, setProgress] = useState(0);
-    const [calibrationValues, setCalibrationValues] = useState({
-        downThreshold: -0.6,
-        upThreshold: -0.18,
-        midThreshold: -0.10
+    const calibrationValuesRef = useRef({
+        downThreshold: 0.25,
+        upThreshold: -0.35,
+        midThreshold: -0.075
     });
+    const calibrationValues = calibrationValuesRef.current;
+
+    const {
+        canStart,
+        start,
+        stop,
+        eventEmitter,
+    }: any = useTourGuideController();
     const [lastCountTime, setLastCountTime] = useState<number>(0);
     const [isRunning, setIsRunning] = useState(false);
     const [isGoingDown, setIsGoingDown] = useState(false);
     const [isCountingActive, setIsCountingActive] = useState(false);
     const insets = useSafeAreaInsets();
+
+    React.useEffect(() => {
+        if (canStart) {
+            start()
+        }
+    }, [canStart])
+
+    const handleOnStart = () => console.log('start')
+    const handleOnStop = () => console.log('stop')
+    const handleOnStepChange = () => console.log(`stepChange`);
+
+    React.useEffect(() => {
+        eventEmitter.on('start', handleOnStart)
+        eventEmitter.on('stop', handleOnStop)
+        eventEmitter.on('stepChange', handleOnStepChange)
+
+        return () => {
+            eventEmitter.off('start', handleOnStart)
+            eventEmitter.off('stop', handleOnStop)
+            eventEmitter.off('stepChange', handleOnStepChange)
+        }
+    }, [])
 
     const createBottomCurvedPath = () => {
         const height = 450;
@@ -88,9 +118,10 @@ const SitUpTestScreen = ({
             Z`;
     };
 
-    const MIN_PUSHUP_TIME = 500; // Minimum time for a valid push-up (ms)
-    const MAX_PUSHUP_TIME = 5000; // Maximum time for a valid push-up (ms)
-    const COOLDOWN_MS = 200; // Reduced cooldown for better responsiveness
+    // Sit-up specific timing constraints
+    const MIN_SITUP_TIME = 800;  // Minimum time for a valid sit-up (ms)
+    const MAX_SITUP_TIME = 4000; // Maximum time for a valid sit-up (ms)
+    const COOLDOWN_MS = 300;     // Cooldown between reps
 
     // Track timestamps for each state transition
     const [stateTimestamps, setStateTimestamps] = useState({
@@ -106,13 +137,11 @@ const SitUpTestScreen = ({
 
     // Track recent Z values for smoothing
     const recentZValues = useRef<number[]>([]);
-    const MAX_HISTORY = 5;
-
+    const MAX_HISTORY = 7; // Increased for better smoothing
 
     const sayNumber = (number: number) => {
         Speech.speak(number.toString());
     }
-
 
     const saveRunResultToFirestore = async () => {
         const user = auth.currentUser;
@@ -123,8 +152,8 @@ const SitUpTestScreen = ({
         }
 
         const userDetailsRef = doc(db, "UserDetails", user.uid);
-        const pushUpDocRef = doc(db, `UserDetails/${user.uid}/SitUps/${Date.now()}`);
-        console.log("Attempting to save run to path:", pushUpDocRef);
+        const sitUpDocRef = doc(db, `UserDetails/${user.uid}/SitUps/${Date.now()}`);
+        console.log("Attempting to save sit-up data to path:", sitUpDocRef);
 
         const TacticalPoints = sitUpCount >= 38 ? 5 : 0;
 
@@ -137,12 +166,12 @@ const SitUpTestScreen = ({
         };
 
         try {
-            await setDoc(pushUpDocRef, runData);
+            await setDoc(sitUpDocRef, runData);
 
             // 2. Fetch current personal best
             const userDoc = await getDoc(userDetailsRef);
             const existingData = userDoc.exists() ? userDoc.data().personalBests || {} : {};
-            const currentPushUpBest = existingData.sitUps || 0;
+            const currentSitUpBest = existingData.sitUps || 0;
             const userData = userDoc.exists() ? userDoc.data() : {};
             const currentTotal = userData.TacticalPoints || 0;
 
@@ -151,25 +180,20 @@ const SitUpTestScreen = ({
             }, { merge: true });
 
             // Update personal bests if new value is higher
-            if (sitUpCount > currentPushUpBest) {
+            if (sitUpCount > currentSitUpBest) {
                 await setDoc(userDetailsRef, {
                     personalBests: {
                         ...existingData,
-                        sitUps: sitUpCount // Only update pullUps, keep others unchanged
+                        sitUps: sitUpCount
                     }
                 }, { merge: true });
             }
 
-            console.log("Run data saved to Firestore:", runData);
+            console.log("Sit-up data saved to Firestore:", runData);
         } catch (error) {
-            console.error("Error saving run data to Firestore:", error);
+            console.error("Error saving sit-up data to Firestore:", error);
         }
     };
-
-    // const sitUpsPlayer = useVideoPlayer(VideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
 
     // Function to get smoothed Z value
     const getSmoothedZ = () => {
@@ -193,7 +217,6 @@ const SitUpTestScreen = ({
         }
     };
 
-
     const hanldleGetStarted = () => {
         if (isAutoDetectEnabled) {
             setIsModalVisible(true);
@@ -207,21 +230,11 @@ const SitUpTestScreen = ({
         setShowManualInputModal(true);
     }
 
-    // Start main countdown when modal is visible
-    useEffect(() => {
-        if (isStartModalVisible) {
-            startMainCountdown();
-            // Reset push-up counter when starting the test
-            setSitUpCount(0);
-            setSitupState(SitupState.READY);
-            setIsFirstCalibration(true);
-        }
-    }, [isStartModalVisible]);
 
     const startMainCountdown = () => {
         if (time > 0 && !isStartRunning) {
             setIsStartRunning(true);
-            if (isAutoDetectEnabled) {
+            if (isAutoDetectEnabled && !isCountingActive) {
                 setIsCountingActive(true);
             }
         }
@@ -280,41 +293,33 @@ const SitUpTestScreen = ({
     // Main timer logic
     useEffect(() => {
         if (isStartRunning && time > 0) {
-            // Enable push-up counting when the timer starts
-            if (isAutoDetectEnabled) {
-                setIsAutoDetectEnabled(true);
-            }
-
-            startIntervalRef.current = setInterval(() => {
+            const interval = setInterval(() => {
                 setTime(prev => {
                     if (prev === 1) {
-                        clearInterval(startIntervalRef.current as NodeJS.Timeout);
+                        clearInterval(interval);
                         setIsStartRunning(false);
                         setIsStartModalVisible(false);
-
-                        // Disable push-up counting when the timer ends
                         setIsCountingActive(false);
 
                         setTimeout(() => {
                             if (isAutoDetectEnabled) {
                                 Speech.stop();
                                 Speech.speak("Time's up!");
-                                console.log("Times Up");
                                 setIsResultModalVisible(true);
                             } else {
-                                askForManualInputModal()
+                                askForManualInputModal();
                             }
                         }, 700);
                     }
+
                     return prev - 1;
                 });
             }, 1000);
-        }
 
-        return () => {
-            if (startIntervalRef.current) clearInterval(startIntervalRef.current);
-        };
-    }, [isStartRunning, time, isAutoDetectEnabled]);
+            return () => clearInterval(interval); // 🛑 Prevent memory leak
+        }
+    }, [isStartRunning, isAutoDetectEnabled]);
+
     // Accelerometer setup
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
@@ -326,7 +331,7 @@ const SitUpTestScreen = ({
         return () => subscription.remove();
     }, []);
 
-
+    // Sit-up detection logic optimized for chest-mounted phone
     useEffect(() => {
         if (!isCountingActive || sensorData.z === undefined || !isAutoDetectEnabled) return;
 
@@ -335,118 +340,132 @@ const SitUpTestScreen = ({
 
         addZValue(z);
         const smoothedZ = getSmoothedZ();
-        // console.log("smoothedZ: ", smoothedZ);
 
-        if (isFirstCalibration && sitUpCount === 3) {
-            setIsFirstCalibration(false);
-            console.log("Calibration complete");
+        const calibrationValues = calibrationValuesRef.current;
+
+        console.log("Smoothed Z:", smoothedZ.toFixed(3), "State:", SitupState[situpState]);
+
+        // IMPROVED: More gradual and ongoing calibration
+        if (sitUpCount < 10) { // Calibrate for first 10 reps instead of 3
+            const calibrationFactor = 0.05; // Gentler adjustment
+
+            if (situpState === SitupState.DOWN && smoothedZ > calibrationValues.downThreshold) {
+                // Gradually adjust down threshold
+                calibrationValuesRef.current.downThreshold = Math.max(
+                    calibrationValues.downThreshold - calibrationFactor,
+                    smoothedZ * 0.8 // Don't go below 80% of current reading
+                );
+            }
+
+            if (situpState === SitupState.UP && smoothedZ < calibrationValues.upThreshold) {
+                // Gradually adjust up threshold
+                calibrationValuesRef.current.upThreshold = Math.min(
+                    calibrationValues.upThreshold + calibrationFactor,
+                    smoothedZ * 1.2 // Don't go above 120% of current reading
+                );
+            }
+
+            // Update mid threshold
+            calibrationValuesRef.current.midThreshold =
+                (calibrationValuesRef.current.upThreshold + calibrationValuesRef.current.downThreshold) / 2;
         }
+
+        // 5. ADD PARTIAL MOVEMENT DETECTION
+        // Allow for less perfect form
+        const movementThreshold = 0.15; // Minimum movement required
 
         switch (situpState) {
             case SitupState.READY:
-                if (smoothedZ > calibrationValues.midThreshold) {
+                if (smoothedZ > calibrationValues.downThreshold) {
+                    setSitupState(SitupState.DOWN);
+                    setStateTimestamps(prev => ({ ...prev, downStart: now, downEnd: now }));
+                    console.log("Ready - lying down");
+                }
+                break;
+
+            case SitupState.DOWN:
+                // More forgiving transition to going up
+                if (smoothedZ < calibrationValues.midThreshold ||
+                    (smoothedZ < calibrationValues.downThreshold - movementThreshold)) {
                     setSitupState(SitupState.GOING_UP);
                     setStateTimestamps(prev => ({ ...prev, upStart: now }));
-                    console.log("Going up");
+                    console.log("Starting to sit up");
                 }
                 break;
 
             case SitupState.GOING_UP:
-                if (smoothedZ > calibrationValues.upThreshold) {
+                // More forgiving "up" detection
+                if (smoothedZ < calibrationValues.upThreshold ||
+                    (smoothedZ < calibrationValues.midThreshold - movementThreshold)) {
                     setSitupState(SitupState.UP);
                     setStateTimestamps(prev => ({ ...prev, upEnd: now }));
-                    console.log("Reached top");
-                } else if (smoothedZ < calibrationValues.midThreshold) {
-                    setSitupState(SitupState.READY);
-                    console.log("False start - reset");
+                    console.log("Reached sitting position");
+                } else if (smoothedZ > calibrationValues.downThreshold) {
+                    // Only reset if they go way back down
+                    setSitupState(SitupState.DOWN);
+                    console.log("Reset to down");
                 }
                 break;
 
             case SitupState.UP:
-                if (smoothedZ < calibrationValues.midThreshold) {
+                // More forgiving transition to going down
+                if (smoothedZ > calibrationValues.midThreshold ||
+                    (smoothedZ > calibrationValues.upThreshold + movementThreshold)) {
                     setSitupState(SitupState.GOING_DOWN);
                     setStateTimestamps(prev => ({ ...prev, downStart: now }));
-                    console.log("Going down");
+                    console.log("Going back down");
                 }
                 break;
 
             case SitupState.GOING_DOWN:
-                if (smoothedZ < calibrationValues.downThreshold) {
-                    const duration = now - stateTimestamps.upStart;
+                // More forgiving completion detection
+                if (smoothedZ > calibrationValues.downThreshold ||
+                    (smoothedZ > calibrationValues.midThreshold + movementThreshold)) {
 
-                    if (duration >= MIN_PUSHUP_TIME &&
-                        duration <= MAX_PUSHUP_TIME &&
-                        now - lastCountTime > COOLDOWN_MS) {
+                    const totalDuration = now - stateTimestamps.upStart;
+                    const timeSinceLastCount = now - lastCountTime;
+
+                    // RELAXED VALIDATION - more forgiving
+                    if (totalDuration >= MIN_SITUP_TIME &&
+                        totalDuration <= MAX_SITUP_TIME &&
+                        timeSinceLastCount > COOLDOWN_MS) {
 
                         setSitUpCount(prev => {
                             const newCount = prev + 1;
                             Speech.stop();
                             sayNumber(newCount);
-
-                            if (isFirstCalibration && newCount <= 3) {
-                                setCalibrationValues(prev => ({
-                                    upThreshold: (prev.upThreshold * 0.7) + (smoothedZ * 0.3),
-                                    downThreshold: Math.min(prev.downThreshold, smoothedZ * 0.8),
-                                    midThreshold: (prev.upThreshold + prev.downThreshold) / 2
-                                }));
-                            }
-
+                            console.log(`Sit-up #${newCount} completed! Duration: ${totalDuration}ms`);
                             return newCount;
                         });
 
                         setLastCountTime(now);
-                        console.log("Sit-up counted!", duration);
                     } else {
-                        Speech.stop();
-                        Speech.speak("Not counted!")
-                        console.log("Not counted");
+                        // LESS STRICT FEEDBACK - don't always say "not counted"
+                        if (totalDuration < MIN_SITUP_TIME) {
+                            console.log(`Too fast - Duration: ${totalDuration}ms`);
+                            // Don't give audio feedback for slightly too fast
+                        } else if (totalDuration > MAX_SITUP_TIME) {
+                            console.log(`Too slow - Duration: ${totalDuration}ms`);
+                            // Don't give audio feedback for slightly too slow
+                        } else {
+                            Speech.stop();
+                            Speech.speak("Not counted!");
+                            console.log(`Invalid sit-up - Duration: ${totalDuration}ms, Cooldown: ${timeSinceLastCount}ms`);
+                        }
                     }
 
                     setSitupState(SitupState.DOWN);
                     setStateTimestamps(prev => ({ ...prev, downEnd: now }));
                 }
                 break;
-
-            case SitupState.DOWN:
-                if (now - stateTimestamps.downEnd > 300) {
-                    setSitupState(SitupState.READY);
-                }
-                break;
         }
-    }, [sensorData]);
-
-
-    // const pullUpsPlayer = useVideoPlayer(VideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-
-    // const startPrepCountdown = () => {
-    //     if (prepTime > 0 && !isRunning) {
-    //         setIsRunning(true);
-    //     }
-    // };
+    }, [sensorData, situpState, isCountingActive, isAutoDetectEnabled, lastCountTime, stateTimestamps]);
 
     useEffect(() => {
         if (isStartModalVisible) {
             startMainCountdown();
         }
     }, [isStartModalVisible])
-
-    // const startMainCountdown = () => {
-    //     if (startTime > 0 && !isStartRunning) {
-    //         setIsStartRunning(true);
-    //     }
-    // };
-
-    // const modalToPrepModal = () => {
-    //     setIsModalVisible(false);
-    //     setTimeout(() => {
-    //         setIsPrepModalVisible(true);
-    //         startPrepCountdown();
-    //     }, 700);
-    // }
-
 
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
@@ -458,9 +477,29 @@ const SitUpTestScreen = ({
         return () => subscription.remove();
     }, []);
 
-
     const stopTracking = async (): Promise<void> => {
         await saveRunResultToFirestore();
+    };
+
+    const resetTestState = () => {
+        setSitUpCount(0);
+        setSitupState(SitupState.READY);
+        setStateTimestamps({
+            downStart: 0,
+            downEnd: 0,
+            upStart: 0,
+            upEnd: 0
+        });
+        setLastCountTime(0);
+        setIsCountingActive(false);
+        // Clear recent Z values for fresh calibration
+        recentZValues.current = [];
+        // Reset calibration values
+        calibrationValuesRef.current = {
+            downThreshold: 0.25,
+            upThreshold: -0.35,
+            midThreshold: -0.075
+        };
     };
 
     const handleEndCountdown = () => {
@@ -485,7 +524,12 @@ const SitUpTestScreen = ({
                         setIsCountingActive(false);
                         setIsStartModalVisible(false);
                         setTime(60);
-                        setIsResultModalVisible(true);
+
+                        if (isAutoDetectEnabled) {
+                            setIsResultModalVisible(true);
+                        } else {
+                            askForManualInputModal();
+                        }
                     },
                     style: 'destructive'
                 },
@@ -493,7 +537,6 @@ const SitUpTestScreen = ({
             { cancelable: true }
         );
     };
-
 
     const formatTime = (seconds: number) => {
         const min = Math.floor(seconds / 60);
@@ -562,6 +605,7 @@ const SitUpTestScreen = ({
                                 />
                             </TouchableOpacity>
                         </View>
+
                         <View style={{
                             paddingHorizontal: 20,
                             shadowColor: '#000',
@@ -650,34 +694,48 @@ const SitUpTestScreen = ({
                                 flexDirection: "row",
                                 justifyContent: "space-between",
                             }}>
-                                <View style={{
-                                    alignItems: "center"
-                                }}>
-                                    <Text style={{
-                                        fontSize: 35,
-                                        fontWeight: "600"
+                                <TourGuideZone
+                                    zone={1}
+                                    shape="rectangle"
+                                    text="🎯 Minimum Target: This is the minimum number of sit-ups you need to complete to pass the fitness test. Aim to reach or exceed this number!"
+                                >
+
+                                    <View style={{
+                                        alignItems: "center"
                                     }}>
-                                        38
-                                    </Text>
-                                    <Text style={{
-                                        fontSize: 10,
-                                        fontWeight: "400"
-                                    }}>MINIMUM</Text>
-                                </View>
-                                <View style={{
-                                    alignItems: "center",
-                                    gap: 10
-                                }}>
-                                    <Switch
-                                        color={"#FA812890"}
-                                        value={isAutoDetectEnabled}
-                                        onValueChange={(value) => setIsAutoDetectEnabled(value)}
-                                    />
-                                    <Text style={{
-                                        fontSize: 10,
-                                        fontWeight: "400"
-                                    }}>AUTO DETECT</Text>
-                                </View>
+                                        <Text style={{
+                                            fontSize: 35,
+                                            fontWeight: "600"
+                                        }}>
+                                            38
+                                        </Text>
+                                        <Text style={{
+                                            fontSize: 10,
+                                            fontWeight: "400"
+                                        }}>MINIMUM</Text>
+                                    </View>
+                                </TourGuideZone>
+                                <TourGuideZone
+                                    zone={2}
+                                    shape="rectangle"
+                                    text="🔄 Auto-Detect Mode: Toggle ON to automatically count sit-ups using face tracking. Toggle OFF to manually input your count at the end of the session."
+                                >
+
+                                    <View style={{
+                                        alignItems: "center",
+                                        gap: 10
+                                    }}>
+                                        <Switch
+                                            color={"#FA812890"}
+                                            value={isAutoDetectEnabled}
+                                            onValueChange={(value) => setIsAutoDetectEnabled(value)}
+                                        />
+                                        <Text style={{
+                                            fontSize: 10,
+                                            fontWeight: "400"
+                                        }}>AUTO DETECT</Text>
+                                    </View>
+                                </TourGuideZone>
                             </View>
                         </View>
                         <View style={{
@@ -719,70 +777,100 @@ const SitUpTestScreen = ({
                                 flexDirection: "row",
                                 justifyContent: "space-between",
                             }}>
-                                <TouchableOpacity
-                                    style={{
-                                        height: 30,
-                                        width: 30,
-                                        alignItems: "center",
-                                        backgroundColor: "#FA812890"
-                                    }}
-                                    onPress={() => {
-                                        decreaseTime();
-                                    }}
+                                <TourGuideZone
+                                    zone={3}
+                                    shape="circle"
+                                    text="➖ Decrease Time: Tap to reduce the session duration by 10 seconds. Minimum duration is 10 seconds."
                                 >
-                                    <Text style={{
-                                        color: "white",
-                                        fontSize: 20
-                                    }}>-</Text>
-                                </TouchableOpacity>
-                                <View style={{
-                                    alignItems: "center"
-                                }}>
-                                    <Text style={{
-                                        fontSize: 35,
-                                        fontWeight: "600"
+
+                                    <TouchableOpacity
+                                        style={{
+                                            height: 30,
+                                            width: 30,
+                                            borderRadius: 15,
+                                            alignItems: "center",
+                                            backgroundColor: "#FA812890"
+                                        }}
+                                        onPress={() => {
+                                            decreaseTime();
+                                        }}
+                                    >
+                                        <Text style={{
+                                            color: "white",
+                                            fontSize: 20
+                                        }}>-</Text>
+                                    </TouchableOpacity>
+                                </TourGuideZone>
+                                <TourGuideZone
+                                    zone={4}
+                                    shape="rectangle"
+                                    text="⏱️ Timer Display: Shows your selected session duration. You can increase or decrease this time based on your fitness level and goals."
+                                >
+
+                                    <View style={{
+                                        alignItems: "center"
                                     }}>
-                                        {formatTime(time)}
-                                    </Text>
-                                    <Text style={{
-                                        fontSize: 10
-                                    }}>MINUTE</Text>
-                                </View>
-                                <TouchableOpacity
-                                    style={{
-                                        height: 30,
-                                        width: 30,
-                                        alignItems: "center",
-                                        backgroundColor: "#FA812890"
-                                    }}
-                                    onPress={() => {
-                                        increaseTime();
-                                    }}
+                                        <Text style={{
+                                            fontSize: 35,
+                                            fontWeight: "600"
+                                        }}>
+                                            {formatTime(time)}
+                                        </Text>
+                                        <Text style={{
+                                            fontSize: 10
+                                        }}>MINUTE</Text>
+                                    </View>
+                                </TourGuideZone>
+                                <TourGuideZone
+                                    zone={5}
+                                    shape="circle"
+                                    text="➕ Increase Time: Tap to add 10 seconds to your session duration. Adjust based on your fitness level."
                                 >
-                                    <Text style={{
-                                        color: "white",
-                                        fontSize: 20
-                                    }}>+</Text>
-                                </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={{
+                                            height: 30,
+                                            borderRadius: 15,
+                                            width: 30,
+                                            alignItems: "center",
+                                            backgroundColor: "#FA812890"
+                                        }}
+                                        onPress={() => {
+                                            increaseTime();
+                                        }}
+                                    >
+                                        <Text style={{
+                                            color: "white",
+                                            fontSize: 20
+                                        }}>+</Text>
+                                    </TouchableOpacity>
+                                </TourGuideZone>
                             </View>
                         </View>
                     </View>
-                    <TouchableOpacity style={styles.getStartedBtn}
-                        onPress={() => {
-                            modalToPrepModal();
-                        }}
+                    <TourGuideZone
+                        zone={6}
+                        shape="rectangle"
+                        text="🚀 Start Your Session: Tap to begin your sit-up session. You'll get a 5-second countdown to prepare before the timer starts!"
                     >
-                        <Text style={{
-                            color: "black"
-                        }}>GET STARTED</Text>
-                        <Image source={require("../../../assets/Icons/fast-forward.png")}
-                            style={{
-                                width: 15,
-                                height: 15,
-                                resizeMode: "contain"
+
+                        <TouchableOpacity style={styles.getStartedBtn}
+                            onPress={() => {
+                                modalToPrepModal();
                             }}
-                        />
-                    </TouchableOpacity>
+                        >
+                            <Text style={{
+                                color: "black"
+                            }}>GET STARTED</Text>
+                            <Image source={require("../../../assets/Icons/fast-forward.png")}
+                                style={{
+                                    width: 15,
+                                    height: 15,
+                                    resizeMode: "contain"
+                                }}
+                            />
+                        </TouchableOpacity>
+                    </TourGuideZone>
                 </SafeAreaView>
             </View>
             <Modal
@@ -814,7 +902,6 @@ const SitUpTestScreen = ({
                                 />
                             </Svg>
 
-                            {/* Content overlay - positioned absolutely to center over SVG */}
                             <View style={styles.contentOverlay}>
                                 <View
                                     style={{
@@ -832,7 +919,6 @@ const SitUpTestScreen = ({
                                         padding: 20
                                     }}>
                                         <TouchableOpacity style={{
-
                                         }}
                                             onPress={() => {
                                                 setIsPrepModalVisible(false);
@@ -1057,7 +1143,8 @@ const SitUpTestScreen = ({
                                                     clearInterval(intervalRef.current);
                                                     intervalRef.current = null;
                                                 }
-                                                setTime(60);
+                                                resetTestState();
+                                                setTime(60)
                                                 setIsStartRunning(false);
                                                 if (startIntervalRef.current) {
                                                     clearInterval(startIntervalRef.current);

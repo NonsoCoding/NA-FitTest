@@ -1,6 +1,6 @@
 import { Alert, Dimensions, Image, ImageBackground, Modal, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../../Branding/Theme";
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Accelerometer } from "expo-sensors";
 import { Switch } from "react-native-paper";
 import { doc, getDoc, setDoc } from "firebase/firestore";
@@ -9,7 +9,7 @@ import * as Speech from "expo-speech";
 import LottieView from "lottie-react-native";
 import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { LinearGradient } from "expo-linear-gradient";
-
+import { TourGuideZone, useTourGuideController } from "rn-tourguide";
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -19,10 +19,10 @@ interface ITestProps {
 
 enum PullupState {
     READY,       // Starting position, waiting for movement
-    GOING_DOWN,  // User is moving downward
-    DOWN,        // User is in the down position
-    GOING_UP,    // User is moving upward
-    UP           // User has completed a rep
+    GOING_UP,    // User is pulling up
+    UP,          // User is in the up position (chin over bar)
+    GOING_DOWN,  // User is going down
+    DOWN         // User has completed a rep (back to starting position)
 }
 
 interface SensorData {
@@ -49,44 +49,73 @@ const PullUpTestScreen = ({
     const [pullUpCount, setPullUpCount] = useState(0);
     const [pullupState, setPullupState] = useState<PullupState>(PullupState.READY);
     const [isFirstCalibration, setIsFirstCalibration] = useState(true);
+
+    // Adjusted thresholds for arm-mounted pull-up detection
     const [calibrationValues, setCalibrationValues] = useState({
-        downThreshold: -0.3,
-        upThreshold: 0.3,
-        midThreshold: 0.0
+        upThreshold: 0.3,      // Threshold for detecting upward movement (pulling up)
+        downThreshold: -0.3,   // Threshold for detecting downward movement (going down)
+        midThreshold: 0.0,     // Neutral position
+        minUpValue: 0.4,       // Minimum acceleration to confirm top position
+        minDownValue: -0.4     // Minimum acceleration to confirm bottom position
     });
+
+    const {
+        canStart,
+        start,
+        stop,
+        eventEmitter,
+    }: any = useTourGuideController();
     const [lastCountTime, setLastCountTime] = useState<number>(0);
     const [isRunning, setIsRunning] = useState(false);
-    const [isGoingDown, setIsGoingDown] = useState(false);
     const [isCountingActive, setIsCountingActive] = useState(false);
 
-    // const startIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    // const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-
-    const MIN_PUSHUP_TIME = 500; // Minimum time for a valid push-up (ms)
-    const MAX_PUSHUP_TIME = 5000; // Maximum time for a valid push-up (ms)
-    const COOLDOWN_MS = 200; // Reduced cooldown for better responsiveness
+    // Pull-up specific timing constants
+    const MIN_PULLUP_TIME = 500;  // Minimum time for a valid pull-up (ms) - increased for pull-ups
+    const MAX_PULLUP_TIME = 1200; // Maximum time for a valid pull-up (ms) - increased for pull-ups
+    const COOLDOWN_MS = 300;      // Cooldown between reps - increased for pull-ups
 
     // Track timestamps for each state transition
     const [stateTimestamps, setStateTimestamps] = useState({
-        downStart: 0,
-        downEnd: 0,
         upStart: 0,
-        upEnd: 0
+        upEnd: 0,
+        downStart: 0,
+        downEnd: 0
     });
+
+    // Track recent sensor values for smoothing (focusing on Y-axis for arm movement)
+    const recentYValues = useRef<number[]>([]);
+    const recentZValues = useRef<number[]>([]);
+    const MAX_HISTORY = 7; // Increased for better smoothing
+
+    React.useEffect(() => {
+        if (canStart) {
+            start()
+        }
+    }, [canStart])
+
+    const handleOnStart = () => console.log('start')
+    const handleOnStop = () => console.log('stop')
+    const handleOnStepChange = () => console.log(`stepChange`);
+
+    React.useEffect(() => {
+        eventEmitter.on('start', handleOnStart)
+        eventEmitter.on('stop', handleOnStop)
+        eventEmitter.on('stepChange', handleOnStepChange)
+
+        return () => {
+            eventEmitter.off('start', handleOnStart)
+            eventEmitter.off('stop', handleOnStop)
+            eventEmitter.off('stepChange', handleOnStepChange)
+        }
+    }, [])
 
     // Refs for intervals
     const startIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Track recent Z values for smoothing
-    const recentZValues = useRef<number[]>([]);
-    const MAX_HISTORY = 5;
-
     const sayNumber = (number: number) => {
         Speech.speak(number.toString());
     }
-
 
     const createCurvedPath = () => {
         const height = 450;
@@ -99,7 +128,6 @@ const PullUpTestScreen = ({
         L ${screenWidth} 0 
         Z`;
     };
-
 
     const createTopCurvedPath = () => {
         const height = 400;
@@ -114,12 +142,6 @@ const PullUpTestScreen = ({
             Z`;
     };
 
-    // const sitUpsPlayer = useVideoPlayer(VideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-
-
     const saveRunResultToFirestore = async () => {
         const user = auth.currentUser;
 
@@ -128,8 +150,8 @@ const PullUpTestScreen = ({
             return;
         }
         const userDetailsRef = doc(db, "UserDetails", user.uid);
-        const pushUpDocRef = doc(db, `UserDetails/${user.uid}/PullUps/${Date.now()}`);
-        console.log("Attempting to save run to path:", pushUpDocRef);
+        const pullUpDocRef = doc(db, `UserDetails/${user.uid}/PullUps/${Date.now()}`);
+        console.log("Attempting to save run to path:", pullUpDocRef);
 
         const TacticalPoints = pullUpCount >= 38 ? 5 : 0;
 
@@ -142,12 +164,12 @@ const PullUpTestScreen = ({
         };
 
         try {
-            await setDoc(pushUpDocRef, runData);
+            await setDoc(pullUpDocRef, runData);
 
             // 2. Fetch current personal best
             const userDoc = await getDoc(userDetailsRef);
             const existingData = userDoc.exists() ? userDoc.data().personalBests || {} : {};
-            const currentPushUpBest = existingData.pullUps || 0;
+            const currentPullUpBest = existingData.pullUps || 0;
             const userData = userDoc.exists() ? userDoc.data() : {};
             const currentTotal = userData.TacticalPoints || 0;
 
@@ -156,7 +178,7 @@ const PullUpTestScreen = ({
             }, { merge: true });
 
             // Update personal bests if new value is higher
-            if (pullUpCount > currentPushUpBest) {
+            if (pullUpCount > currentPullUpBest) {
                 await setDoc(userDetailsRef, {
                     personalBests: {
                         ...existingData,
@@ -171,15 +193,29 @@ const PullUpTestScreen = ({
         }
     };
 
-    // Function to get smoothed Z value
+    // Function to get smoothed Y value (primary axis for arm movement)
+    const getSmoothedY = () => {
+        if (recentYValues.current.length === 0) return 0;
+        const sum = recentYValues.current.reduce((a, b) => a + b, 0);
+        return sum / recentYValues.current.length;
+    };
+
+    // Function to get smoothed Z value (secondary axis for validation)
     const getSmoothedZ = () => {
         if (recentZValues.current.length === 0) return 0;
         const sum = recentZValues.current.reduce((a, b) => a + b, 0);
         return sum / recentZValues.current.length;
     };
 
-    // Add new Z value and maintain limited history
-    const addZValue = (z: number) => {
+    // Add new sensor values and maintain limited history
+    const addSensorValues = (y: number, z: number) => {
+        // Y-axis values (primary for arm movement)
+        recentYValues.current.push(y);
+        if (recentYValues.current.length > MAX_HISTORY) {
+            recentYValues.current.shift();
+        }
+
+        // Z-axis values (secondary for validation)
         recentZValues.current.push(z);
         if (recentZValues.current.length > MAX_HISTORY) {
             recentZValues.current.shift();
@@ -210,7 +246,7 @@ const PullUpTestScreen = ({
     useEffect(() => {
         if (isStartModalVisible) {
             startMainCountdown();
-            // Reset push-up counter when starting the test
+            // Reset pull-up counter when starting the test
             setPullUpCount(0);
             setPullupState(PullupState.READY);
             setIsFirstCalibration(true);
@@ -269,7 +305,7 @@ const PullUpTestScreen = ({
     // Main timer logic
     useEffect(() => {
         if (isStartRunning && time > 0) {
-            // Enable push-up counting when the timer starts
+            // Enable pull-up counting when the timer starts
             if (isAutoDetectEnabled) {
                 setIsAutoDetectEnabled(true);
             }
@@ -281,7 +317,7 @@ const PullUpTestScreen = ({
                         setIsStartRunning(false);
                         setIsStartModalVisible(false);
 
-                        // Disable push-up counting when the timer ends
+                        // Disable pull-up counting when the timer ends
                         setIsCountingActive(false);
 
                         setTimeout(() => {
@@ -304,6 +340,7 @@ const PullUpTestScreen = ({
             if (startIntervalRef.current) clearInterval(startIntervalRef.current);
         };
     }, [isStartRunning]);
+
     // Accelerometer setup
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
@@ -315,47 +352,82 @@ const PullUpTestScreen = ({
         return () => subscription.remove();
     }, []);
 
-
+    // Pull-up detection logic - optimized for arm-mounted phone
     useEffect(() => {
-        if (!isCountingActive || sensorData.z === undefined || !isAutoDetectEnabled) return;
+        if (!isCountingActive || sensorData.y === undefined || sensorData.z === undefined || !isAutoDetectEnabled) return;
 
         const now = Date.now();
+        const y = sensorData.y;
         const z = sensorData.z;
 
-        addZValue(z);
+        addSensorValues(y, z);
+        const smoothedY = getSmoothedY();
         const smoothedZ = getSmoothedZ();
+
+        // More forgiving combined acceleration threshold
+        const combinedAcceleration = Math.sqrt(smoothedY * smoothedY + smoothedZ * smoothedZ);
+        const verticalComponent = smoothedY;
 
         switch (pullupState) {
             case PullupState.READY:
-                if (smoothedZ < calibrationValues.midThreshold) {
-                    setPullupState(PullupState.GOING_DOWN); // Pulling down
-                    setStateTimestamps(prev => ({ ...prev, downStart: now }));
-                    console.log("Pulling down");
-                }
-                break;
-
-            case PullupState.GOING_DOWN:
-                if (smoothedZ < calibrationValues.downThreshold) {
-                    setPullupState(PullupState.DOWN);
-                    setStateTimestamps(prev => ({ ...prev, downEnd: now }));
-                    console.log("Reached bottom");
-                }
-                break;
-
-            case PullupState.DOWN:
-                if (smoothedZ > calibrationValues.midThreshold) {
+                // More sensitive upward movement detection
+                if (verticalComponent > calibrationValues.upThreshold && combinedAcceleration > 0.3) {
                     setPullupState(PullupState.GOING_UP);
                     setStateTimestamps(prev => ({ ...prev, upStart: now }));
-                    console.log("Pulling up");
+                    console.log("Starting pull-up - going up", verticalComponent);
                 }
                 break;
 
             case PullupState.GOING_UP:
-                if (smoothedZ > calibrationValues.upThreshold) {
-                    const duration = now - stateTimestamps.downEnd;
+                // Ensure minimum time has passed before allowing transition to UP
+                const timeInGoingUp = now - stateTimestamps.upStart;
 
-                    if (duration >= MIN_PUSHUP_TIME &&
-                        duration <= MAX_PUSHUP_TIME &&
+                // More forgiving top position detection with minimum time requirement
+                if (timeInGoingUp > 200 && ( // Require at least 200ms in GOING_UP state
+                    verticalComponent > calibrationValues.minUpValue ||
+                    (verticalComponent > calibrationValues.upThreshold && combinedAcceleration < 0.4))) {
+                    setPullupState(PullupState.UP);
+                    setStateTimestamps(prev => ({ ...prev, upEnd: now }));
+                    console.log("Reached top position", verticalComponent, "after", timeInGoingUp, "ms");
+                }
+                // More forgiving incomplete rep detection - but only after some time
+                else if (timeInGoingUp > 300 && verticalComponent < (calibrationValues.midThreshold - 0.1)) {
+                    setPullupState(PullupState.READY);
+                    console.log("Incomplete rep - returning to ready after", timeInGoingUp, "ms");
+                }
+                break;
+
+            case PullupState.UP:
+                // Ensure minimum time has passed before allowing transition to GOING_DOWN
+                const timeInUp = now - stateTimestamps.upEnd;
+
+                // More sensitive downward movement detection with minimum time requirement
+                if (timeInUp > 150 && // Require at least 150ms in UP state
+                    verticalComponent < calibrationValues.downThreshold && combinedAcceleration > 0.3) {
+                    setPullupState(PullupState.GOING_DOWN);
+                    setStateTimestamps(prev => ({ ...prev, downStart: now }));
+                    console.log("Starting descent", verticalComponent, "after", timeInUp, "ms at top");
+                }
+                break;
+
+            case PullupState.GOING_DOWN:
+                // Ensure minimum time has passed before allowing transition to DOWN
+                const timeInGoingDown = now - stateTimestamps.downStart;
+
+                // More forgiving bottom position detection with minimum time requirement
+                if (timeInGoingDown > 200 && ( // Require at least 200ms in GOING_DOWN state
+                    verticalComponent < calibrationValues.minDownValue ||
+                    (verticalComponent < calibrationValues.downThreshold && combinedAcceleration < 0.4))) {
+
+                    const totalDuration = now - stateTimestamps.upStart;
+                    const upDuration = stateTimestamps.upEnd - stateTimestamps.upStart;
+                    const downDuration = now - stateTimestamps.downStart;
+
+                    // Much more forgiving validation criteria
+                    if (totalDuration >= MIN_PULLUP_TIME &&
+                        totalDuration <= MAX_PULLUP_TIME &&
+                        upDuration > 200 && // Proper minimum up duration
+                        downDuration > 200 && // Proper minimum down duration
                         now - lastCountTime > COOLDOWN_MS) {
 
                         setPullUpCount(prev => {
@@ -365,37 +437,50 @@ const PullUpTestScreen = ({
                             return newCount;
                         });
                         setLastCountTime(now);
-                        console.log("Pull-up counted!", duration);
+                        console.log("Pull-up counted!", {
+                            total: totalDuration,
+                            up: upDuration,
+                            down: downDuration,
+                            verticalComponent: verticalComponent,
+                            combinedAcceleration: combinedAcceleration
+                        });
                     } else {
-                        Speech.stop();
-                        Speech.speak("Not counted!")
-                        console.log("Not counted");
+                        // More detailed logging for debugging
+                        console.log("Pull-up not counted", {
+                            total: totalDuration,
+                            up: upDuration,
+                            down: downDuration,
+                            verticalComponent: verticalComponent,
+                            combinedAcceleration: combinedAcceleration,
+                            timeSinceLastCount: now - lastCountTime,
+                            reason: totalDuration < MIN_PULLUP_TIME ? "too fast" :
+                                totalDuration > MAX_PULLUP_TIME ? "too slow" :
+                                    upDuration <= 200 ? "up duration too short" :
+                                        downDuration <= 200 ? "down duration too short" :
+                                            now - lastCountTime <= COOLDOWN_MS ? "cooldown active" : "invalid pattern"
+                        });
+
+                        // Only say "Not counted" for timing issues, not for cooldown
+                        if (now - lastCountTime > COOLDOWN_MS) {
+                            Speech.stop();
+                            Speech.speak("Not counted!")
+                        }
                     }
 
-                    setPullupState(PullupState.UP);
-                    setStateTimestamps(prev => ({ ...prev, upEnd: now }));
+                    setPullupState(PullupState.DOWN);
+                    setStateTimestamps(prev => ({ ...prev, downEnd: now }));
                 }
                 break;
 
-            case PullupState.UP:
-                if (now - stateTimestamps.upEnd > 300) {
+            case PullupState.DOWN:
+                // Shorter wait time before allowing next rep
+                if (now - stateTimestamps.downEnd > 300) { // Reduced from 500ms
                     setPullupState(PullupState.READY);
+                    console.log("Ready for next rep");
                 }
                 break;
         }
-    }, [sensorData, isCountingActive, isAutoDetectEnabled]);
-
-
-    // const pullUpsPlayer = useVideoPlayer(VideoSource, (player) => {
-    //     player.loop = true;
-    //     player.play();
-    // });
-
-    // const startPrepCountdown = () => {
-    //     if (prepTime > 0 && !isRunning) {
-    //         setIsRunning(true);
-    //     }
-    // };
+    }, [sensorData, isCountingActive, isAutoDetectEnabled, pullupState, stateTimestamps, lastCountTime]);
 
     const handleEndCountdown = () => {
         Alert.alert(
@@ -419,7 +504,12 @@ const PullUpTestScreen = ({
                         setIsCountingActive(false);
                         setIsStartModalVisible(false);
                         setTime(60);
-                        setIsResultModalVisible(true);
+
+                        if (isAutoDetectEnabled) {
+                            setIsResultModalVisible(true);
+                        } else {
+                            askForManualInputModal();
+                        }
                     },
                     style: 'destructive'
                 },
@@ -433,21 +523,6 @@ const PullUpTestScreen = ({
             startMainCountdown();
         }
     }, [isStartModalVisible])
-
-    // const startMainCountdown = () => {
-    //     if (startTime > 0 && !isStartRunning) {
-    //         setIsStartRunning(true);
-    //     }
-    // };
-
-    // const modalToPrepModal = () => {
-    //     setIsModalVisible(false);
-    //     setTimeout(() => {
-    //         setIsPrepModalVisible(true);
-    //         startPrepCountdown();
-    //     }, 700);
-    // }
-
 
     useEffect(() => {
         const subscription = Accelerometer.addListener(accelerometerData => {
@@ -471,8 +546,6 @@ const PullUpTestScreen = ({
 
     const increaseTime = () => setTime(prev => prev + 10);
     const decreaseTime = () => setTime(prev => (prev > 10 ? prev - 10 : 0));
-
-
 
     return (
         <View style={{
@@ -663,34 +736,48 @@ const PullUpTestScreen = ({
                                 flexDirection: "row",
                                 justifyContent: "space-between",
                             }}>
-                                <View style={{
-                                    alignItems: "center"
-                                }}>
-                                    <Text style={{
-                                        fontSize: 35,
-                                        fontWeight: "600"
+                                <TourGuideZone
+                                    zone={1}
+                                    shape="rectangle"
+                                    text="🎯 Minimum Target: This is the minimum number of pull-ups you need to complete to pass the fitness test. Aim to reach or exceed this number!"
+                                >
+
+                                    <View style={{
+                                        alignItems: "center"
                                     }}>
-                                        38
-                                    </Text>
-                                    <Text style={{
-                                        fontSize: 10,
-                                        fontWeight: "400"
-                                    }}>MINIMUM</Text>
-                                </View>
-                                <View style={{
-                                    alignItems: "center",
-                                    gap: 10
-                                }}>
-                                    <Switch
-                                        color={"#FA812890"}
-                                        value={isAutoDetectEnabled}
-                                        onValueChange={(value) => setIsAutoDetectEnabled(value)}
-                                    />
-                                    <Text style={{
-                                        fontSize: 10,
-                                        fontWeight: "400"
-                                    }}>AUTO DETECT</Text>
-                                </View>
+                                        <Text style={{
+                                            fontSize: 35,
+                                            fontWeight: "600"
+                                        }}>
+                                            38
+                                        </Text>
+                                        <Text style={{
+                                            fontSize: 10,
+                                            fontWeight: "400"
+                                        }}>MINIMUM</Text>
+                                    </View>
+                                </TourGuideZone>
+                                <TourGuideZone
+                                    zone={2}
+                                    shape="rectangle"
+                                    text="🔄 Auto-Detect Mode: Toggle ON to automatically count pull-ups using face tracking. Toggle OFF to manually input your count at the end of the session."
+                                >
+
+                                    <View style={{
+                                        alignItems: "center",
+                                        gap: 10
+                                    }}>
+                                        <Switch
+                                            color={"#FA812890"}
+                                            value={isAutoDetectEnabled}
+                                            onValueChange={(value) => setIsAutoDetectEnabled(value)}
+                                        />
+                                        <Text style={{
+                                            fontSize: 10,
+                                            fontWeight: "400"
+                                        }}>AUTO DETECT</Text>
+                                    </View>
+                                </TourGuideZone>
                             </View>
                         </View>
                         <View style={{
@@ -732,70 +819,100 @@ const PullUpTestScreen = ({
                                 flexDirection: "row",
                                 justifyContent: "space-between",
                             }}>
-                                <TouchableOpacity
-                                    style={{
-                                        height: 30,
-                                        width: 30,
-                                        alignItems: "center",
-                                        backgroundColor: "#FA812890"
-                                    }}
-                                    onPress={() => {
-                                        decreaseTime();
-                                    }}
+                                <TourGuideZone
+                                    zone={3}
+                                    shape="circle"
+                                    text="➖ Decrease Time: Tap to reduce the session duration by 10 seconds. Minimum duration is 10 seconds."
                                 >
-                                    <Text style={{
-                                        color: "white",
-                                        fontSize: 20
-                                    }}>-</Text>
-                                </TouchableOpacity>
-                                <View style={{
-                                    alignItems: "center"
-                                }}>
-                                    <Text style={{
-                                        fontSize: 35,
-                                        fontWeight: "600"
+
+                                    <TouchableOpacity
+                                        style={{
+                                            height: 30,
+                                            width: 30,
+                                            borderRadius: 15,
+                                            alignItems: "center",
+                                            backgroundColor: "#FA812890"
+                                        }}
+                                        onPress={() => {
+                                            decreaseTime();
+                                        }}
+                                    >
+                                        <Text style={{
+                                            color: "white",
+                                            fontSize: 20
+                                        }}>-</Text>
+                                    </TouchableOpacity>
+                                </TourGuideZone>
+                                <TourGuideZone
+                                    zone={4}
+                                    shape="rectangle"
+                                    text="⏱️ Timer Display: Shows your selected session duration. You can increase or decrease this time based on your fitness level and goals."
+                                >
+
+                                    <View style={{
+                                        alignItems: "center"
                                     }}>
-                                        {formatTime(time)}
-                                    </Text>
-                                    <Text style={{
-                                        fontSize: 10
-                                    }}>MINUTE</Text>
-                                </View>
-                                <TouchableOpacity
-                                    style={{
-                                        height: 30,
-                                        width: 30,
-                                        alignItems: "center",
-                                        backgroundColor: "#FA812890"
-                                    }}
-                                    onPress={() => {
-                                        increaseTime();
-                                    }}
+                                        <Text style={{
+                                            fontSize: 35,
+                                            fontWeight: "600"
+                                        }}>
+                                            {formatTime(time)}
+                                        </Text>
+                                        <Text style={{
+                                            fontSize: 10
+                                        }}>MINUTE</Text>
+                                    </View>
+                                </TourGuideZone>
+                                <TourGuideZone
+                                    zone={5}
+                                    shape="circle"
+                                    text="➕ Increase Time: Tap to add 10 seconds to your session duration. Adjust based on your fitness level."
                                 >
-                                    <Text style={{
-                                        color: "white",
-                                        fontSize: 20
-                                    }}>+</Text>
-                                </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        style={{
+                                            height: 30,
+                                            borderRadius: 15,
+                                            width: 30,
+                                            alignItems: "center",
+                                            backgroundColor: "#FA812890"
+                                        }}
+                                        onPress={() => {
+                                            increaseTime();
+                                        }}
+                                    >
+                                        <Text style={{
+                                            color: "white",
+                                            fontSize: 20
+                                        }}>+</Text>
+                                    </TouchableOpacity>
+                                </TourGuideZone>
                             </View>
                         </View>
                     </View>
-                    <TouchableOpacity style={styles.getStartedBtn}
-                        onPress={() => {
-                            modalToPrepModal();
-                        }}
+                    <TourGuideZone
+                        zone={6}
+                        shape="rectangle"
+                        text="🚀 Start Your Session: Tap to begin your pull-up session. You'll get a 5-second countdown to prepare before the timer starts!"
                     >
-                        <Text style={{
-                            color: "black"
-                        }}>GET STARTED</Text>
-                        <Image source={require("../../../assets/Icons/fast-forward.png")}
-                            style={{
-                                width: 15,
-                                height: 15,
-                                resizeMode: "contain"
+
+                        <TouchableOpacity style={styles.getStartedBtn}
+                            onPress={() => {
+                                modalToPrepModal();
                             }}
-                        />
-                    </TouchableOpacity>
+                        >
+                            <Text style={{
+                                color: "black"
+                            }}>GET STARTED</Text>
+                            <Image source={require("../../../assets/Icons/fast-forward.png")}
+                                style={{
+                                    width: 15,
+                                    height: 15,
+                                    resizeMode: "contain"
+                                }}
+                            />
+                        </TouchableOpacity>
+                    </TourGuideZone>
                 </SafeAreaView>
             </View>
             <Modal

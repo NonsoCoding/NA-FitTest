@@ -7,7 +7,7 @@ export const Theme = {
     second_primary: "#1F1F1F",
     backgroundColor: "#D9D9D9",
     lightPrimary: "#4B532080",
-    mediumPrimary: "#4B5320"
+    mediumPrimary: "black"
   },
   Montserrat_Font: {
     Mont100: "Montserrat_100Thin",

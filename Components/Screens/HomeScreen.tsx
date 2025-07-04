@@ -9,6 +9,8 @@ import { async } from "@firebase/util"
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import * as Progress from "react-native-progress";
+import { Pedometer } from "expo-sensors";
+import { string } from "yup";
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -24,13 +26,15 @@ const sprintVideoSource = require('../../assets/ExerciseGifs/sprint.mp4');
 const sitUpVideoSource = require('../../assets/ExerciseGifs/situps.mp4');
 const runningVideoSource = require('../../assets/ExerciseGifs/running.mp4');
 
-
 const HomePage = ({
     navigation
 }: IHomePageProps) => {
 
     const [isLoading, setIsLoading] = useState(false);
-    const [progress, setProgress] = useState(0);
+    const [isPedometerAvailable, setIsPedometerAvailable] = useState('checking');
+    const [isAvailable, setIsAvailable] = useState('checking...');
+    const [stepCount, setStepCount] = useState(0);
+
     const [userInfo, setUserInfo] = useState<{
         firstName: string;
         lastName: string;
@@ -46,13 +50,38 @@ const HomePage = ({
         sprintTime: 0
     })
     const today = new Date();
+    const [monthlyTacticalPoints, setMonthlyTacticalPoints] = useState(0);
     const formattedDate = today.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     });
 
-    const barWidth = screenWidth * 0.7;
+    const barWidth = screenWidth * 0.65;
+
+    const MONTHLY_TARGET = 300;
+    const BRONZE_THRESHOLD = 0.3;
+    const SILVER_THRESHOLD = 0.7;
+
+    const progress = Math.min(monthlyTacticalPoints / MONTHLY_TARGET, 1);
+    const progressPercentage = Math.round(progress * 100);
+
+    const getcurrentTier = () => {
+        if (progress < BRONZE_THRESHOLD) {
+            return { name: "Bronze", color: "#CD7F32", icon: require("../../assets/Icons/BronzeMedal.png") }
+        } else if (progress < SILVER_THRESHOLD) {
+            return { name: 'Silver', color: '#COCOCO', icon: require("../../assets/Icons/Silver.png") }
+        } else {
+            return { name: 'Gold', color: '#FFD125', icon: require("../../assets/Icons/Gold-Badge1.png") }
+        }
+    }
+
+    const currentTier = getcurrentTier();
+
+    const getCurrentMonthKey = () => {
+        const now = new Date();
+        return `${now.getFullYear()} - ${now.getMonth() + 1}`
+    }
 
     // This creates the curved path - the key part!
     const createCurvedPath = () => {
@@ -66,6 +95,51 @@ const HomePage = ({
         Q ${screenWidth * 0.75} ${height - waveHeight} ${screenWidth} ${height}
         L ${screenWidth} 0 
         Z`;
+    };
+
+    const cleanupOldMonths = async (currentMonthKey: string) => {
+        try {
+            const keys = await AsyncStorage.getAllKeys();
+            const monthlyKeys = keys.filter(key => key.startsWith('monthlyTacticalPoints_'));
+
+            for (const key of monthlyKeys) {
+                if (key !== `monthlyTacticalPoints_${currentMonthKey}`) {
+                    await AsyncStorage.removeItem(key);
+                }
+            }
+        } catch (error) {
+            console.error("Error cleaning up old months:", error);
+        }
+    };
+
+
+    const handleMonthlyTacticalPoints = async (totalPoints: number) => {
+        const currentMonthKey = getCurrentMonthKey();
+        const storageKey = `monthlyTacticalPoints_${currentMonthKey}`;
+
+        try {
+            // Get stored data for current month
+            const storedData = await AsyncStorage.getItem(storageKey);
+            const monthlyData = storedData ? JSON.parse(storedData) : { points: 0, lastTotal: 0 };
+
+            // Calculate points gained this month
+            const pointsGained = totalPoints - monthlyData.lastTotal;
+            const newMonthlyPoints = monthlyData.points + Math.max(0, pointsGained);
+
+            // Update storage
+            await AsyncStorage.setItem(storageKey, JSON.stringify({
+                points: newMonthlyPoints,
+                lastTotal: totalPoints
+            }));
+
+            setMonthlyTacticalPoints(newMonthlyPoints);
+
+            // Clean up old months (optional)
+            await cleanupOldMonths(currentMonthKey);
+
+        } catch (error) {
+            console.error("Error handling monthly tactical points:", error);
+        }
     };
 
     const formatTime = (seconds: number) => {
@@ -91,6 +165,9 @@ const HomePage = ({
                     profilePic: data.profilePic
                 };
                 setUserInfo(userData);
+
+                await handleMonthlyTacticalPoints(data.TacticalPoints || 0)
+
                 try {
                     await AsyncStorage.setItem('userInfo', JSON.stringify(userData));
                     console.log("Saved userInfo to storage:", userData);
@@ -142,17 +219,6 @@ const HomePage = ({
     };
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setProgress(prev => {
-                const next = prev + 0.1;
-                return next > 1 ? 1 : next;
-            });
-        }, 100);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
         checkStoredUser();
     }, [])
 
@@ -164,6 +230,41 @@ const HomePage = ({
             console.error("Error saving personalBests to storage:", e);
         }
     };
+
+    useEffect(() => {
+        let liveSteps = 0;
+
+        // Check if pedometer is available
+        Pedometer.isAvailableAsync().then(
+            (result) => setIsAvailable(String(result)),
+            (error) => setIsAvailable('Error: ' + error)
+        );
+
+        // Get steps from beginning of the day
+        const now = new Date();
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        Pedometer.getStepCountAsync(startOfDay, now).then(
+            (result) => {
+                setStepCount(result.steps); // start from today’s steps
+            },
+            (error) => {
+                console.log('Error getting step count: ', error);
+            }
+        );
+
+        // Start live updates
+        const subscription = Pedometer.watchStepCount((result) => {
+            liveSteps += result.steps;
+            setStepCount(prev => prev + result.steps);
+        });
+
+        // Cleanup on unmount
+        return () => {
+            subscription.remove();
+        };
+    }, []);
 
 
 
@@ -369,13 +470,22 @@ const HomePage = ({
                         alignItems: "center",
                         justifyContent: "space-between"
                     }}>
-                        <Text style={{
-                            fontSize: 35
-                        }}>10000</Text>
+                        <View style={{
+                            flexDirection: "row",
+                            alignItems: "flex-end"
+                        }}>
+                            <Text style={{
+                                fontSize: 35
+                            }}>{stepCount}</Text>
+                            <Text style={{
+                                bottom: 6,
+                                fontSize: 8
+                            }}>STEPS TODAY</Text>
+                        </View>
                         <Image
                             style={{
-                                height: 100,
-                                width: 180,
+                                height: 80,
+                                width: 140,
                                 resizeMode: "contain"
                             }}
                             source={require("../../assets/Icons/Graph.png")}
@@ -556,27 +666,30 @@ const HomePage = ({
                             <Progress.Bar
                                 progress={progress}
                                 width={barWidth}
-                                height={50}
-                                color="#FA8128"
+                                height={30}
+                                color={currentTier.color}
                                 borderRadius={15}
                                 unfilledColor="#E0E0E0"
                                 borderWidth={0}
                             />
                             <View style={styles.textContainer}>
-                                <Text style={styles.progressText}>{Math.round(progress * 100)}% COMPLETED</Text>
+                                <Text style={styles.progressText}>{progressPercentage}% COMPLETED ({monthlyTacticalPoints}/{MONTHLY_TARGET})</Text>
                             </View>
                         </View>
-                        <View>
-                            <Image source={require("../../assets/Icons/Gold-Badge1.png")}
+                        <View style={{
+                            alignItems: "center"
+                        }}>
+                            <Image source={currentTier.icon}
                                 style={{
-                                    height: 30,
-                                    width: 30
+                                    height: 20,
+                                    width: 20
                                 }}
                             />
                             <Text style={{
-                                color: "#FFD125",
-                                fontWeight: "900"
-                            }}>Gold</Text>
+                                color: currentTier.color,
+                                fontWeight: "900",
+                                fontSize: 12,
+                            }}>{currentTier.name}</Text>
                         </View>
                     </View>
                 </View>
@@ -637,7 +750,7 @@ const styles = StyleSheet.create({
     progressText: {
         color: "white",
         fontWeight: "bold",
-        fontSize: 16,
+        fontSize: 13,
     },
     shadowWrapper: {
         shadowColor: '#000',

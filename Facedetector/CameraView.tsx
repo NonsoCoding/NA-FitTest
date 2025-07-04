@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Text, View, StyleSheet, Button, TouchableOpacity, Image, ImageBackground, Modal, SafeAreaView, TextInput, Dimensions } from "react-native";
+import { Text, View, StyleSheet, Button, TouchableOpacity, Image, ImageBackground, Modal, SafeAreaView, TextInput, Dimensions, Alert, ActivityIndicator } from "react-native";
 import { Camera, CameraType } from "expo-camera";
 import * as FaceDetector from "expo-face-detector";
 import { TourGuideZone, useTourGuideController } from "rn-tourguide";
@@ -8,6 +8,8 @@ import { Theme } from "../Components/Branding/Theme";
 import LottieView from "lottie-react-native";
 import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { Switch } from "react-native-paper";
+import { addDoc, collection, doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db } from "../Firebase/Settings";
 
 interface PushUpTrackerIProps {
     navigation: any;
@@ -22,6 +24,7 @@ const PushUpsScreen = ({
     const [hasPermission, setHasPermission] = useState<Boolean | null>(null);
     const [faceData, setFaceData] = useState<any[]>([]);
     const [time, setTime] = useState(60);
+    const [isModalVisible, setIsModalVisible] = useState(false);
     const [prepTime, setPrepTime] = useState(5);
     const [pushUpCount, setPushUpCount] = useState(0);
     const [faceClose, setFaceClose] = useState(false);
@@ -29,24 +32,35 @@ const PushUpsScreen = ({
     const [recordingStarted, setRecordingStarted] = useState<boolean | null>(null);
     const previousY = useRef<number | null>(null);
     const [beginModal, setBeginModal] = useState(false);
+    const [isStartModalVisible, setIsStartModalVisible] = useState(false);
     const [showDemoModal, setShowDemoModal] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null);
-    const countRef = useRef(10);
+    const countRef = useRef(5);
+    const [isResultModalVisible, setIsResultModalVisible] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [countdownFinished, setCountdownFinished] = useState(false);
     const [manualInputModal, setManualInputModal] = useState(false);
     const [mainTimer, setMainTimer] = useState<number | null>(null);
+    const [isRecording, setIsRecording] = useState(false);
     const mainTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const [videoUri, setVideoUri] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
     const [timerModal, setTimerModal] = useState(false);
     const [autoDetect, setAutoDetect] = useState(false);
+    const [manualInputValue, setManualInputValue] = useState('');
     const [sessionActive, setSessionActive] = useState(false);
-
+    const [showManualInputModal, setShowManualInputModal] = useState(false)
     const {
         canStart,
         start,
         stop,
         eventEmitter,
     }: any = useTourGuideController();
+    const [isCountdownActive, setIsCountdownActive] = useState(false);
+    const startIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const isCountdownActiveRef = useRef(false);
+
 
     React.useEffect(() => {
         if (canStart) {
@@ -113,6 +127,7 @@ const PushUpsScreen = ({
     }
 
     const resetTimers = () => {
+        setIsCountdownActive(false); // ✅ Add this line
         stopCountdown();
         setSessionActive(false);
         setCountdownFinished(false);
@@ -120,23 +135,38 @@ const PushUpsScreen = ({
         setMainTimer(null);
         setFaceData([]);
         setCountdown(null);
-        setCountdownFinished(false);
-        setMainTimer(null);
+        setFaceClose(false);
+        previousY.current = null;
+
+        // Clear all timers
         if (mainTimerRef.current) {
-            clearTimeout(mainTimerRef.current);
+            clearInterval(mainTimerRef.current);
             mainTimerRef.current = null;
+        }
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+        if (startIntervalRef.current) {
+            clearInterval(startIntervalRef.current);
+            startIntervalRef.current = null;
         }
     };
 
     const startCountdown = () => {
-        countRef.current = 10;
-        setCountdown(10);
+        countRef.current = 5;
+        setCountdown(5);
         setCountdownFinished(false);
+        isCountdownActiveRef.current = true;
 
         const speakAndCount = () => {
+            if (!isCountdownActiveRef.current) return;
+
             Speech.speak(String(countRef.current), {
                 rate: 0.9,
                 onDone: () => {
+                    if (!isCountdownActiveRef.current) return;
+
                     countRef.current--;
                     setCountdown(countRef.current);
 
@@ -146,23 +176,26 @@ const PushUpsScreen = ({
                         Speech.speak("Begin!", {
                             rate: 0.9,
                             onDone: () => {
+                                if (!isCountdownActiveRef.current) return;
+
                                 setCountdownFinished(true);
                                 setBeginModal(false);
+                                isCountdownActiveRef.current = false;
 
                                 setTimeout(() => {
                                     setSessionActive(true);
                                     startMainTimer(time);
-                                }, 100);
+                                }, 500);
                             }
                         });
                     }
-
                 },
             });
         };
 
         speakAndCount();
-    }
+    };
+
 
     const stopMainTimer = () => {
         if (mainTimerRef.current) {
@@ -171,69 +204,185 @@ const PushUpsScreen = ({
         }
     };
 
-    const endSession = () => {
-        setSessionActive(false);
-        stopMainTimer();
-        resetTimers();
-        if (!autoDetect) {
-            setManualInputModal(true);
-        }
-    }
-
     const startMainTimer = (duration: number) => {
         let remaining = duration;
         setMainTimer(remaining);
+        setIsStartModalVisible(true);
 
-        const tick = () => {
+        const tick = async () => {
             remaining--;
             setMainTimer(remaining);
+
             if (remaining > 0) {
                 mainTimerRef.current = setTimeout(tick, 1000);
             } else {
-                if (!autoDetect) {
-                    setManualInputModal(true);
-                }
+                setSessionActive(false);
+                setCountdownFinished(false);
+                stopMainTimer();
+                setIsStartModalVisible(false);
+
+                setTimeout(() => {
+                    if (autoDetect) {
+                        setIsResultModalVisible(true);
+                    } else {
+                        setManualInputModal(true);
+                    }
+                }, 500);
             }
         };
 
-        tick();
+        mainTimerRef.current = setTimeout(tick, 1000);
     };
 
+
+
     const stopCountdown = () => {
+        setIsCountdownActive(false); // ✅ Mark countdown as inactive first
+
         if (timeoutRef.current) {
             clearTimeout(timeoutRef.current);
             timeoutRef.current = null;
         }
+
         Speech.stop();
-    }
 
-    const startRecording = async () => {
-        if (cameraRef.current) {
-            try {
-                setRecordingStarted(true);
-                const video = await cameraRef.current.recordAsync();
-                console.log("Recording Saved at: ", video.uri);
+        setCountdown(null);
+        countRef.current = 5;
+    };
 
-            } catch (error: any) {
-                console.error("Recording failed: ", error)
-            } finally {
-                setRecordingStarted(false);
-            }
+    const handleEndCountdown = () => {
+        Alert.alert(
+            'End Countdown',
+            'Are you sure you want to end the push up count?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel'
+                },
+                {
+                    text: 'End',
+                    onPress: async () => {
+                        try {
+                            // Stop all timers and intervals
+                            if (startIntervalRef.current) {
+                                clearInterval(startIntervalRef.current);
+                                startIntervalRef.current = null;
+                            }
+                            if (mainTimerRef.current) {
+                                clearInterval(mainTimerRef.current);
+                                mainTimerRef.current = null;
+                            }
+
+
+                            // Stop speech and face detection
+                            Speech.stop();
+                            setCountdownFinished(false);
+                            setSessionActive(false);
+
+                            // Close session modal
+                            setIsStartModalVisible(false);
+
+                            // Reset timer
+                            setTime(60);
+                            setMainTimer(null);
+
+                            // Show result modal after delay
+                            setTimeout(() => {
+                                if (autoDetect) {
+                                    setIsResultModalVisible(true);
+                                } else {
+                                    setManualInputModal(true);
+                                }
+                            }, 300);
+                        } catch (error) {
+                            console.error("Error in handleEndCountdown:", error);
+                        }
+                    },
+                    style: 'destructive'
+                },
+            ],
+            { cancelable: true }
+        );
+    };
+
+    const handleBeginPress = () => {
+        setBeginModal(true);
+        startCountdown();
+
+    };
+
+    useEffect(() => {
+        return () => {
+            resetTimers();
+        };
+    }, []);
+
+    const handleSubmitResult = async () => {
+        const user = auth.currentUser;
+
+        if (!user) {
+            console.warn("No user signed in");
+            return;
         }
-    }
 
-    const stopRecording = async () => {
-        if (cameraRef.current) {
-            try {
-                await cameraRef.current.stopRecording();
-            } catch (error: any) {
-                console.error("Error stopping recording: ", error)
+        const userDetailsRef = doc(db, "UserDetails", user.uid);
+        const pushUpDocRef = doc(db, `UserDetails/${user.uid}/PushUps/${Date.now()}`);
+        console.log("Attempting to save push-up session to path:", pushUpDocRef);
+
+        const TacticalPoints = pushUpCount >= 38 ? 5 : 0;
+
+        const sessionData = {
+            uid: user.uid,
+            pushUpCount: pushUpCount,
+            duration: time,
+            timestamp: new Date().toISOString(),
+            mode: autoDetect ? 'auto' : 'manual',
+            TacticalPoints: TacticalPoints
+        };
+
+        try {
+            await setDoc(pushUpDocRef, sessionData);
+
+            // 2. Fetch current personal best
+            const userDoc = await getDoc(userDetailsRef);
+            const existingData = userDoc.exists() ? userDoc.data().personalBests || {} : {};
+            const currentPushUpBest = existingData.pushUps || 0;
+            const userData = userDoc.exists() ? userDoc.data() : {};
+            const currentTotal = userData.TacticalPoints || 0;
+
+            await setDoc(userDetailsRef, {
+                TacticalPoints: currentTotal + TacticalPoints
+            }, { merge: true });
+
+            // Update personal bests if new value is higher
+            if (pushUpCount > currentPushUpBest) {
+                await setDoc(userDetailsRef, {
+                    personalBests: {
+                        ...existingData,
+                        pushUps: pushUpCount // Only update pushUps, keep others unchanged
+                    }
+                }, { merge: true });
             }
+
+            console.log("Push-up session data saved to Firestore:", sessionData);
+
+            // Reset and navigate after successful save
+            resetTimers();
+            setIsResultModalVisible(false);
+            navigation.goBack();
+            setTime(60);
+            setVideoUri(null);
+        } catch (error) {
+            console.error("Error saving push-up session data to Firestore:", error);
+            Alert.alert('Error', 'Failed to submit result. Please try again.');
+        } finally {
+            setIsUploading(false);
         }
-    }
+    };
+
 
     const handleFaceDetected = ({ faces }: any) => {
-        if (!countdownFinished) return;
+        if (!countdownFinished || !autoDetect) return;
 
         setFaceData(faces); // ✅ Always update face data for UI
 
@@ -241,11 +390,6 @@ const PushUpsScreen = ({
 
         const face = faces[0];
         const faceSize = face.bounds.size.height;
-
-        if (!recordingStarted) {
-            setRecordingStarted(true);
-            startRecording();
-        }
 
         // Push-up logic
         if (previousY.current !== null) {
@@ -329,29 +473,41 @@ const PushUpsScreen = ({
                                 />
                             </TouchableOpacity>
                         </View>
-                        <Camera
-                            type={CameraType.front}
-                            style={[styles.camera, {
-                                height: "55%"
-                            }]}
-                            onFacesDetected={handleFaceDetected}
-                            faceDetectorSettings={{
-                                mode: FaceDetector.FaceDetectorMode.fast,
-                                detectLandmarks: FaceDetector.FaceDetectorLandmarks.none,
-                                runClassification: FaceDetector.FaceDetectorClassifications.none,
-                                minDetectionInterval: 100,
-                                tracking: true
-                            }}
-                        >
-                            {/* {faceData.length === 0 && (
-                                <Text style={styles.statusText}>No face detected!</Text>
-                            )} */}
-                            {recordingStarted && (
-                                <View style={styles.recordingIndicator}>
-                                    <Text style={styles.recordingText}>●</Text>
+                        <View style={{ alignItems: "center", padding: 10 }}>
+                            <TourGuideZone
+                                zone={1}
+                                shape="rectangle"
+                                text="📹 Camera View: Position your face in the center of the camera. The system will track your face movement to count push-ups automatically when auto-detect is enabled."
+                            >
+                                <View
+                                    style={{
+                                        width: 350,
+                                        height: 200,
+                                        borderRadius: 10,
+                                        overflow: "hidden",
+                                    }}
+                                >
+                                    <Camera
+                                        type={CameraType.front}
+                                        style={{ flex: 1 }}
+                                        onFacesDetected={handleFaceDetected}
+                                        faceDetectorSettings={{
+                                            mode: FaceDetector.FaceDetectorMode.fast,
+                                            detectLandmarks: FaceDetector.FaceDetectorLandmarks.none,
+                                            runClassification: FaceDetector.FaceDetectorClassifications.none,
+                                            minDetectionInterval: 100,
+                                            tracking: true,
+                                        }}
+                                    >
+                                        {recordingStarted && (
+                                            <View style={styles.recordingIndicator}>
+                                                <Text style={styles.recordingText}>●</Text>
+                                            </View>
+                                        )}
+                                    </Camera>
                                 </View>
-                            )}
-                        </Camera>
+                            </TourGuideZone>
+                        </View>
                     </View>
                 </View>
             </View>
@@ -388,7 +544,6 @@ const PushUpsScreen = ({
                                         backgroundColor: 'white',
                                         borderRadius: 16,
                                         justifyContent: "center",
-                                        // iOS shadow
                                         shadowColor: '#000',
                                         shadowOffset: {
                                             width: 0,
@@ -397,22 +552,13 @@ const PushUpsScreen = ({
                                         shadowOpacity: 0.3,
                                         shadowRadius: 8,
                                     }}>
-                                        {/* <VideoView
-                        style={{
-                            alignSelf: "center",
-                            width: 280,
-                            height: 280,
-                            borderRadius: 20
-                        }}
-                        player={sitUpsPlayer}
-                    /> */}
                                         <Text style={{
                                             alignSelf: "center",
                                             fontWeight: "400",
                                             textAlign: "center",
                                             fontSize: 14
                                         }}>
-                                            Maximum number of push-ups
+                                            Target Push-Up Count
                                         </Text>
                                         <View style={{
                                             paddingHorizontal: 10,
@@ -421,34 +567,46 @@ const PushUpsScreen = ({
                                             flexDirection: "row",
                                             justifyContent: "space-between",
                                         }}>
-                                            <View style={{
-                                                alignItems: "center"
-                                            }}>
-                                                <Text style={{
-                                                    fontSize: 35,
-                                                    fontWeight: "600"
+                                            <TourGuideZone
+                                                zone={2}
+                                                shape="rectangle"
+                                                text="🎯 Minimum Target: This is the minimum number of push-ups you need to complete to pass the fitness test. Aim to reach or exceed this number!"
+                                            >
+                                                <View style={{
+                                                    alignItems: "center"
                                                 }}>
-                                                    38
-                                                </Text>
-                                                <Text style={{
-                                                    fontSize: 10,
-                                                    fontWeight: "400"
-                                                }}>MINIMUM</Text>
-                                            </View>
-                                            <View style={{
-                                                alignItems: "center",
-                                                gap: 10
-                                            }}>
-                                                <Switch
-                                                    color={"#FA812890"}
-                                                    value={autoDetect}
-                                                    onValueChange={(value) => setAutoDetect(value)}
-                                                />
-                                                <Text style={{
-                                                    fontSize: 10,
-                                                    fontWeight: "400"
-                                                }}>AUTO DETECT</Text>
-                                            </View>
+                                                    <Text style={{
+                                                        fontSize: 35,
+                                                        fontWeight: "600"
+                                                    }}>
+                                                        38
+                                                    </Text>
+                                                    <Text style={{
+                                                        fontSize: 10,
+                                                        fontWeight: "400"
+                                                    }}>MINIMUM</Text>
+                                                </View>
+                                            </TourGuideZone>
+                                            <TourGuideZone
+                                                zone={3}
+                                                shape="rectangle"
+                                                text="🔄 Auto-Detect Mode: Toggle ON to automatically count push-ups using face tracking. Toggle OFF to manually input your count at the end of the session."
+                                            >
+                                                <View style={{
+                                                    alignItems: "center",
+                                                    gap: 10
+                                                }}>
+                                                    <Switch
+                                                        color={"#FA812890"}
+                                                        value={autoDetect}
+                                                        onValueChange={(value) => setAutoDetect(value)}
+                                                    />
+                                                    <Text style={{
+                                                        fontSize: 10,
+                                                        fontWeight: "400"
+                                                    }}>AUTO DETECT</Text>
+                                                </View>
+                                            </TourGuideZone>
                                         </View>
                                     </View>
                                     <View style={{
@@ -457,7 +615,6 @@ const PushUpsScreen = ({
                                         backgroundColor: 'white',
                                         borderRadius: 16,
                                         justifyContent: "center",
-                                        // iOS shadow
                                         shadowColor: '#000',
                                         shadowOffset: {
                                             width: 0,
@@ -466,22 +623,13 @@ const PushUpsScreen = ({
                                         shadowOpacity: 0.3,
                                         shadowRadius: 8,
                                     }}>
-                                        {/* <VideoView
-                        style={{
-                            alignSelf: "center",
-                            width: 280,
-                            height: 280,
-                            borderRadius: 20
-                        }}
-                        player={sitUpsPlayer}
-                    /> */}
                                         <Text style={{
                                             alignSelf: "center",
                                             fontWeight: "400",
                                             textAlign: "center",
                                             fontSize: 14
                                         }}>
-                                            Set your preferred time limit
+                                            Session Duration
                                         </Text>
                                         <View style={{
                                             paddingHorizontal: 10,
@@ -490,63 +638,84 @@ const PushUpsScreen = ({
                                             flexDirection: "row",
                                             justifyContent: "space-between",
                                         }}>
-                                            <TouchableOpacity
-                                                style={{
-                                                    height: 30,
-                                                    width: 30,
-                                                    alignItems: "center",
-                                                    backgroundColor: "#FA812890"
-                                                }}
-                                                onPress={() => {
-                                                    decreaseTime();
-                                                }}
+                                            <TourGuideZone
+                                                zone={4}
+                                                shape="circle"
+                                                text="➖ Decrease Time: Tap to reduce the session duration by 10 seconds. Minimum duration is 10 seconds."
                                             >
-                                                <Text style={{
-                                                    color: "white",
-                                                    fontSize: 20
-                                                }}>-</Text>
-                                            </TouchableOpacity>
-                                            <View style={{
-                                                alignItems: "center"
-                                            }}>
-                                                <Text style={{
-                                                    fontSize: 35,
-                                                    fontWeight: "600"
+                                                <TouchableOpacity
+                                                    style={{
+                                                        height: 30,
+                                                        width: 30,
+                                                        alignItems: "center",
+                                                        backgroundColor: "#FA812890",
+                                                        borderRadius: 15,
+                                                        justifyContent: "center"
+                                                    }}
+                                                    onPress={() => {
+                                                        decreaseTime();
+                                                    }}
+                                                >
+                                                    <Text style={{
+                                                        color: "white",
+                                                        fontSize: 20
+                                                    }}>-</Text>
+                                                </TouchableOpacity>
+                                            </TourGuideZone>
+                                            <TourGuideZone
+                                                zone={5}
+                                                shape="rectangle"
+                                                text="⏱️ Timer Display: Shows your selected session duration. You can increase or decrease this time based on your fitness level and goals."
+                                            >
+                                                <View style={{
+                                                    alignItems: "center"
                                                 }}>
-                                                    {formatTime(time)}
-                                                </Text>
-                                                <Text style={{
-                                                    fontSize: 10
-                                                }}>MINUTE</Text>
-                                            </View>
-                                            <TouchableOpacity
-                                                style={{
-                                                    height: 30,
-                                                    width: 30,
-                                                    alignItems: "center",
-                                                    backgroundColor: "#FA812890"
-                                                }}
-                                                onPress={() => {
-                                                    increaseTime();
-                                                }}
+                                                    <Text style={{
+                                                        fontSize: 35,
+                                                        fontWeight: "600"
+                                                    }}>
+                                                        {formatTime(time)}
+                                                    </Text>
+                                                    <Text style={{
+                                                        fontSize: 10
+                                                    }}>DURATION</Text>
+                                                </View>
+                                            </TourGuideZone>
+                                            <TourGuideZone
+                                                zone={6}
+                                                shape="circle"
+                                                text="➕ Increase Time: Tap to add 10 seconds to your session duration. Adjust based on your fitness level."
                                             >
-                                                <Text style={{
-                                                    color: "white",
-                                                    fontSize: 20
-                                                }}>+</Text>
-                                            </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={{
+                                                        height: 30,
+                                                        width: 30,
+                                                        alignItems: "center",
+                                                        backgroundColor: "#FA812890",
+                                                        borderRadius: 15,
+                                                        justifyContent: "center"
+                                                    }}
+                                                    onPress={() => {
+                                                        increaseTime();
+                                                    }}
+                                                >
+                                                    <Text style={{
+                                                        color: "white",
+                                                        fontSize: 20
+                                                    }}>+</Text>
+                                                </TouchableOpacity>
+                                            </TourGuideZone>
                                         </View>
                                     </View>
                                 </View>
                                 <TourGuideZone
                                     zone={7}
                                     shape="rectangle"
-                                    text="Begin push up count you'll be given a preparation time of 10 seconds get ready."
+                                    text="🚀 Start Your Session: Tap to begin your push-up session. You'll get a 5-second countdown to prepare before the timer starts!"
                                 >
-                                    <View style={{
-                                    }}>
+                                    <View style={{}}>
                                         <TouchableOpacity style={{
-                                            backgroundColor: sessionActive ? "red" : "#FA812890",
+                                            backgroundColor: "#FA812890",
                                             justifyContent: "space-between",
                                             flexDirection: "row",
                                             alignItems: "center",
@@ -554,18 +723,13 @@ const PushUpsScreen = ({
                                             borderRadius: 5
                                         }}
                                             onPress={() => {
-                                                if (!sessionActive) {
-                                                    startCountdown();
-                                                    setTimerModal(true);
-                                                    setBeginModal(true)
-                                                } else {
-                                                    endSession();
-                                                }
+                                                handleBeginPress();
                                             }}
                                         >
                                             <Text style={{
-                                                color: sessionActive ? "white" : "black"
-                                            }}>{sessionActive ? "END" : "BEGIN"}</Text>
+                                                color: "white",
+                                                fontWeight: "600"
+                                            }}>START PUSH-UPS</Text>
                                             <Image source={require("../assets/BackgroundImages/VectorRight.png")}
                                                 style={{
                                                     height: 20,
@@ -577,49 +741,6 @@ const PushUpsScreen = ({
                                 </TourGuideZone>
                             </SafeAreaView>
                         </View>
-                        {/* <View style={styles.overlay}>
-                            <View style={{
-                                alignItems: "center",
-                                gap: 0
-                            }}>
-                                <TouchableOpacity onPress={() => {
-                                    setShowDemoModal(true)
-                                }}
-                                    style={{
-                                        justifyContent: "center",
-                                        alignItems: "center"
-                                    }}
-                                >
-                                    <Image
-                                        style={{
-                                            height: 30,
-                                            width: 40,
-                                            resizeMode: "contain"
-                                        }}
-                                        source={require("../assets/Icons/sit-up.png")}
-                                    />
-                                    <Text style={{
-                                        fontSize: 15
-                                    }}>View Demo</Text>
-                                </TouchableOpacity>
-                                <Text style={styles.countText}>{pushUpCount}</Text>
-                                {countdownFinished && mainTimer !== null && (
-                                    <View style={{
-                                        alignItems: "center"
-                                    }}>
-                                        <Text style={{
-                                            fontSize: 13,
-                                            color: "black"
-                                        }}>Time left</Text>
-                                        <Text style={{
-                                            fontWeight: "700",
-                                            color: "white",
-                                            fontSize: 30
-                                        }}>{mainTimer !== null ? formatTime(mainTimer) : formatTime(time)}</Text>
-                                    </View>
-                                )}
-                            </View>
-                        </View> */}
                     </View>
                 </View>
                 <Modal
@@ -668,12 +789,12 @@ const PushUpsScreen = ({
                                             paddingHorizontal: 20
                                         }}>
                                             <TouchableOpacity style={{
-
                                             }}
                                                 onPress={() => {
-                                                    setBeginModal(false)
-                                                    setPrepTime(5);
-
+                                                    stopCountdown();
+                                                    setBeginModal(false);
+                                                    setCountdown(null);
+                                                    setCountdownFinished(false);
                                                 }}
                                             >
                                                 <Text style={{
@@ -721,51 +842,251 @@ const PushUpsScreen = ({
                         </View>
                     </View>
                 </Modal>
-
                 <Modal
-                    visible={showDemoModal}
+                    visible={isStartModalVisible}
                     animationType="slide"
                     transparent={true}
                     onRequestClose={() => {
-                        setShowDemoModal(showDemoModal);
+                        setIsModalVisible(false);
                     }}
                 >
                     <View style={{
                         flex: 1,
-                        justifyContent: "center",
-                        alignItems: "center"
+                        justifyContent: "flex-end"
                     }}>
-                        <View
-                            style={{
-                                height: "40%",
-                                width: "90%",
-                                backgroundColor: "white",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                borderRadius: 10,
-                                borderTopLeftRadius: 10,
-                                gap: 10,
-                                padding: 20
-                            }}
-                        >
-                            <TouchableOpacity style={{
-                                position: "absolute",
-                                top: 10,
-                                right: 10,
-                                height: 30,
-                                width: 30,
-                                borderRadius: 15,
-                                justifyContent: "center",
-                                alignItems: "center",
-                                backgroundColor: "black"
-                            }}
-                                onPress={() => {
-                                    setShowDemoModal(false);
-                                }}>
-                                <Text style={{
-                                    color: "white"
-                                }}>X</Text>
-                            </TouchableOpacity>
+                        <View style={[styles.shadowTopWrapper, {
+                            top: 100,
+                        }]}>
+                            <View style={styles.headerContainer}>
+                                <Svg height="500" width={screenWidth} style={styles.svg}>
+                                    <Defs>
+                                        <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                            <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                                        </SvgLinearGradient>
+                                    </Defs>
+                                    <Path
+                                        d={createTopCurvedPath()}
+                                        fill="url(#grad)"
+                                    />
+                                </Svg>
+
+                                {/* Content overlay - positioned absolutely to center over SVG */}
+                                <View style={styles.contentOverlay}>
+                                    <View
+                                        style={{
+                                            height: 300,
+                                            width: "100%",
+                                            alignSelf: "center",
+                                            gap: 20,
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            borderRadius: 15
+                                        }}
+                                    >
+                                        <View style={{
+                                            height: 120,
+                                            width: '70%',
+                                            borderRadius: 5,
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: 10,
+                                            backgroundColor: "rgba(0, 0, 0, 0.3)"
+                                        }}>
+                                            <View style={{
+                                                flexDirection: "row",
+                                                alignItems: "flex-end",
+
+                                            }}>
+                                                <Text style={{
+                                                    fontSize: 20,
+                                                    color: "white"
+                                                }}>
+                                                    {mainTimer !== null ? formatTime(mainTimer) : formatTime(time)}
+                                                </Text>
+                                                <Text style={{
+                                                    fontSize: 12,
+                                                    color: "white",
+                                                }}>sec</Text>
+                                            </View>
+                                            <View style={{
+                                                flexDirection: "row",
+                                                alignItems: "flex-end",
+                                            }}>
+                                                <Text style={{
+                                                    fontSize: 50,
+                                                    color: "white",
+                                                }}>{pushUpCount}</Text>
+
+                                            </View>
+                                        </View>
+                                        <TouchableOpacity
+                                            style={{
+                                                backgroundColor: "rgba(0, 0, 0, 0.3)",
+                                                padding: 20,
+                                                width: "70%",
+                                                justifyContent: "space-between",
+                                                flexDirection: "row",
+                                                alignItems: "center"
+                                            }}
+                                            onPress={() => {
+                                                handleEndCountdown();
+                                            }}
+                                        >
+                                            <Text style={{
+                                                color: "white"
+                                            }}>END SITUP</Text>
+                                            <Image source={require("../assets/Icons/fast-forward.png")}
+                                                style={{
+                                                    width: 15,
+                                                    height: 15,
+                                                    resizeMode: "contain"
+                                                }}
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
+
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+                <Modal
+                    visible={isResultModalVisible}
+                    animationType="slide"
+                    transparent={true}
+                    onRequestClose={() => {
+                        setIsModalVisible(false);
+                    }}
+                >
+                    <View style={{
+                        flex: 1,
+                        justifyContent: "flex-end"
+                    }}>
+                        <View style={[styles.shadowTopWrapper, {
+                            top: 100,
+                        }]}>
+                            <View style={styles.headerContainer}>
+                                <Svg height="500" width={screenWidth} style={styles.svg}>
+                                    <Defs>
+                                        <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                            <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                            <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                                        </SvgLinearGradient>
+                                    </Defs>
+                                    <Path
+                                        d={createTopCurvedPath()}
+                                        fill="url(#grad)"
+                                    />
+                                </Svg>
+
+                                {/* Content overlay - positioned absolutely to center over SVG */}
+                                <View style={styles.contentOverlay}
+                                >
+                                    <View
+                                        style={{
+                                            height: 300,
+                                            width: "100%",
+                                            alignSelf: "center",
+                                            gap: 20,
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            borderRadius: 15
+                                        }}
+                                    >
+                                        <View style={{
+                                            position: "absolute",
+                                            top: 0,
+                                            right: 0,
+                                            paddingHorizontal: 20
+                                        }}>
+                                            <TouchableOpacity style={{
+
+                                            }}
+                                                onPress={() => {
+                                                    setIsResultModalVisible(false);
+                                                    resetTimers();
+                                                    setPrepTime(5);
+                                                    if (intervalRef.current) {
+                                                        clearInterval(intervalRef.current);
+                                                        intervalRef.current = null;
+                                                    }
+                                                    setTime(60);
+                                                    if (startIntervalRef.current) {
+                                                        clearInterval(startIntervalRef.current);
+                                                        startIntervalRef.current = null;
+                                                    }
+                                                }}
+                                            >
+                                                <Text style={{
+                                                    fontSize: 17,
+                                                    color: "white",
+                                                }}>close</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                        <View style={{
+                                            height: 100,
+                                            width: '70%',
+                                            borderRadius: 5,
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            gap: 10,
+                                            backgroundColor: "rgba(0, 0, 0, 0.3)"
+                                        }}>
+                                            <View style={{
+                                                flexDirection: "row",
+                                                alignItems: "flex-end",
+                                            }}>
+                                                <Text style={{
+                                                    fontSize: 40,
+                                                    color: "white",
+                                                }}>{pushUpCount}</Text>
+                                                {/* <Text style={{
+                                                        fontSize: 17,
+                                                        bottom: 10,
+                                                        color: "white",
+                                                    }}>min</Text> */}
+                                            </View>
+                                            <View
+                                            >
+                                                <Text style={{
+                                                    color: "white"
+                                                }}>Correct Sit Ups</Text>
+                                            </View>
+                                        </View>
+                                        <TouchableOpacity style={{
+                                            width: "70%",
+                                            backgroundColor: "rgba(0, 0, 0, 0.3)",
+                                            justifyContent: "space-between",
+                                            flexDirection: "row",
+                                            padding: 20,
+                                            borderRadius: 5,
+                                            alignItems: "center",
+                                            opacity: isUploading ? 0.6 : 1
+                                        }}
+                                            onPress={() => {
+                                                handleSubmitResult();
+                                            }}
+                                            disabled={isUploading}
+                                        >
+                                            <Text style={{
+                                                color: "white"
+                                            }}>{isUploading ? 'UPLOADING...' : 'SUBMIT'}</Text>
+                                            {isUploading ? (
+                                                <ActivityIndicator color="white" size="small" />
+                                            ) : (
+                                                <Image source={require("../assets/downloadedIcons/fast.png")}
+                                                    style={{
+                                                        width: 25,
+                                                        height: 25,
+                                                        resizeMode: "contain"
+                                                    }}
+                                                />
+                                            )}
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
                         </View>
                     </View>
                 </Modal>
@@ -781,10 +1102,10 @@ const PushUpsScreen = ({
                         flex: 1,
                         justifyContent: "center",
                         backgroundColor: "rgba(0, 0, 0, 0.6)",
-                        padding: 20
+                        padding: 20,
                     }}>
                         <View style={{
-                            height: 300,
+                            height: "30%",
                             padding: 20,
                             justifyContent: "center",
                             backgroundColor: Theme.colors.backgroundColor,
@@ -802,10 +1123,12 @@ const PushUpsScreen = ({
                                         fontWeight: "200",
                                         fontSize: 16,
                                         textAlign: "center"
-                                    }}>Input your pull-up count</Text>
+                                    }}>Input your Sit-up count</Text>
                                 </View>
                             </View>
                             <TextInput
+                                value={pushUpCount === 0 ? "" : pushUpCount.toString()}
+                                onChangeText={(text) => setPushUpCount(Number(text) || 0)}
                                 keyboardType="numeric"
                                 placeholderTextColor="#aaa"
                                 style={{
@@ -820,23 +1143,27 @@ const PushUpsScreen = ({
                                     color: '#000',
                                 }}
                             />
-                            <TouchableOpacity
+                            <TouchableOpacity style={[styles.getStartedBtn, {
+                                backgroundColor: "#FA812890",
+                                opacity: isUploading ? 0.6 : 1
+                            }]}
                                 onPress={() => {
-                                    setManualInputModal(false);
-                                    setPrepTime(5);
-                                    setTime(60);
-                                    resetTimers();
+                                    handleSubmitResult();
                                 }}
                             >
                                 <Text style={{
                                     color: "white"
-                                }}>SUBMIT</Text>
-                                <Image source={require("../assets/downloadedIcons/fast.png")}
-                                    style={{
-                                        height: 24,
-                                        width: 24
-                                    }}
-                                />
+                                }}>{isUploading ? 'UPLOADING...' : 'SUBMIT'}</Text>
+                                {isUploading ? (
+                                    <ActivityIndicator color="white" size="small" />
+                                ) : (
+                                    <Image source={require("../assets/downloadedIcons/fast.png")}
+                                        style={{
+                                            height: 24,
+                                            width: 24
+                                        }}
+                                    />
+                                )}
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -1029,6 +1356,16 @@ const styles = StyleSheet.create({
         shadowRadius: 15,
         elevation: 12,
         zIndex: 1,
+    }, getStartedBtn: {
+        padding: 20,
+        backgroundColor: "#FA812890",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        alignSelf: "center",
+        borderRadius: 5,
+        gap: 10,
+        flexDirection: "row"
     },
     shadowTopWrapper: {
         flex: 1,
