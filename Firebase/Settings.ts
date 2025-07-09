@@ -10,12 +10,12 @@ import { getFirestore } from 'firebase/firestore'
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAbB6rRODB0txennMzTHWwEibZPjJVoEQM",
-  authDomain: "tactical-pt.firebaseapp.com",
-  projectId: "tactical-pt",
-  storageBucket: "tactical-pt.firebasestorage.app",
-  messagingSenderId: "565483164663",
-  appId: "1:565483164663:web:2074b0d60e5a47f59a54f2"
+  apiKey: "AIzaSyCbZiHMxiGbOdlOhzymBtZagkuNFkLHz8o",
+  authDomain: "tactixfit-app.firebaseapp.com",
+  projectId: "tactixfit-app",
+  storageBucket: "tactixfit-app.firebasestorage.app",
+  messagingSenderId: "317606084434",
+  appId: "1:317606084434:web:1718f04fef52646974848b"
 };
 
 // Initialize Firebase

@@ -153,7 +153,7 @@ const PullUpTestScreen = ({
         const pullUpDocRef = doc(db, `UserDetails/${user.uid}/PullUps/${Date.now()}`);
         console.log("Attempting to save run to path:", pullUpDocRef);
 
-        const TacticalPoints = pullUpCount >= 38 ? 5 : 0;
+        const TacticalPoints = pullUpCount >= 38 ? 10 : 0;
 
         const runData = {
             uid: user.uid,
@@ -920,104 +920,43 @@ const PullUpTestScreen = ({
                 animationType="slide"
                 transparent={true}
                 onRequestClose={() => {
-                    setIsModalVisible(false);
+                    setIsPrepModalVisible(false);
                 }}
             >
                 <View style={{
                     flex: 1,
-                    justifyContent: "flex-end",
-                    backgroundColor: "rgba(0, 0, 0, 0.6)"
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "rgba(0, 0, 0, 0.5)"
                 }}>
-                    <View style={[styles.shadowTopWrapper, {
-                        top: 100,
-                    }]}>
-                        <View style={styles.headerContainer}>
-                            <Svg height="500" width={screenWidth} style={styles.svg}>
-                                <Defs>
-                                    <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                        <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                                    </SvgLinearGradient>
-                                </Defs>
-                                <Path
-                                    d={createTopCurvedPath()}
-                                    fill="url(#grad)"
-                                />
-                            </Svg>
-
-                            {/* Content overlay - positioned absolutely to center over SVG */}
-                            <View style={styles.contentOverlay}>
-                                <View
-                                    style={{
-                                        height: 300,
-                                        width: "100%",
-                                        alignSelf: "center",
-                                        gap: 20,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        borderRadius: 15
-                                    }}
-                                >
-                                    <View style={{
-                                        position: "absolute",
-                                        top: 0,
-                                        right: 0,
-                                        padding: 20
-                                    }}>
-                                        <TouchableOpacity style={{
-
-                                        }}
-                                            onPress={() => {
-                                                setIsPrepModalVisible(false);
-                                                setPrepTime(5);
-                                                setTime(60)
-                                                setIsRunning(false);
-                                                if (intervalRef.current) {
-                                                    clearInterval(intervalRef.current);
-                                                    intervalRef.current = null;
-                                                }
-                                            }}
-                                        >
-                                            <Text style={{
-                                                fontSize: 17,
-                                                color: "white",
-                                            }}>close</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={{
-                                        height: 150,
-                                        width: '70%',
-                                        borderRadius: 5,
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        gap: 10,
-                                    }}>
-                                        <View style={{
-                                            flexDirection: "row",
-                                            alignItems: "flex-end",
-                                        }}>
-                                            <Text style={{
-                                                fontSize: 60,
-                                                color: "white",
-                                            }}>{prepTime}</Text>
-                                            <Text style={{
-                                                fontSize: 17,
-                                                bottom: 10,
-                                                color: "white",
-                                            }}>sec</Text>
-                                        </View>
-                                        <TouchableOpacity
-                                            onPress={() => {
-
-                                            }}
-                                        >
-                                            <Text style={{
-                                                color: "white"
-                                            }}>GET READY</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </View>
+                    <View style={{
+                        height: 250,
+                        width: "70%",
+                        backgroundColor: Theme.colors.primaryColor,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        borderRadius: 5
+                    }}>
+                        <View style={{
+                            alignItems: "center"
+                        }}>
+                            <View style={{
+                                flexDirection: "row",
+                                alignItems: "flex-end",
+                            }}>
+                                <Text style={{
+                                    fontSize: 60,
+                                    color: "white",
+                                }}>0{prepTime}</Text>
+                                <Text style={{
+                                    fontSize: 17,
+                                    bottom: 10,
+                                    color: "white",
+                                }}>sec</Text>
                             </View>
+                            <Text style={{
+                                color: "white"
+                            }}>GET READY TO SPRINT</Text>
                         </View>
                     </View>
                 </View>

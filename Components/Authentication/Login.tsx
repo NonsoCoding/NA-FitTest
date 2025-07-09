@@ -234,7 +234,7 @@ const LoginScreen = ({
                                             <TextInput
                                                 style={styles.textinput}
                                                 placeholderTextColor={"#8c8c8e"}
-                                                placeholder="Dapt@gmail.com"
+                                                placeholder="Your Email"
                                                 value={values.email}
                                                 onChangeText={handleChange("email")}
                                                 onBlur={handleBlur("email")}

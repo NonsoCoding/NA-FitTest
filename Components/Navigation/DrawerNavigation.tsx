@@ -6,7 +6,7 @@ import EditDetails from '../Screens/EditDetails';
 import History from '../Screens/History';
 import AdminDashboard from '../Screens/AdminDashboard';
 import About from '../LegalDocument/About';
-import { Platform } from 'react-native';
+import { Platform, View } from 'react-native';
 import { AntDesign, Feather, Ionicons, MaterialCommunityIcons, SimpleLineIcons } from '@expo/vector-icons';
 
 const Tab = createBottomTabNavigator();
@@ -20,40 +20,89 @@ export const BottomTabNavigator = () => {
           height: Platform.OS === "android" ? 90 : 90,
           paddingBottom: 10,
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          color: "black"
-        },
+        tabBarShowLabel: false,
       }}
     >
       <Tab.Screen
         options={{
-          tabBarIcon: ({ }) => (
-            <Ionicons name='home-outline' size={25} />
+          tabBarIcon: ({ focused }: any) => (
+            <View style={{
+              backgroundColor: focused ? 'black' : 'transparent',
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: 50,
+              minHeight: 40,
+              marginTop: 30
+            }}>
+              <Ionicons
+                name='home-outline'
+                size={25}
+                color={focused ? 'white' : 'black'}
+              />
+            </View>
           )
         }}
         name="Home" component={HomePage}
       />
       <Tab.Screen
         options={{
-          tabBarIcon: ({ }) => (
-            <Feather name='user' size={25} />
+          tabBarIcon: ({ focused }) => (
+            <View style={{
+              backgroundColor: focused ? 'black' : 'transparent',
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: 50,
+              minHeight: 40,
+              marginTop: 30
+            }}>
+              <Feather name='user' size={25} color={focused ? 'white' : 'black'} />
+            </View>
           )
         }}
         name="Profile" component={Profile}
       />
       <Tab.Screen
         options={{
-          tabBarIcon: ({ }) => (
-            <MaterialCommunityIcons name='history' size={25} />
+          tabBarIcon: ({ focused }) => (
+            <View style={{
+              backgroundColor: focused ? 'black' : 'transparent',
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: 50,
+              minHeight: 40,
+              marginTop: 30
+            }}>
+              <MaterialCommunityIcons name='history' size={25} color={focused ? 'white' : 'black'} />
+            </View>
           )
         }}
         name="History" component={History}
       />
       <Tab.Screen
         options={{
-          tabBarIcon: ({ }) => (
-            <SimpleLineIcons name='info' size={25} />
+          tabBarIcon: ({ focused }) => (
+            <View style={{
+              backgroundColor: focused ? 'black' : 'transparent',
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 20,
+              alignItems: 'center',
+              justifyContent: 'center',
+              minWidth: 50,
+              minHeight: 40,
+              marginTop: 30
+            }}>
+              <SimpleLineIcons name='info' size={23} color={focused ? 'white' : 'black'} />
+            </View>
           )
         }}
         name="About" component={About}

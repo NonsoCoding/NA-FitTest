@@ -13,6 +13,7 @@ import Toast from 'react-native-toast-message';
 import Constants from 'expo-constants';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../../Firebase/Settings';
+import { doc, getFirestore, setDoc } from 'firebase/firestore';
 
 interface SignUpIprops {
     navigation?: any;
@@ -77,13 +78,22 @@ const SignUpScreen = ({
 
     const SignUp = async (values: SignUpValues) => {
         setIsLoading(true);
+        const db = getFirestore();
+
         try {
             const userCredentials = await createUserWithEmailAndPassword(auth, values.email, values.password);
             const user = userCredentials.user;
             const uid = userCredentials.user.uid;
             console.log('User created: ', user);
-            await sendEmailVerification(user);
             saveUserToStorage(uid)
+
+            await setDoc(doc(db, "UserRoles", uid), {
+                role: "user",
+                email: values.email,
+                createdAt: new Date()
+            })
+
+            await sendEmailVerification(user);
             Alert.alert('Success', 'A verification link has been sent to your email.');
             navigation.navigate('VerificationScreen');
         } catch (error: any) {
@@ -206,7 +216,7 @@ const SignUpScreen = ({
                                             <TextInput
                                                 style={styles.textinput}
                                                 placeholderTextColor={"#8c8c8e"}
-                                                placeholder="Dapt@gmail.com"
+                                                placeholder="Your Email"
                                                 value={values.email}
                                                 onChangeText={handleChange("email")}
                                                 onBlur={handleBlur("email")}

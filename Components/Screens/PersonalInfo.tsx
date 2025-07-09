@@ -212,7 +212,7 @@ const PersonalInfo = ({
                                                     <RadioButton
                                                         selected={values.gender === 'Female'}
                                                         onPress={() => setFieldValue('gender', 'Female')}
-                                                        label="Female§§§§§§"
+                                                        label="Female"
                                                     />
                                                 </View>
                                                 {touched.gender && errors.gender && (

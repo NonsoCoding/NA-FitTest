@@ -155,7 +155,7 @@ const SitUpTestScreen = ({
         const sitUpDocRef = doc(db, `UserDetails/${user.uid}/SitUps/${Date.now()}`);
         console.log("Attempting to save sit-up data to path:", sitUpDocRef);
 
-        const TacticalPoints = sitUpCount >= 38 ? 5 : 0;
+        const TacticalPoints = sitUpCount >= 38 ? 10 : 0;
 
         const runData = {
             uid: user.uid,

@@ -3,7 +3,7 @@ import { Theme } from "../Branding/Theme";
 import LottieView from "lottie-react-native";
 import { useEffect, useState } from "react";
 import { auth, db } from "../../Firebase/Settings";
-import { doc, getDoc, onSnapshot } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, onSnapshot, setDoc, updateDoc } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { async } from "@firebase/util"
 import { LinearGradient } from 'expo-linear-gradient';
@@ -50,6 +50,7 @@ const HomePage = ({
         sprintTime: 0
     })
     const today = new Date();
+    const [baselineSteps, setBaselineSteps] = useState(0);
     const [monthlyTacticalPoints, setMonthlyTacticalPoints] = useState(0);
     const formattedDate = today.toLocaleDateString('en-US', {
         year: 'numeric',
@@ -97,45 +98,26 @@ const HomePage = ({
         Z`;
     };
 
-    const cleanupOldMonths = async (currentMonthKey: string) => {
-        try {
-            const keys = await AsyncStorage.getAllKeys();
-            const monthlyKeys = keys.filter(key => key.startsWith('monthlyTacticalPoints_'));
-
-            for (const key of monthlyKeys) {
-                if (key !== `monthlyTacticalPoints_${currentMonthKey}`) {
-                    await AsyncStorage.removeItem(key);
-                }
-            }
-        } catch (error) {
-            console.error("Error cleaning up old months:", error);
-        }
-    };
-
-
-    const handleMonthlyTacticalPoints = async (totalPoints: number) => {
+    const handleMonthlyTacticalPoints = async (totalPoints: number, uid: string) => {
         const currentMonthKey = getCurrentMonthKey();
-        const storageKey = `monthlyTacticalPoints_${currentMonthKey}`;
+        const storageRef = doc(db, "UserDetails", uid, "MonthlyProgress", currentMonthKey);
 
         try {
             // Get stored data for current month
-            const storedData = await AsyncStorage.getItem(storageKey);
-            const monthlyData = storedData ? JSON.parse(storedData) : { points: 0, lastTotal: 0 };
+            const snapShot = await getDoc(storageRef);
+            const monthlyData = snapShot.exists() ? snapShot.data() : { points: 0, lastTotal: 0 }
 
             // Calculate points gained this month
             const pointsGained = totalPoints - monthlyData.lastTotal;
             const newMonthlyPoints = monthlyData.points + Math.max(0, pointsGained);
 
-            // Update storage
-            await AsyncStorage.setItem(storageKey, JSON.stringify({
+            await setDoc(storageRef, {
                 points: newMonthlyPoints,
                 lastTotal: totalPoints
-            }));
+            });
+
 
             setMonthlyTacticalPoints(newMonthlyPoints);
-
-            // Clean up old months (optional)
-            await cleanupOldMonths(currentMonthKey);
 
         } catch (error) {
             console.error("Error handling monthly tactical points:", error);
@@ -166,7 +148,11 @@ const HomePage = ({
                 };
                 setUserInfo(userData);
 
-                await handleMonthlyTacticalPoints(data.TacticalPoints || 0)
+                await handleMonthlyTacticalPoints(data.TacticalPoints || 0, uid);
+
+                if (data.stepBaseline) {
+                    setBaselineSteps(data.stepBaseline);
+                }
 
                 try {
                     await AsyncStorage.setItem('userInfo', JSON.stringify(userData));
@@ -198,6 +184,33 @@ const HomePage = ({
         }
     };
 
+
+    const initializeStepsForNewAccount = async () => {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        // Check if this is a new account setup
+        const userDocRef = doc(db, "UserDetails", user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists() && !userDoc.data().stepBaseline) {
+            // Get current device steps to use as baseline
+            const now = new Date();
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+
+            const result = await Pedometer.getStepCountAsync(startOfDay, now);
+
+            // Store baseline in Firestore
+            await updateDoc(userDocRef, {
+                stepBaseline: result.steps,
+                stepBaselineDate: new Date().toISOString()
+            });
+
+            setBaselineSteps(result.steps);
+        }
+    };
+
     const checkStoredUser = async () => {
         // Check if there's a stored UID
         const storedUid = await getUserFromStorage();
@@ -207,11 +220,7 @@ const HomePage = ({
             // Subscribe to user data with the stored UID
             subscribeToUserData(storedUid);
 
-            // Optional: You can also navigate to main screen here if needed
-            // navigation.reset({
-            //     index: 0,
-            //     routes: [{ name: "MainDrawer" }]
-            // });
+            await initializeStepsForNewAccount();
         } else {
             console.log("No user found in storage");
             // You can redirect to login screen here if needed
@@ -232,9 +241,7 @@ const HomePage = ({
     };
 
     useEffect(() => {
-        let liveSteps = 0;
 
-        // Check if pedometer is available
         Pedometer.isAvailableAsync().then(
             (result) => setIsAvailable(String(result)),
             (error) => setIsAvailable('Error: ' + error)
@@ -248,6 +255,7 @@ const HomePage = ({
         Pedometer.getStepCountAsync(startOfDay, now).then(
             (result) => {
                 setStepCount(result.steps); // start from today’s steps
+                saveStepCountToFirestore(result.steps);
             },
             (error) => {
                 console.log('Error getting step count: ', error);
@@ -255,9 +263,19 @@ const HomePage = ({
         );
 
         // Start live updates
-        const subscription = Pedometer.watchStepCount((result) => {
-            liveSteps += result.steps;
-            setStepCount(prev => prev + result.steps);
+        const subscription = Pedometer.watchStepCount(async () => {
+            const now = new Date();
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+
+            try {
+                const result = await Pedometer.getStepCountAsync(startOfDay, now);
+                setStepCount(result.steps);
+                saveStepCountToFirestore(result.steps);
+            } catch (error: any) {
+                console.log("Error updating live steps: ", error);
+
+            }
         });
 
         // Cleanup on unmount
@@ -327,6 +345,51 @@ const HomePage = ({
             console.error("Error loading userInfo from storage:", e);
         }
     };
+
+    const saveStepCountToFirestore = async (steps: number) => {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const today = new Date().toISOString().split('T')[0]; // e.g., '2025-07-05'
+        const stepDocRef = doc(db, "UserDetails", user.uid, "StepLogs", today);
+
+
+        // Save the adjusted steps (steps minus baseline)
+        const adjustedSteps = Math.max(0, steps - baselineSteps);
+
+        try {
+            await setDoc(stepDocRef, {
+                steps: adjustedSteps,
+                rawSteps: steps, // Keep raw steps for reference
+                timestamp: new Date().toISOString()
+            });
+            console.log("Step count saved to Firestore");
+        } catch (e) {
+            console.error("Error saving step count: ", e);
+        }
+    };
+
+    const resetStepData = async () => {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        try {
+            // Clear from Firestore
+            const today = new Date().toISOString().split('T')[0];
+            const stepDocRef = doc(db, "UserDetails", user.uid, "StepLogs", today);
+            await deleteDoc(stepDocRef);
+
+            // Reset local state
+            setStepCount(0);
+
+            console.log("Step data reset");
+        } catch (error) {
+            console.error("Error resetting step data:", error);
+        }
+    };
+
+    // Update your step display logic
+    const displaySteps = Math.max(0, stepCount - baselineSteps);
 
     useEffect(() => {
         loadUserInfoFromStorage();
@@ -476,7 +539,7 @@ const HomePage = ({
                         }}>
                             <Text style={{
                                 fontSize: 35
-                            }}>{stepCount}</Text>
+                            }}>{displaySteps}</Text>
                             <Text style={{
                                 bottom: 6,
                                 fontSize: 8
