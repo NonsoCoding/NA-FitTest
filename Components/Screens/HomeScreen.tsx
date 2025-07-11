@@ -11,6 +11,7 @@ import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'reac
 import * as Progress from "react-native-progress";
 import { Pedometer } from "expo-sensors";
 import { string } from "yup";
+import Toast from "react-native-toast-message";
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -416,8 +417,8 @@ const HomePage = ({
                     <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
                 </View>
             )}
-            <View style={styles.shadowWrapper}>
-                <View style={styles.headerContainer}>
+            <View>
+                <View style={[styles.headerContainer]}>
                     <Svg height="200" width={screenWidth} style={styles.svg}>
                         <Defs>
                             <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -513,11 +514,19 @@ const HomePage = ({
                     // Android shadow
                     elevation: 5,
                 }}>
-                    <View style={{
+                    <TouchableOpacity style={{
                         flexDirection: "row",
                         gap: 10,
                         alignItems: "center"
-                    }}>
+                    }}
+                        onPress={() => {
+                            Toast.show({
+                                type: "info",
+                                text1: "Step check!",
+                                text2: "Let’s see how far you’ve walked today."
+                            })
+                        }}
+                    >
                         <Image
                             style={{
                                 height: 20,
@@ -527,7 +536,7 @@ const HomePage = ({
                         <Text style={{
                             color: "#6C659C"
                         }}>STEPS</Text>
-                    </View>
+                    </TouchableOpacity>
                     <View style={{
                         flexDirection: "row",
                         alignItems: "center",
@@ -574,11 +583,19 @@ const HomePage = ({
                     // Android shadow
                     elevation: 5,
                 }}>
-                    <View style={{
+                    <TouchableOpacity style={{
                         flexDirection: "row",
                         gap: 10,
                         alignItems: "center"
-                    }}>
+                    }}
+                        onPress={() => {
+                            Toast.show({
+                                type: "info",
+                                text1: "Workout exercises",
+                                text2: "Take a look at today's fitness excercise routines..."
+                            })
+                        }}
+                    >
                         <Image
                             style={{
                                 height: 20,
@@ -588,7 +605,7 @@ const HomePage = ({
                         <Text style={{
                             color: "#188649"
                         }}>WORKOUT</Text>
-                    </View>
+                    </TouchableOpacity>
                     <View style={{
                         flexDirection: 'row',
                         alignItems: "center",
@@ -703,11 +720,20 @@ const HomePage = ({
                     // Android shadow
                     elevation: 5,
                 }}>
-                    <View style={{
+                    <TouchableOpacity style={{
                         flexDirection: "row",
                         gap: 10,
                         alignItems: "center"
-                    }}>
+                    }}
+                        onPress={() => {
+                            Toast.show({
+                                type: "info",
+                                text1: "Tactixfit points",
+                                text2: "This is your total tactixfit points or this month...",
+                                position: 'bottom'
+                            });
+                        }}
+                    >
                         <Image
                             style={{
                                 height: 20,
@@ -717,7 +743,7 @@ const HomePage = ({
                         <Text style={{
                             color: "#188649"
                         }}>TACTIXFIT POINTS</Text>
-                    </View>
+                    </TouchableOpacity>
                     <View style={{
                         alignItems: "center",
                         flexDirection: "row",
@@ -739,9 +765,18 @@ const HomePage = ({
                                 <Text style={styles.progressText}>{progressPercentage}% COMPLETED ({monthlyTacticalPoints}/{MONTHLY_TARGET})</Text>
                             </View>
                         </View>
-                        <View style={{
+                        <TouchableOpacity style={{
                             alignItems: "center"
-                        }}>
+                        }}
+                            onPress={() => {
+                                Toast.show({
+                                    type: "info",
+                                    text1: "Tactixfit League",
+                                    text2: "You’ve earned points to reach this league level!",
+                                    position: 'bottom'
+                                });
+                            }}
+                        >
                             <Image source={currentTier.icon}
                                 style={{
                                     height: 20,
@@ -753,7 +788,7 @@ const HomePage = ({
                                 fontWeight: "900",
                                 fontSize: 12,
                             }}>{currentTier.name}</Text>
-                        </View>
+                        </TouchableOpacity>
                     </View>
                 </View>
             </View>
@@ -815,19 +850,5 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         fontSize: 13,
     },
-    shadowWrapper: {
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.8,
-        shadowRadius: 15,
 
-        // Android shadow
-        elevation: 12,
-
-        // Ensure shadow doesn't get clipped
-        zIndex: 1,
-    },
 })

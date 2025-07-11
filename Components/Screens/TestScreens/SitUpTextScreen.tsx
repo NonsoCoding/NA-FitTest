@@ -553,7 +553,7 @@ const SitUpTestScreen = ({
             backgroundColor: "white"
 
         }}>
-            <View style={styles.shadowWrapper}>
+            <View>
                 <View style={styles.headerContainer}>
                     <Svg height="500" width={screenWidth} style={styles.svg}>
                         <Defs>
@@ -569,7 +569,7 @@ const SitUpTestScreen = ({
                     </Svg>
 
                     {/* Content overlay - positioned absolutely to center over SVG */}
-                    <View style={styles.contentOverlay}>
+                    <SafeAreaView style={styles.contentOverlay}>
                         <View style={{
                             alignItems: "center",
                             flexDirection: "row",
@@ -605,28 +605,30 @@ const SitUpTestScreen = ({
                                 />
                             </TouchableOpacity>
                         </View>
-
                         <View style={{
-                            paddingHorizontal: 20,
-                            shadowColor: '#000',
-                            shadowOffset: {
-                                width: 0,
-                                height: 1,
-                            },
-                            shadowOpacity: 0.6,
-                            shadowRadius: 15,
-                            // Android shadow
-                            elevation: 6,
-                            // Ensure shadow doesn't get clipped
-                            zIndex: 1,
+                            flex: 1,
+                            padding: 20
                         }}>
                             <View style={{
+                                paddingHorizontal: 20,
                                 backgroundColor: 'white',
                                 borderRadius: 10,
-                                height: "70%",
                                 alignItems: "center",
-                                justifyContent: "center"
+                                justifyContent: "center",
+                                shadowColor: '#000',
+                                height: "60%",
+                                shadowOffset: {
+                                    width: 0,
+                                    height: 1,
+                                },
+                                shadowOpacity: 0.6,
+                                shadowRadius: 15,
+                                // Android shadow
+                                elevation: 6,
+                                // Ensure shadow doesn't get clipped
+                                zIndex: 1,
                             }}>
+
                                 <LottieView
                                     source={require("../../../assets/ExerciseGifs/push-ups.json")}
                                     style={{
@@ -636,9 +638,10 @@ const SitUpTestScreen = ({
                                     autoPlay={true}
                                     loop={true}
                                 />
+
                             </View>
                         </View>
-                    </View>
+                    </SafeAreaView>
                 </View>
             </View>
             <View style={{
@@ -649,6 +652,7 @@ const SitUpTestScreen = ({
                 <SafeAreaView style={{
                     padding: 20,
                     flex: 1,
+                    bottom: 60,
                     justifyContent: "space-between"
                 }}>
                     <View style={{
@@ -685,7 +689,7 @@ const SitUpTestScreen = ({
                                 textAlign: "center",
                                 fontSize: 14
                             }}>
-                                Maximum number of push-ups
+                                Target sit-ups count
                             </Text>
                             <View style={{
                                 paddingHorizontal: 10,
@@ -885,7 +889,7 @@ const SitUpTestScreen = ({
                     flex: 1,
                     justifyContent: "flex-end",
                 }}>
-                    <View style={[styles.shadowTopWrapper, {
+                    <View style={[{
                         top: 100,
                     }]}>
                         <View style={styles.headerContainer}>
@@ -902,7 +906,9 @@ const SitUpTestScreen = ({
                                 />
                             </Svg>
 
-                            <View style={styles.contentOverlay}>
+                            <View style={[styles.contentOverlay, {
+                                top: 100
+                            }]}>
                                 <View
                                     style={{
                                         height: 300,
@@ -986,7 +992,7 @@ const SitUpTestScreen = ({
                     flex: 1,
                     justifyContent: "flex-end"
                 }}>
-                    <View style={[styles.shadowTopWrapper, {
+                    <View style={[{
                         top: 100,
                     }]}>
                         <View style={styles.headerContainer}>
@@ -1004,7 +1010,9 @@ const SitUpTestScreen = ({
                             </Svg>
 
                             {/* Content overlay - positioned absolutely to center over SVG */}
-                            <View style={styles.contentOverlay}>
+                            <View style={[styles.contentOverlay, {
+                                top: 100
+                            }]}>
                                 <View
                                     style={{
                                         height: 300,
@@ -1095,7 +1103,7 @@ const SitUpTestScreen = ({
                     flex: 1,
                     justifyContent: "flex-end"
                 }}>
-                    <View style={[styles.shadowTopWrapper, {
+                    <View style={[{
                         top: 100,
                     }]}>
                         <View style={styles.headerContainer}>
@@ -1113,7 +1121,9 @@ const SitUpTestScreen = ({
                             </Svg>
 
                             {/* Content overlay - positioned absolutely to center over SVG */}
-                            <View style={styles.contentOverlay}
+                            <View style={[styles.contentOverlay, {
+                                top: 100
+                            }]}
                             >
                                 <View
                                     style={{
@@ -1330,7 +1340,7 @@ const styles = StyleSheet.create({
     },
     contentOverlay: {
         position: 'absolute',
-        top: 60,
+        top: 0,
         left: 0,
         right: 0,
         bottom: 0,
@@ -1340,31 +1350,5 @@ const styles = StyleSheet.create({
     },
     svg: {
         padding: 20,
-    },
-    shadowWrapper: {
-        flex: 1,
-        justifyContent: "center",
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.8,
-        shadowRadius: 15,
-        elevation: 12,
-        zIndex: 1,
-    },
-    shadowTopWrapper: {
-        flex: 1,
-        justifyContent: "flex-end",
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.8,
-        shadowRadius: 15,
-        elevation: 12,
-        zIndex: 1,
     },
 })

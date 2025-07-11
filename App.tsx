@@ -4,6 +4,7 @@ import StackNavigation from './Components/Navigation/StackNavigator';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { MD3LightTheme as DefaultTheme } from 'react-native-paper';
 import { TourGuideProvider } from "rn-tourguide";
+import Toast from 'react-native-toast-message';
 
 function App() {
 
@@ -12,6 +13,7 @@ function App() {
             <PaperProvider theme={DefaultTheme}>
                 <View style={styles.container}>
                     <StackNavigation />
+                    <Toast />
                 </View>
             </PaperProvider>
         </TourGuideProvider>

@@ -560,7 +560,7 @@ const RunningTestScreen = ({
 
                     }}
                         onPress={() => {
-                            navigation.navigate("SprintHistory")
+                            navigation.navigate("RunningHistory")
                         }}
                     >
                         <Image source={require("../../../assets/downloadedIcons/notification.png")}

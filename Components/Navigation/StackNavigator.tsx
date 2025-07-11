@@ -24,7 +24,6 @@ import PersonalInfo from "../Screens/PersonalInfo";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
 import Profile from "../Screens/Profile";
-import CameraViewScreen from "../../Facedetector/CameraView";
 import { BottomTabNavigator } from "./DrawerNavigation";
 
 
@@ -68,7 +67,7 @@ const StackNavigation: React.FC = () => {
                     <Stack.Screen name="PullUpScreen" component={PullUpTestScreen} />
                     <Stack.Screen name="ForgottenPassword" component={ForgottenPassword} />
                     <Stack.Screen name="ResetPassword" component={ResetPassword} />
-                    <Stack.Screen name="PushUpsScreen" component={CameraViewScreen} />
+                    <Stack.Screen name="PushUpsScreen" component={PushUpsTestScreen} />
                     <Stack.Screen name="SprintScreen" component={SprintTestScreen} />
                     <Stack.Screen name="SitUpScreen" component={SitUpTestScreen} />
                     <Stack.Screen name="Profile" component={Profile} />

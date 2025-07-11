@@ -552,51 +552,7 @@ const PullUpTestScreen = ({
             flex: 1,
             backgroundColor: "white"
         }}>
-            {/* <View style={{
-                backgroundColor: Theme.colors.primaryColor,
-                justifyContent: "flex-end",
-                gap: 20,
-                padding: 20,
-                height: "14%",
-            }}>
-                <View style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between"
-                }}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            navigation.goBack();
-                        }}
-                    >
-                        <Image source={require("../../../assets/downloadedIcons/back1.png")}
-                            style={{
-                                width: 20,
-                                height: 20
-                            }}
-                        />
-                    </TouchableOpacity>
-                    <Text style={{
-                        color: "white"
-                    }}>PULL-UPS (TEST MODE)</Text>
-                    <TouchableOpacity style={{
-
-                    }}
-                        onPress={() => {
-                            navigation.navigate("PullUpsHistory")
-                        }}
-                    >
-                        <Image source={require("../../../assets/downloadedIcons/notification.png")}
-                            style={{
-                                height: 30,
-                                width: 30,
-                                resizeMode: "contain"
-                            }}
-                        />
-                    </TouchableOpacity>
-                </View>
-            </View> */}
-            <View style={styles.shadowWrapper}>
+            <View>
                 <View style={styles.headerContainer}>
                     <Svg height="500" width={screenWidth} style={styles.svg}>
                         <Defs>
@@ -612,7 +568,7 @@ const PullUpTestScreen = ({
                     </Svg>
 
                     {/* Content overlay - positioned absolutely to center over SVG */}
-                    <View style={styles.contentOverlay}>
+                    <SafeAreaView style={styles.contentOverlay}>
                         <View style={{
                             alignItems: "center",
                             flexDirection: "row",
@@ -636,7 +592,7 @@ const PullUpTestScreen = ({
                             }}>PULL UP</Text>
                             <TouchableOpacity
                                 onPress={() => {
-                                    navigation.navigate("PullUpHistory")
+                                    navigation.navigate("PullUpsHistory")
                                 }}
                             >
                                 <Image source={require("../../../assets/downloadedIcons/notification.png")}
@@ -649,25 +605,27 @@ const PullUpTestScreen = ({
                             </TouchableOpacity>
                         </View>
                         <View style={{
-                            paddingHorizontal: 20,
-                            shadowColor: '#000',
-                            shadowOffset: {
-                                width: 0,
-                                height: 1,
-                            },
-                            shadowOpacity: 0.6,
-                            shadowRadius: 15,
-                            // Android shadow
-                            elevation: 6,
-                            // Ensure shadow doesn't get clipped
-                            zIndex: 1,
+                            flex: 1,
+                            padding: 20
                         }}>
                             <View style={{
+                                paddingHorizontal: 20,
                                 backgroundColor: 'white',
                                 borderRadius: 10,
-                                height: "70%",
                                 alignItems: "center",
-                                justifyContent: "center"
+                                justifyContent: "center",
+                                shadowColor: '#000',
+                                height: "60%",
+                                shadowOffset: {
+                                    width: 0,
+                                    height: 1,
+                                },
+                                shadowOpacity: 0.6,
+                                shadowRadius: 15,
+                                // Android shadow
+                                elevation: 6,
+                                // Ensure shadow doesn't get clipped
+                                zIndex: 1,
                             }}>
                                 <LottieView
                                     source={require("../../../assets/ExerciseGifs/push-ups.json")}
@@ -680,7 +638,7 @@ const PullUpTestScreen = ({
                                 />
                             </View>
                         </View>
-                    </View>
+                    </SafeAreaView>
                 </View>
             </View>
             <View style={{
@@ -691,6 +649,7 @@ const PullUpTestScreen = ({
                 <SafeAreaView style={{
                     padding: 20,
                     flex: 1,
+                    bottom: 60,
                     justifyContent: "space-between"
                 }}>
                     <View style={{
@@ -727,7 +686,7 @@ const PullUpTestScreen = ({
                                 textAlign: "center",
                                 fontSize: 14
                             }}>
-                                Maximum number of pull-ups
+                                Target pull-ups count
                             </Text>
                             <View style={{
                                 paddingHorizontal: 10,
@@ -920,60 +879,15 @@ const PullUpTestScreen = ({
                 animationType="slide"
                 transparent={true}
                 onRequestClose={() => {
-                    setIsPrepModalVisible(false);
-                }}
-            >
-                <View style={{
-                    flex: 1,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    backgroundColor: "rgba(0, 0, 0, 0.5)"
-                }}>
-                    <View style={{
-                        height: 250,
-                        width: "70%",
-                        backgroundColor: Theme.colors.primaryColor,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        borderRadius: 5
-                    }}>
-                        <View style={{
-                            alignItems: "center"
-                        }}>
-                            <View style={{
-                                flexDirection: "row",
-                                alignItems: "flex-end",
-                            }}>
-                                <Text style={{
-                                    fontSize: 60,
-                                    color: "white",
-                                }}>0{prepTime}</Text>
-                                <Text style={{
-                                    fontSize: 17,
-                                    bottom: 10,
-                                    color: "white",
-                                }}>sec</Text>
-                            </View>
-                            <Text style={{
-                                color: "white"
-                            }}>GET READY TO SPRINT</Text>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-            <Modal
-                visible={isStartModalVisible}
-                animationType="slide"
-                transparent={true}
-                onRequestClose={() => {
                     setIsModalVisible(false);
                 }}
             >
                 <View style={{
                     flex: 1,
-                    justifyContent: "flex-end"
+                    justifyContent: "flex-end",
+                    backgroundColor: "rgba(0, 0, 0, 0.6)"
                 }}>
-                    <View style={[styles.shadowTopWrapper, {
+                    <View style={[{
                         top: 100,
                     }]}>
                         <View style={styles.headerContainer}>
@@ -991,7 +905,118 @@ const PullUpTestScreen = ({
                             </Svg>
 
                             {/* Content overlay - positioned absolutely to center over SVG */}
-                            <View style={styles.contentOverlay}
+                            <View style={[styles.contentOverlay, {
+                                top: 100
+                            }]}>
+                                <View
+                                    style={{
+                                        height: 300,
+                                        width: "100%",
+                                        alignSelf: "center",
+                                        gap: 20,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        borderRadius: 15
+                                    }}
+                                >
+                                    <View style={{
+                                        position: "absolute",
+                                        top: 0,
+                                        right: 0,
+                                        padding: 20
+                                    }}>
+                                        <TouchableOpacity style={{
+
+                                        }}
+                                            onPress={() => {
+                                                setIsPrepModalVisible(false);
+                                                setPrepTime(5);
+                                                setTime(60)
+                                                setIsRunning(false);
+                                                if (intervalRef.current) {
+                                                    clearInterval(intervalRef.current);
+                                                    intervalRef.current = null;
+                                                }
+                                            }}
+                                        >
+                                            <Text style={{
+                                                fontSize: 17,
+                                                color: "white",
+                                            }}>close</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View style={{
+                                        height: 150,
+                                        width: '70%',
+                                        borderRadius: 5,
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 10,
+                                    }}>
+                                        <View style={{
+                                            flexDirection: "row",
+                                            alignItems: "flex-end",
+                                        }}>
+                                            <Text style={{
+                                                fontSize: 60,
+                                                color: "white",
+                                            }}>{prepTime}</Text>
+                                            <Text style={{
+                                                fontSize: 17,
+                                                bottom: 10,
+                                                color: "white",
+                                            }}>sec</Text>
+                                        </View>
+                                        <TouchableOpacity
+                                            onPress={() => {
+
+                                            }}
+                                        >
+                                            <Text style={{
+                                                color: "white"
+                                            }}>GET READY</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            <Modal
+                visible={isStartModalVisible}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => {
+                    setIsModalVisible(false);
+                }}
+            >
+                <View style={{
+                    flex: 1,
+                    justifyContent: "flex-end"
+                }}>
+                    <View style={[{
+                        top: 100,
+                    }]}>
+                        <View style={[styles.headerContainer]}>
+                            <Svg height="500" width={screenWidth} style={styles.svg}>
+                                <Defs>
+                                    <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                        <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                                    </SvgLinearGradient>
+                                </Defs>
+                                <Path
+                                    d={createTopCurvedPath()}
+                                    fill="url(#grad)"
+                                />
+                            </Svg>
+
+                            {/* Content overlay - positioned absolutely to center over SVG */}
+                            <View
+                                style={[styles.contentOverlay, {
+                                    top: 100
+                                }]}
                             >
                                 <View
                                     style={{
@@ -1082,7 +1107,7 @@ const PullUpTestScreen = ({
                     flex: 1,
                     justifyContent: "flex-end"
                 }}>
-                    <View style={[styles.shadowTopWrapper, {
+                    <View style={[{
                         top: 100,
                     }]}>
                         <View style={styles.headerContainer}>
@@ -1100,7 +1125,9 @@ const PullUpTestScreen = ({
                             </Svg>
 
                             {/* Content overlay - positioned absolutely to center over SVG */}
-                            <View style={styles.contentOverlay}
+                            <View style={[styles.contentOverlay, {
+                                top: 100
+                            }]}
                             >
                                 <View
                                     style={{
@@ -1313,7 +1340,7 @@ const styles = StyleSheet.create({
     },
     contentOverlay: {
         position: 'absolute',
-        top: 60,
+        top: 0,
         left: 0,
         right: 0,
         bottom: 0,
@@ -1324,30 +1351,9 @@ const styles = StyleSheet.create({
     svg: {
         padding: 20,
     },
-    shadowWrapper: {
-        flex: 1,
-        justifyContent: "center",
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.8,
-        shadowRadius: 15,
-        elevation: 12,
-        zIndex: 1,
-    },
     shadowTopWrapper: {
         flex: 1,
         justifyContent: "flex-end",
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.8,
-        shadowRadius: 15,
-        elevation: 12,
-        zIndex: 1,
+
     },
 })

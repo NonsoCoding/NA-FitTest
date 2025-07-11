@@ -88,7 +88,7 @@ const History = ({
 
     return (
         <View style={styles.container}>
-            <View style={styles.shadowWrapper}>
+            <View>
                 <View style={styles.headerContainer}>
                     <Svg height="200" width={screenWidth} style={styles.svg}>
                         <Defs>
@@ -216,9 +216,9 @@ const History = ({
                                             shadowColor: '#000',
                                             shadowOffset: {
                                                 width: 0,
-                                                height: 10,
+                                                height: 5,
                                             },
-                                            shadowOpacity: 0.3,
+                                            shadowOpacity: 0.2,
                                             shadowRadius: 8,
                                         }}>
                                         <View
@@ -309,19 +309,6 @@ const styles = StyleSheet.create({
     },
     shadowWrapper: {
         justifyContent: "center",
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.8,
-        shadowRadius: 15,
-        elevation: 12,
-        zIndex: 1,
-    },
-    shadowTopWrapper: {
-        flex: 1,
-        justifyContent: "flex-end",
         shadowColor: '#000',
         shadowOffset: {
             width: 0,

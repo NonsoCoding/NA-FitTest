@@ -542,236 +542,334 @@ const SprintTestScreen = ({
     return (
         <View style={styles.container}>
             {/* Map View */}
-            <View style={styles.mapContainer}>
-                <View style={{
-                    flexDirection: "row",
-                    justifyContent: 'space-between',
-                    alignItems: "center",
-                    padding: 20,
-                    zIndex: 999,
-                    marginTop: Platform.OS === "android" ? 40 : 30
-                }}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            navigation.goBack();
-                        }}
-                        style={{
-                            zIndex: 999,
-                        }}
-                    >
-                        <FontAwesome6 name="arrow-left-long" size={30} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={{
-
-                    }}
-                        onPress={() => {
-                            navigation.navigate("SprintHistory")
-                        }}
-                    >
-                        <Image source={require("../../../assets/downloadedIcons/notification.png")}
-                            style={{
-                                height: 30,
-                                width: 30,
-                                resizeMode: "contain"
+            <View style={{
+                flex: 1,
+                gap: 10
+            }}>
+                <View style={styles.mapContainer}>
+                    <View style={{
+                        flexDirection: "row",
+                        justifyContent: 'space-between',
+                        alignItems: "center",
+                        padding: 20,
+                        zIndex: 999,
+                        marginTop: Platform.OS === "android" ? 40 : 30
+                    }}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.goBack();
                             }}
-                        />
-                    </TouchableOpacity>
+                            style={{
+                                zIndex: 999,
+                            }}
+                        >
+                            <FontAwesome6 name="arrow-left-long" size={30} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={{
+
+                        }}
+                            onPress={() => {
+                                navigation.navigate("SprintHistory")
+                            }}
+                        >
+                            <Image source={require("../../../assets/downloadedIcons/notification.png")}
+                                style={{
+                                    height: 30,
+                                    width: 30,
+                                    resizeMode: "contain"
+                                }}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                    <MapView
+                        ref={mapRef}
+                        style={styles.map}
+                        region={mapRegion}
+                        showsUserLocation={true}
+                        showsMyLocationButton={false}
+                        followsUserLocation={isTracking}
+                        showsCompass={false}
+                        showsScale={false}
+                        showsBuildings={false}
+                        showsTraffic={false}
+                        mapType="standard"
+                        onMapReady={() => {
+                            console.log('Map is ready');
+                        }}
+                    >
+
+                        {/* Show running path */}
+                        {runMetrics.coordinates.length > 1 && (
+                            <Polyline
+                                coordinates={runMetrics.coordinates}
+                                strokeColor="#4CAF50"
+                                strokeWidth={6}
+                                lineDashPattern={[5, 5]}
+                            />
+                        )}
+
+                        {/* Start marker */}
+                        {runMetrics.coordinates.length > 0 && (
+                            <Marker
+                                coordinate={runMetrics.coordinates[0]}
+                                title="Start"
+                                description="Sprint starting point"
+                                pinColor="green"
+                            />
+                        )}
+
+                        {/* Current location marker */}
+                        {currentLocation && isTracking && (
+                            <Marker
+                                coordinate={currentLocation}
+                                title="Current Location"
+                                description="You are here"
+                                pinColor="blue"
+                            />
+                        )}
+                    </MapView>
                 </View>
-                <MapView
-                    ref={mapRef}
-                    style={styles.map}
-                    region={mapRegion}
-                    showsUserLocation={true}
-                    showsMyLocationButton={false}
-                    followsUserLocation={isTracking}
-                    showsCompass={false}
-                    showsScale={false}
-                    showsBuildings={false}
-                    showsTraffic={false}
-                    mapType="standard"
-                    onMapReady={() => {
-                        console.log('Map is ready');
-                    }}
-                >
-
-                    {/* Show running path */}
-                    {runMetrics.coordinates.length > 1 && (
-                        <Polyline
-                            coordinates={runMetrics.coordinates}
-                            strokeColor="#4CAF50"
-                            strokeWidth={6}
-                            lineDashPattern={[5, 5]}
+                <View style={styles.metricsContainer}>
+                    {/* Progress Bar */}
+                    <View style={styles.progressBarContainer}>
+                        <View
+                            style={[
+                                styles.progressBar,
+                                { width: `${getProgressPercentage()}%` }
+                            ]}
                         />
-                    )}
-
-                    {/* Start marker */}
-                    {runMetrics.coordinates.length > 0 && (
-                        <Marker
-                            coordinate={runMetrics.coordinates[0]}
-                            title="Start"
-                            description="Sprint starting point"
-                            pinColor="green"
-                        />
-                    )}
-
-                    {/* Current location marker */}
-                    {currentLocation && isTracking && (
-                        <Marker
-                            coordinate={currentLocation}
-                            title="Current Location"
-                            description="You are here"
-                            pinColor="blue"
-                        />
-                    )}
-                </MapView>
-            </View>
-            {/* Metrics Display */}
-            <View style={styles.metricsContainer}>
-                {/* Progress Bar */}
-                <View style={styles.progressBarContainer}>
-                    <View
-                        style={[
-                            styles.progressBar,
-                            { width: `${getProgressPercentage()}%` }
-                        ]}
-                    />
-                    <Text style={styles.progressText}>
-                        {runMetrics.distance.toFixed(2)} / {TARGET_DISTANCE_METERS} meters
-                    </Text>
-                </View>
-
-                {/* Main Metrics */}
-                <View style={styles.metricsRow}>
-                    <View style={styles.metricItem}>
-                        <Text style={styles.metricLabel}>TIME</Text>
-                        <Text style={styles.metricValue}>{formatTime(runMetrics.elapsedTime)}</Text>
+                        <Text style={styles.progressText}>
+                            {runMetrics.distance.toFixed(2)} / {TARGET_DISTANCE_METERS} meters
+                        </Text>
                     </View>
 
-                    <View style={styles.metricItem}>
-                        <Text style={styles.metricLabel}>SPEED</Text>
-                        <Text style={styles.metricValue}>{formatPace(runMetrics.averageSpeed)}</Text>
+                    {/* Main Metrics */}
+                    <View style={styles.metricsRow}>
+                        <View style={styles.metricItem}>
+                            <Text style={styles.metricLabel}>TIME</Text>
+                            <Text style={styles.metricValue}>{formatTime(runMetrics.elapsedTime)}</Text>
+                        </View>
+
+                        <View style={styles.metricItem}>
+                            <Text style={styles.metricLabel}>SPEED</Text>
+                            <Text style={styles.metricValue}>{formatPace(runMetrics.averageSpeed)}</Text>
+                        </View>
+
+                        <View style={styles.metricItem}>
+                            <Text style={styles.metricLabel}>ACTIVITY</Text>
+                            <View style={styles.activityIndicator}>
+                                {renderActivityIcon()}
+                                <Text style={styles.activityText}>
+                                    {runMetrics.isRunning ? 'Sprinting' : 'Walking'}
+                                </Text>
+                            </View>
+                        </View>
                     </View>
 
-                    <View style={styles.metricItem}>
-                        <Text style={styles.metricLabel}>ACTIVITY</Text>
-                        <View style={styles.activityIndicator}>
-                            {renderActivityIcon()}
-                            <Text style={styles.activityText}>
-                                {runMetrics.isRunning ? 'Sprinting' : 'Walking'}
+                    {/* Additional Metrics */}
+                    <View style={styles.secondaryMetricsRow}>
+                        <View style={styles.metricItem}>
+                            <Text style={styles.secondaryLabel}>CADENCE</Text>
+                            <Text style={styles.secondaryValue}>{Math.round(runMetrics.stepsPerMinute)} spm</Text>
+                        </View>
+
+                        <View style={styles.metricItem}>
+                            <Text style={styles.secondaryLabel}>CURRENT SPEED</Text>
+                            <Text style={styles.secondaryValue}>{(runMetrics.currentSpeed * 2.23694).toFixed(1)} mph</Text>
+                        </View>
+
+                        <View style={styles.metricItem}>
+                            <Text style={styles.secondaryLabel}>EST. FINISH</Text>
+                            <Text style={styles.secondaryValue}>
+                                {runMetrics.estimatedCompletion > 0
+                                    ? formatTime(runMetrics.elapsedTime + runMetrics.estimatedCompletion)
+                                    : runMetrics.distance >= TARGET_DISTANCE_METERS
+                                        ? 'Complete!'
+                                        : '--:--'}
                             </Text>
                         </View>
                     </View>
                 </View>
-
-                {/* Additional Metrics */}
-                <View style={styles.secondaryMetricsRow}>
-                    <View style={styles.metricItem}>
-                        <Text style={styles.secondaryLabel}>CADENCE</Text>
-                        <Text style={styles.secondaryValue}>{Math.round(runMetrics.stepsPerMinute)} spm</Text>
-                    </View>
-
-                    <View style={styles.metricItem}>
-                        <Text style={styles.secondaryLabel}>CURRENT SPEED</Text>
-                        <Text style={styles.secondaryValue}>{(runMetrics.currentSpeed * 2.23694).toFixed(1)} mph</Text>
-                    </View>
-
-                    <View style={styles.metricItem}>
-                        <Text style={styles.secondaryLabel}>EST. FINISH</Text>
-                        <Text style={styles.secondaryValue}>
-                            {runMetrics.estimatedCompletion > 0
-                                ? formatTime(runMetrics.elapsedTime + runMetrics.estimatedCompletion)
-                                : runMetrics.distance >= TARGET_DISTANCE_METERS
-                                    ? 'Complete!'
-                                    : '--:--'}
-                        </Text>
-                    </View>
-                </View>
             </View>
+            {/* Metrics Display */}
 
             {/* Control Button */}
-            <View style={styles.buttonContainer}>
-                {loading ? (
-                    <ActivityIndicator size="large" color="#4CAF50" />
-                ) : (
-                    <TouchableOpacity
-                        style={[
-                            styles.button,
-                            isTracking ? styles.stopButton : styles.startButton
-                        ]}
-                        onPress={isTracking ? stopTracking : startTracking}
-                        disabled={loading}
+            <View style={{
+                padding: 20,
+            }}>
+                <SafeAreaView style={styles.buttonContainer}>
+                    {loading ? (
+                        <ActivityIndicator size="large" color="#4CAF50" />
+                    ) : (
+                        <TouchableOpacity
+                            style={[
+                                styles.button,
+                                isTracking ? styles.stopButton : styles.startButton
+                            ]}
+                            onPress={isTracking ? stopTracking : startTracking}
+                            disabled={loading}
+                        >
+                            <Text style={styles.buttonText}>
+                                {isTracking ? 'STOP RUN' : 'START RUN'}
+                            </Text>
+                            <MaterialIcons
+                                name={isTracking ? 'stop' : 'play-arrow'}
+                                size={24}
+                                color="white"
+                            />
+                        </TouchableOpacity>
+                    )}
+                    <Modal
+                        visible={isPrepModalVisible}
+                        animationType="slide"
+                        transparent={true}
+                        onRequestClose={() => {
+                            setIsPrepModalVisible(false)
+                        }}
                     >
-                        <Text style={styles.buttonText}>
-                            {isTracking ? 'STOP RUN' : 'START RUN'}
-                        </Text>
-                        <MaterialIcons
-                            name={isTracking ? 'stop' : 'play-arrow'}
-                            size={24}
-                            color="white"
-                        />
-                    </TouchableOpacity>
-                )}
-                <Modal
-                    visible={isPrepModalVisible}
-                    animationType="slide"
-                    transparent={true}
-                    onRequestClose={() => {
-                        setIsPrepModalVisible(false)
-                    }}
-                >
-                    <View style={{
-                        flex: 1,
-                        justifyContent: "flex-end",
-                        backgroundColor: "rgba(0, 0, 0, 0.6)"
-                    }}>
-                        <View style={[styles.shadowTopWrapper, {
-                            top: 100,
-                        }]}>
-                            <View style={styles.headerContainer}>
-                                <Svg height="500" width={screenWidth} style={styles.svg}>
-                                    <Defs>
-                                        <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                            <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                                        </SvgLinearGradient>
-                                    </Defs>
-                                    <Path
-                                        d={createTopCurvedPath()}
-                                        fill="url(#grad)"
-                                    />
-                                </Svg>
+                        <View style={{
+                            flex: 1,
+                            justifyContent: "flex-end",
+                            backgroundColor: "rgba(0, 0, 0, 0.6)"
+                        }}>
+                            <View style={[styles.shadowTopWrapper, {
+                                top: 100,
+                            }]}>
+                                <View style={styles.headerContainer}>
+                                    <Svg height="500" width={screenWidth} style={styles.svg}>
+                                        <Defs>
+                                            <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                                <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                                            </SvgLinearGradient>
+                                        </Defs>
+                                        <Path
+                                            d={createTopCurvedPath()}
+                                            fill="url(#grad)"
+                                        />
+                                    </Svg>
 
-                                {/* Content overlay - positioned absolutely to center over SVG */}
-                                <View style={styles.contentOverlay}>
-                                    <View
-                                        style={{
-                                            height: 300,
-                                            width: "100%",
-                                            alignSelf: "center",
-                                            gap: 20,
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            borderRadius: 15
-                                        }}
-                                    >
+                                    {/* Content overlay - positioned absolutely to center over SVG */}
+                                    <View style={styles.contentOverlay}>
+                                        <View
+                                            style={{
+                                                height: 300,
+                                                width: "100%",
+                                                alignSelf: "center",
+                                                gap: 20,
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                borderRadius: 15
+                                            }}
+                                        >
+                                            <View style={{
+                                                position: "absolute",
+                                                top: 0,
+                                                right: 0,
+                                                padding: 20
+                                            }}>
+                                                <TouchableOpacity style={{
+
+                                                }}
+                                                    onPress={() => {
+                                                        setIsPrepModalVisible(false);
+                                                        setPrepTime(5);
+                                                        setPrepTime(5)
+                                                        setIsRunning(false);
+                                                        if (intervalRef.current) {
+                                                            clearInterval(intervalRef.current);
+                                                            intervalRef.current = null;
+                                                        }
+                                                    }}
+                                                >
+                                                    <Text style={{
+                                                        fontSize: 17,
+                                                        color: "white",
+                                                    }}>close</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                            <View style={{
+                                                height: 150,
+                                                width: '70%',
+                                                borderRadius: 5,
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                gap: 10,
+                                            }}>
+                                                <View style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "flex-end",
+                                                }}>
+                                                    <Text style={{
+                                                        fontSize: 60,
+                                                        color: "white",
+                                                    }}>{prepTime}</Text>
+                                                    <Text style={{
+                                                        fontSize: 17,
+                                                        bottom: 10,
+                                                        color: "white",
+                                                    }}>sec</Text>
+                                                </View>
+                                                <TouchableOpacity
+                                                    onPress={() => {
+
+                                                    }}
+                                                >
+                                                    <Text style={{
+                                                        color: "white"
+                                                    }}>GET READY</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    </Modal>
+                    <Modal
+                        visible={isResultModalVisible}
+                        animationType="slide"
+                        transparent={true}
+                        onRequestClose={() => {
+                            resetAppState()
+                        }}
+                    >
+                        <View style={{
+                            flex: 1,
+                            justifyContent: "flex-end",
+                            backgroundColor: "rgba(0, 0, 0, 0.6)"
+                        }}>
+                            <View style={[styles.shadowTopWrapper, {
+                                top: 100,
+                            }]}>
+                                <View style={styles.headerContainer}>
+                                    <Svg height="500" width={screenWidth} style={styles.svg}>
+                                        <Defs>
+                                            <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                                <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
+                                                <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
+                                            </SvgLinearGradient>
+                                        </Defs>
+                                        <Path
+                                            d={createTopCurvedPath()}
+                                            fill="url(#grad)"
+                                        />
+                                    </Svg>
+
+                                    {/* Content overlay - positioned absolutely to center over SVG */}
+                                    <View style={[styles.contentOverlay, {
+                                    }]}>
                                         <View style={{
                                             position: "absolute",
-                                            top: 0,
+                                            top: -30,
                                             right: 0,
+
                                             padding: 20
                                         }}>
-                                            <TouchableOpacity style={{
-
-                                            }}
+                                            <TouchableOpacity
                                                 onPress={() => {
-                                                    setIsPrepModalVisible(false);
-                                                    setPrepTime(5);
-                                                    setPrepTime(5)
-                                                    setIsRunning(false);
-                                                    if (intervalRef.current) {
-                                                        clearInterval(intervalRef.current);
-                                                        intervalRef.current = null;
-                                                    }
+                                                    setIsResultModalVisible(false);
+                                                    resetAppState();
                                                 }}
                                             >
                                                 <Text style={{
@@ -780,202 +878,113 @@ const SprintTestScreen = ({
                                                 }}>close</Text>
                                             </TouchableOpacity>
                                         </View>
-                                        <View style={{
-                                            height: 150,
-                                            width: '70%',
-                                            borderRadius: 5,
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: 10,
-                                        }}>
-                                            <View style={{
-                                                flexDirection: "row",
-                                                alignItems: "flex-end",
-                                            }}>
-                                                <Text style={{
-                                                    fontSize: 60,
-                                                    color: "white",
-                                                }}>{prepTime}</Text>
-                                                <Text style={{
-                                                    fontSize: 17,
-                                                    bottom: 10,
-                                                    color: "white",
-                                                }}>sec</Text>
-                                            </View>
-                                            <TouchableOpacity
-                                                onPress={() => {
-
-                                                }}
-                                            >
-                                                <Text style={{
-                                                    color: "white"
-                                                }}>GET READY</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </Modal>
-                <Modal
-                    visible={isResultModalVisible}
-                    animationType="slide"
-                    transparent={true}
-                    onRequestClose={() => {
-                        resetAppState()
-                    }}
-                >
-                    <View style={{
-                        flex: 1,
-                        justifyContent: "flex-end",
-                        backgroundColor: "rgba(0, 0, 0, 0.6)"
-                    }}>
-                        <View style={[styles.shadowTopWrapper, {
-                            top: 100,
-                        }]}>
-                            <View style={styles.headerContainer}>
-                                <Svg height="500" width={screenWidth} style={styles.svg}>
-                                    <Defs>
-                                        <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                            <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                                        </SvgLinearGradient>
-                                    </Defs>
-                                    <Path
-                                        d={createTopCurvedPath()}
-                                        fill="url(#grad)"
-                                    />
-                                </Svg>
-
-                                {/* Content overlay - positioned absolutely to center over SVG */}
-                                <View style={[styles.contentOverlay, {
-                                }]}>
-                                    <View style={{
-                                        position: "absolute",
-                                        top: -30,
-                                        right: 0,
-
-                                        padding: 20
-                                    }}>
-                                        <TouchableOpacity
-                                            onPress={() => {
-                                                setIsResultModalVisible(false);
-                                                resetAppState();
+                                        <View
+                                            style={{
+                                                height: 300,
+                                                width: "100%",
+                                                alignSelf: "center",
+                                                gap: 20,
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                borderRadius: 15
                                             }}
                                         >
-                                            <Text style={{
-                                                fontSize: 17,
-                                                color: "white",
-                                            }}>close</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View
-                                        style={{
-                                            height: 300,
-                                            width: "100%",
-                                            alignSelf: "center",
-                                            gap: 20,
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            borderRadius: 15
-                                        }}
-                                    >
-                                        <View style={{
-                                            height: 230,
-                                            width: '90%',
-                                            borderRadius: 5,
-                                            padding: 20,
-                                            justifyContent: "center",
-                                            gap: 10,
-                                            backgroundColor: "rgba(0, 0, 0, 0.3)"
-                                        }}>
                                             <View style={{
-                                                flexDirection: "row",
-                                                alignItems: "center",
-                                                justifyContent: "space-between"
+                                                height: 230,
+                                                width: '90%',
+                                                borderRadius: 5,
+                                                padding: 20,
+                                                justifyContent: "center",
+                                                gap: 10,
+                                                backgroundColor: "rgba(0, 0, 0, 0.3)"
                                             }}>
-                                                <Text style={{
-                                                    fontSize: 18,
-                                                    color: "white"
-                                                }}>Distance: </Text>
-                                                <Text style={{
-                                                    fontSize: 18,
-                                                    fontWeight: "200",
-                                                    color: "white",
-                                                }}>{runMetrics.distance.toFixed(2)} meters</Text>
-                                            </View>
-                                            <View style={{
-                                                flexDirection: "row",
-                                                alignItems: "center",
-                                                justifyContent: "space-between"
-                                            }}>
-                                                <Text style={{
-                                                    fontSize: 18,
-                                                    color: "white"
-                                                }}>Time: </Text>
-                                                <Text style={{
-                                                    fontSize: 18,
-                                                    fontWeight: "200",
-                                                    color: "white",
-                                                }}>{formatTime(runMetrics.elapsedTime)}</Text>
-                                            </View>
-                                            <View style={{
-                                                flexDirection: "row",
-                                                alignItems: "center",
-                                                justifyContent: 'space-between'
-                                            }}>
-                                                <Text style={{
-                                                    fontSize: 18,
-                                                    color: "white"
-                                                }}>Avg Speed: </Text>
-                                                <Text style={{
-                                                    fontSize: 18,
-                                                    fontWeight: "200",
-                                                    color: "white",
-                                                }}>{formatPace(runMetrics.averageSpeed)}/mph</Text>
-                                            </View>
-                                            <View style={{
-                                                flexDirection: "row",
-                                                alignItems: "center",
-                                                justifyContent: "space-between"
-                                            }}>
-                                                <Text style={{
-                                                    fontSize: 18,
-                                                    color: "white"
-                                                }}>Status: </Text>
-                                                <Text style={{
-                                                    fontSize: 18,
-                                                    color: "white",
-                                                    fontWeight: "200",
-                                                }}>{runMetrics.distance >= TARGET_DISTANCE_METERS ? 'Completed' : 'Incomplete'}</Text>
-                                            </View>
-                                            <TouchableOpacity style={styles.getStartedBtn}
-                                                onPress={() => {
-                                                    setIsResultModalVisible(false);
-                                                    resetAppState();
-                                                    setPrepTime(5);
-                                                    navigation.goBack();
-                                                }}
-                                            >
-                                                <Text style={{
-                                                    color: "white"
-                                                }}>continue</Text>
-                                                <Image source={require("../../../assets/downloadedIcons/fast.png")}
-                                                    style={{
-                                                        width: 25,
-                                                        height: 25,
-                                                        resizeMode: "contain"
+                                                <View style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    justifyContent: "space-between"
+                                                }}>
+                                                    <Text style={{
+                                                        fontSize: 18,
+                                                        color: "white"
+                                                    }}>Distance: </Text>
+                                                    <Text style={{
+                                                        fontSize: 18,
+                                                        fontWeight: "200",
+                                                        color: "white",
+                                                    }}>{runMetrics.distance.toFixed(2)} meters</Text>
+                                                </View>
+                                                <View style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    justifyContent: "space-between"
+                                                }}>
+                                                    <Text style={{
+                                                        fontSize: 18,
+                                                        color: "white"
+                                                    }}>Time: </Text>
+                                                    <Text style={{
+                                                        fontSize: 18,
+                                                        fontWeight: "200",
+                                                        color: "white",
+                                                    }}>{formatTime(runMetrics.elapsedTime)}</Text>
+                                                </View>
+                                                <View style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    justifyContent: 'space-between'
+                                                }}>
+                                                    <Text style={{
+                                                        fontSize: 18,
+                                                        color: "white"
+                                                    }}>Avg Speed: </Text>
+                                                    <Text style={{
+                                                        fontSize: 18,
+                                                        fontWeight: "200",
+                                                        color: "white",
+                                                    }}>{formatPace(runMetrics.averageSpeed)}/mph</Text>
+                                                </View>
+                                                <View style={{
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    justifyContent: "space-between"
+                                                }}>
+                                                    <Text style={{
+                                                        fontSize: 18,
+                                                        color: "white"
+                                                    }}>Status: </Text>
+                                                    <Text style={{
+                                                        fontSize: 18,
+                                                        color: "white",
+                                                        fontWeight: "200",
+                                                    }}>{runMetrics.distance >= TARGET_DISTANCE_METERS ? 'Completed' : 'Incomplete'}</Text>
+                                                </View>
+                                                <TouchableOpacity style={styles.getStartedBtn}
+                                                    onPress={() => {
+                                                        setIsResultModalVisible(false);
+                                                        resetAppState();
+                                                        setPrepTime(5);
+                                                        navigation.goBack();
                                                     }}
-                                                />
-                                            </TouchableOpacity>
+                                                >
+                                                    <Text style={{
+                                                        color: "white"
+                                                    }}>continue</Text>
+                                                    <Image source={require("../../../assets/downloadedIcons/fast.png")}
+                                                        style={{
+                                                            width: 25,
+                                                            height: 25,
+                                                            resizeMode: "contain"
+                                                        }}
+                                                    />
+                                                </TouchableOpacity>
+                                            </View>
                                         </View>
                                     </View>
                                 </View>
                             </View>
                         </View>
-                    </View>
-                </Modal>
+                    </Modal>
+                </SafeAreaView>
             </View>
         </View>
     );
@@ -987,7 +996,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f5f5f5',
     },
     mapContainer: {
-        flex: 1,
+        height: "60%"
     },
     map: {
         ...StyleSheet.absoluteFillObject,
