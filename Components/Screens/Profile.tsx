@@ -15,6 +15,7 @@ import { AntDesign, Feather, FontAwesome, FontAwesome5, FontAwesome6, Ionicons, 
 import CameraModal from "../Modals/CameraModal";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { LinearGradient } from "expo-linear-gradient";
 
 
 interface IProfileProps {
@@ -63,33 +64,6 @@ const Profile = ({
         weight: '',
         dateOfBirth: new Date(),
     });
-
-
-    const createCurvedPath = () => {
-        const height = 160;
-        const waveHeight = 45;
-
-        return `M 0 0 
-        L 0 ${height} 
-        Q ${screenWidth * 0.25} ${height + waveHeight} ${screenWidth * 0.5} ${height}
-        Q ${screenWidth * 0.75} ${height - waveHeight} ${screenWidth} ${height}
-        L ${screenWidth} 0 
-        Z`;
-    };
-
-    const createTopCurvedPath = () => {
-        const height = 400;
-        const waveHeight = 45;
-
-        return `M 0 0
-            L 0 ${waveHeight}
-            Q ${screenWidth * 0.25} ${waveHeight * 2} ${screenWidth * 0.5} ${waveHeight}
-            Q ${screenWidth * 0.75} 0 ${screenWidth} ${waveHeight}
-            L ${screenWidth} ${height}
-            L 0 ${height}
-            Z`;
-    };
-
 
     const onChange = (event: any, selectedDate?: Date) => {
         setShow(Platform.OS === 'ios');
@@ -186,6 +160,7 @@ const Profile = ({
                     routes: [{ name: "IntroScreen" }]
                 })
             }, 5000);
+            setIsLogOutModalVisible(false);
         } catch (e) {
             setIsLoading(false);
             console.error('Error during logout: ', e);
@@ -423,105 +398,99 @@ const Profile = ({
                 <View style={{
                     flex: 1
                 }}>
+                    <LinearGradient
+                        colors={['#FFD700', '#FFA500']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={{
+                            height: "20%",
+                            borderBottomRightRadius: 10,
+                            borderBottomLeftRadius: 10,
+                            paddingTop: 50,
+                            padding: 20,
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            alignItems: "center"
+                        }}
+                    >
 
-                    <View style={[styles.headerContainer]}>
-                        <Svg height="200" width={screenWidth} style={styles.svg}>
-                            <Defs>
-                                <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                    <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                                </SvgLinearGradient>
-                            </Defs>
-                            <Path
-                                d={createCurvedPath()}
-                                fill="url(#grad)"
-                            />
-                        </Svg>
-                        {/* Content overlay - positioned absolutely to center over SVG */}
-                        <SafeAreaView style={styles.contentOverlay}>
+                        <View style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 10
+                        }}>
                             <View style={{
-                                flexDirection: "row",
-                                paddingHorizontal: 20,
-                                justifyContent: "space-between",
+                                alignItems: "center",
+                                gap: 5
                             }}>
-                                <View style={{
-                                    flexDirection: "row",
-                                    alignItems: "center",
-                                    gap: 10
+                                <TouchableOpacity onPress={() => {
+                                    setPreviewProfilePictureeModal(true)
+                                }} style={{
+
                                 }}>
-                                    <View style={{
-                                        alignItems: "center",
-                                        gap: 5
-                                    }}>
-                                        <TouchableOpacity onPress={() => {
-                                            setPreviewProfilePictureeModal(true)
-                                        }} style={{
-
-                                        }}>
-                                            {userInfo?.profilePic ? (
-                                                <Image
-                                                    source={{ uri: userInfo.profilePic }}
-                                                    style={{
-                                                        width: 60,
-                                                        height: 60,
-                                                        resizeMode: "cover",
-                                                        borderRadius: 30
-                                                    }}
-                                                />
-                                            ) : (
-                                                <Image
-                                                    source={require("../../assets/downloadedIcons/profile.png")}
-                                                    style={{
-                                                        width: 60,
-                                                        height: 60,
-                                                        resizeMode: "cover",
-                                                        borderRadius: 30
-                                                    }}
-                                                />
-                                            )}
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            onPress={() => {
-                                                setIsCameraModalVisible(true)
-                                            }}
+                                    {userInfo?.profilePic ? (
+                                        <Image
+                                            source={{ uri: userInfo.profilePic }}
                                             style={{
-
-                                            }}>
-                                            <Text style={{
-                                                color: 'white',
-                                                fontWeight: "700"
-                                            }}>Edit</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View>
-                                        <Text style={{
-                                            color: "white",
-                                            fontSize: 20,
-                                            fontWeight: "700"
-                                        }}>{userInfo?.firstName} {userInfo?.lastName}</Text>
-                                        <Text style={{
-                                            color: "white",
-                                            fontSize: 12
-                                        }}>{email}</Text>
-                                        <Text style={{
-                                            color: "white",
-                                            fontSize: 12
-                                        }}>{userInfo?.serviceNumber}</Text>
-                                    </View>
-                                </View>
+                                                width: 50,
+                                                height: 50,
+                                                resizeMode: "cover",
+                                                borderRadius: 30
+                                            }}
+                                        />
+                                    ) : (
+                                        <Image
+                                            source={require("../../assets/downloadedIcons/profile.png")}
+                                            style={{
+                                                width: 60,
+                                                height: 60,
+                                                resizeMode: "cover",
+                                                borderRadius: 30
+                                            }}
+                                        />
+                                    )}
+                                </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={() => {
-                                        setIsLogOutModalVisible(true)
+                                        setIsCameraModalVisible(true)
                                     }}
                                     style={{
-                                        alignItems: "center",
-                                        justifyContent: "center"
+
                                     }}>
-                                    <SimpleLineIcons name="logout" size={25} color={"white"} />
+                                    <Text style={{
+                                        color: 'white',
+                                        fontWeight: "700"
+                                    }}>Edit</Text>
                                 </TouchableOpacity>
                             </View>
-                        </SafeAreaView>
-                    </View>
+                            <View>
+                                <Text style={{
+                                    color: "white",
+                                    fontSize: 20,
+                                    fontWeight: "700"
+                                }}>{userInfo?.firstName} {userInfo?.lastName}</Text>
+                                <Text style={{
+                                    color: "white",
+                                    fontSize: 12
+                                }}>{email}</Text>
+                                <Text style={{
+                                    color: "white",
+                                    fontSize: 12
+                                }}>{userInfo?.serviceNumber}</Text>
+                            </View>
+                        </View>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setIsLogOutModalVisible(true)
+                            }}
+                            style={{
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}>
+                            <SimpleLineIcons name="logout" size={25} color={"white"} />
+                        </TouchableOpacity>
+
+                    </LinearGradient>
                     <View style={{
                         flex: 3,
                         gap: 20
@@ -560,7 +529,7 @@ const Profile = ({
                                         width: 0,
                                         height: 4,
                                     },
-                                    shadowOpacity: 0.3,
+                                    shadowOpacity: 0.1,
                                     shadowRadius: 8,
 
                                     // Android shadow
@@ -623,7 +592,7 @@ const Profile = ({
                                         width: 0,
                                         height: 4,
                                     },
-                                    shadowOpacity: 0.3,
+                                    shadowOpacity: 0.1,
                                     shadowRadius: 8,
 
                                     // Android shadow
@@ -686,7 +655,7 @@ const Profile = ({
                                         width: 0,
                                         height: 4,
                                     },
-                                    shadowOpacity: 0.3,
+                                    shadowOpacity: 0.1,
                                     shadowRadius: 8,
 
                                     // Android shadow
@@ -749,7 +718,7 @@ const Profile = ({
                                         width: 0,
                                         height: 4,
                                     },
-                                    shadowOpacity: 0.3,
+                                    shadowOpacity: 0.1,
                                     shadowRadius: 8,
 
                                     // Android shadow
@@ -812,7 +781,7 @@ const Profile = ({
                                         width: 0,
                                         height: 4,
                                     },
-                                    shadowOpacity: 0.3,
+                                    shadowOpacity: 0.1,
                                     shadowRadius: 8,
 
                                     // Android shadow
@@ -865,7 +834,7 @@ const Profile = ({
                                         width: 0,
                                         height: 4,
                                     },
-                                    shadowOpacity: 0.3,
+                                    shadowOpacity: 0.1,
                                     shadowRadius: 8,
 
                                     // Android shadow
@@ -990,158 +959,147 @@ const Profile = ({
                                 backgroundColor: "rgba(0, 0, 0, 0.4)",
                                 justifyContent: "flex-end"
                             }}>
-                                <View style={[styles.shadowTopWrapper, {
-                                    top: 100,
-                                }]}>
-                                    <View style={styles.headerContainer}>
-                                        <Svg height="500" width={screenWidth} style={styles.svg}>
-                                            <Defs>
-                                                <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                                    <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                                    <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                                                </SvgLinearGradient>
-                                            </Defs>
-                                            <Path
-                                                d={createTopCurvedPath()}
-                                                fill="url(#grad)"
-                                            />
-                                        </Svg>
+                                <LinearGradient
+                                    colors={['#FFD700', '#FFA500']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={{
+                                        height: "40%",
+                                        padding: 20,
+                                        gap: 20
+                                    }}
+                                >
 
-                                        {/* Content overlay - positioned absolutely to center over SVG */}
-                                        <View style={[styles.contentOverlay, {
-                                            padding: 20,
-                                            top: 80
-                                        }]}>
-                                            <View style={{
-                                                flexDirection: "row",
-                                                justifyContent: 'space-between',
-                                            }}>
-                                                <View style={{
-                                                    flexDirection: "row",
-                                                    alignItems: "center",
-                                                    gap: 20
-                                                }}>
-                                                    {userInfo?.profilePic ? (
-                                                        <Image
-                                                            style={{
-                                                                height: 40,
-                                                                width: 40,
-                                                                borderRadius: 20,
-                                                            }}
-                                                            source={{ uri: userInfo.profilePic }}
-                                                        />
-                                                    ) : (
-                                                        <Image
-                                                            style={{
-                                                                height: 40,
-                                                                width: 40,
-                                                                borderRadius: 20,
-                                                            }}
-                                                            source={require("../../assets/downloadedIcons/profile.png")}
-                                                        />
-                                                    )}
-                                                    <Text style={{
-                                                        color: 'white',
-                                                        fontWeight: "700",
-                                                        fontSize: 18
-                                                    }}>Edit profile picture</Text>
-                                                </View>
-                                                <TouchableOpacity
-                                                    onPress={() => {
-                                                        setIsCameraModalVisible(false);
-                                                    }}
+                                    <View style={{
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
+                                        gap: 20
+                                    }}>
+                                        <View style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            gap: 15
+                                        }}>
+                                            {userInfo?.profilePic ? (
+                                                <Image
                                                     style={{
-                                                        backgroundColor: "#292929",
-                                                        padding: 5,
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                        paddingHorizontal: 12,
-                                                        borderRadius: 30
+                                                        height: 40,
+                                                        width: 40,
+                                                        borderRadius: 20,
                                                     }}
-                                                >
-                                                    <FontAwesome5
-                                                        name="times"
-                                                        color={"white"}
-                                                        size={23}
-                                                    />
-                                                </TouchableOpacity>
-                                            </View>
-                                            <View style={{
-                                                backgroundColor: "#FA812890",
-                                                padding: 20,
-                                                borderRadius: 5,
-                                                gap: 30
-                                            }}>
-                                                <TouchableOpacity
-                                                    onPress={() => {
-                                                        takePhoto();
-                                                    }}
+                                                    source={{ uri: userInfo.profilePic }}
+                                                />
+                                            ) : (
+                                                <Image
                                                     style={{
-                                                        flexDirection: 'row',
-                                                        justifyContent: "space-between",
-                                                        alignItems: "center"
-                                                    }}>
-                                                    <Text style={{
-                                                        color: 'white',
-                                                        fontWeight: "700"
-                                                    }}>
-                                                        Take photo
-                                                    </Text>
-
-                                                    <Ionicons
-                                                        name="camera"
-                                                        size={25}
-                                                        color={"white"}
-                                                    />
-                                                </TouchableOpacity>
-                                                <TouchableOpacity
-                                                    onPress={() => {
-                                                        pickImage();
+                                                        height: 40,
+                                                        width: 40,
+                                                        borderRadius: 20,
                                                     }}
-                                                    style={{
-                                                        flexDirection: 'row',
-                                                        justifyContent: "space-between",
-                                                        alignItems: "center"
-                                                    }}>
-                                                    <Text style={{
-                                                        color: 'white',
-                                                        fontWeight: "700"
-                                                    }}>
-                                                        Choose photo
-                                                    </Text>
-
-                                                    <FontAwesome
-                                                        name="photo"
-                                                        size={22}
-                                                        color={"white"}
-                                                    />
-                                                </TouchableOpacity>
-                                                <TouchableOpacity
-                                                    onPress={() => {
-                                                        deleteProfileImage("");
-                                                    }}
-                                                    style={{
-                                                        flexDirection: 'row',
-                                                        justifyContent: "space-between",
-                                                        alignItems: "center"
-                                                    }}>
-                                                    <Text style={{
-                                                        color: 'red',
-                                                        fontWeight: "700"
-                                                    }}>
-                                                        Delete photo
-                                                    </Text>
-
-                                                    <Ionicons
-                                                        name="trash-outline"
-                                                        size={25}
-                                                        color={'white'}
-                                                    />
-                                                </TouchableOpacity>
-                                            </View>
+                                                    source={require("../../assets/downloadedIcons/profile.png")}
+                                                />
+                                            )}
+                                            <Text style={{
+                                                color: 'white',
+                                                fontWeight: "700",
+                                                fontSize: 18
+                                            }}>Edit profile picture</Text>
                                         </View>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setIsCameraModalVisible(false);
+                                            }}
+                                            style={{
+                                                backgroundColor: "#292929",
+                                                padding: 5,
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                paddingHorizontal: 12,
+                                                borderRadius: 30
+                                            }}
+                                        >
+                                            <FontAwesome5
+                                                name="times"
+                                                color={"white"}
+                                                size={23}
+                                            />
+                                        </TouchableOpacity>
                                     </View>
-                                </View>
+                                    <View style={{
+                                        backgroundColor: "#FA812890",
+                                        padding: 20,
+                                        borderRadius: 5,
+                                        gap: 30
+                                    }}>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                takePhoto();
+                                            }}
+                                            style={{
+                                                flexDirection: 'row',
+                                                justifyContent: "space-between",
+                                                alignItems: "center"
+                                            }}>
+                                            <Text style={{
+                                                color: 'white',
+                                                fontWeight: "700"
+                                            }}>
+                                                Take photo
+                                            </Text>
+
+                                            <Ionicons
+                                                name="camera"
+                                                size={25}
+                                                color={"white"}
+                                            />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                pickImage();
+                                            }}
+                                            style={{
+                                                flexDirection: 'row',
+                                                justifyContent: "space-between",
+                                                alignItems: "center"
+                                            }}>
+                                            <Text style={{
+                                                color: 'white',
+                                                fontWeight: "700"
+                                            }}>
+                                                Choose photo
+                                            </Text>
+
+                                            <FontAwesome
+                                                name="photo"
+                                                size={22}
+                                                color={"white"}
+                                            />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                deleteProfileImage("");
+                                            }}
+                                            style={{
+                                                flexDirection: 'row',
+                                                justifyContent: "space-between",
+                                                alignItems: "center"
+                                            }}>
+                                            <Text style={{
+                                                color: 'red',
+                                                fontWeight: "700"
+                                            }}>
+                                                Delete photo
+                                            </Text>
+
+                                            <Ionicons
+                                                name="trash-outline"
+                                                size={25}
+                                                color={'white'}
+                                            />
+                                        </TouchableOpacity>
+                                    </View>
+                                </LinearGradient>
                             </View>
                         </Modal>
                         <Modal
@@ -1216,7 +1174,11 @@ const Profile = ({
                                                 padding: 20,
                                                 justifyContent: "space-between",
                                                 borderRadius: 5
-                                            }}>
+                                            }}
+                                                onPress={() => {
+                                                    logout();
+                                                }}
+                                            >
                                                 <Text>Logout</Text>
                                                 <SimpleLineIcons name="logout" size={16} color={"black"} />
                                             </TouchableOpacity>
@@ -1312,52 +1274,6 @@ const styles = StyleSheet.create({
     buttonText: {
         color: '#fff',
         fontWeight: '600',
-    },
-    headerContainer: {
-        position: 'relative',
-        backgroundColor: "transparent",
-        justifyContent: "center",
-    },
-    contentOverlay: {
-        position: 'absolute',
-        top: 60,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        flex: 1,
-        justifyContent: 'flex-start',
-        gap: 20,
-    },
-    svg: {
-        padding: 20,
-    },
-    shadowWrapper: {
-        flex: 1,
-        backgroundColor: "transparent",
-        justifyContent: "center",
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.8,
-        shadowRadius: 15,
-        elevation: 12,
-        zIndex: 1,
-    },
-    shadowTopWrapper: {
-        flex: 1,
-        backgroundColor: "transparent",
-        justifyContent: "flex-end",
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.8,
-        shadowRadius: 15,
-        elevation: 12,
-        zIndex: 1,
     },
     radioGroup: {
         flexDirection: 'row',

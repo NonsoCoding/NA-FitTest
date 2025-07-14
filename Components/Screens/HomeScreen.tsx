@@ -7,7 +7,6 @@ import { deleteDoc, doc, getDoc, onSnapshot, setDoc, updateDoc } from "firebase/
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { async } from "@firebase/util"
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import * as Progress from "react-native-progress";
 import { Pedometer } from "expo-sensors";
 import { string } from "yup";
@@ -84,20 +83,6 @@ const HomePage = ({
         const now = new Date();
         return `${now.getFullYear()} - ${now.getMonth() + 1}`
     }
-
-    // This creates the curved path - the key part!
-    const createCurvedPath = () => {
-        const height = 160;
-        const waveHeight = 45;
-
-        // Simple single wave - one dip down, one peak up
-        return `M 0 0 
-        L 0 ${height} 
-        Q ${screenWidth * 0.25} ${height + waveHeight} ${screenWidth * 0.5} ${height}
-        Q ${screenWidth * 0.75} ${height - waveHeight} ${screenWidth} ${height}
-        L ${screenWidth} 0 
-        Z`;
-    };
 
     const handleMonthlyTacticalPoints = async (totalPoints: number, uid: string) => {
         const currentMonthKey = getCurrentMonthKey();
@@ -417,28 +402,21 @@ const HomePage = ({
                     <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
                 </View>
             )}
-            <View>
-                <View style={[styles.headerContainer]}>
-                    <Svg height="200" width={screenWidth} style={styles.svg}>
-                        <Defs>
-                            <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                            </SvgLinearGradient>
-                        </Defs>
-                        <Path
-                            d={createCurvedPath()}
-                            fill="url(#grad)"
-                        />
-                    </Svg>
-                </View>
+            <LinearGradient
+                colors={['#FFD700', '#FFA500']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                    paddingTop: 50,
+                    borderBottomLeftRadius: 10,
+                    borderBottomRightRadius: 10
+                }}
+            >
                 <View style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    position: "absolute",
                     gap: 10,
                     padding: 20,
-                    top: "25%"
                 }}>
                     <View>
                         {userInfo?.profilePic ? (
@@ -492,15 +470,17 @@ const HomePage = ({
                         </View>
                     </View>
                 </View>
-            </View>
+            </LinearGradient>
+
             <View style={{
                 padding: 20,
-                gap: 30
+                gap: 20
             }}>
                 <View style={{
-                    padding: 10,
+                    padding: 15,
                     backgroundColor: 'white',
                     borderRadius: 16,
+                    gap: 10,
                     justifyContent: "center",
                     // iOS shadow
                     shadowColor: '#000',
@@ -554,19 +534,19 @@ const HomePage = ({
                                 fontSize: 8
                             }}>STEPS TODAY</Text>
                         </View>
-                        <Image
+                        {/* <Image
                             style={{
                                 height: 80,
                                 width: 140,
                                 resizeMode: "contain"
                             }}
                             source={require("../../assets/Icons/Graph.png")}
-                        />
+                        /> */}
                     </View>
                 </View>
                 <View style={{
                     paddingHorizontal: 15,
-                    paddingVertical: 30,
+                    paddingVertical: 15,
                     gap: 20,
                     backgroundColor: 'white',
                     borderRadius: 16,
@@ -703,7 +683,7 @@ const HomePage = ({
                 </View>
                 <View style={{
                     paddingHorizontal: 15,
-                    paddingVertical: 30,
+                    paddingVertical: 15,
                     gap: 20,
                     backgroundColor: 'white',
                     borderRadius: 16,

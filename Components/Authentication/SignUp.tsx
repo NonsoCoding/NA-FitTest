@@ -1,6 +1,6 @@
 
 import * as React from 'react'
-import { Alert, Dimensions, Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, Image, ImageBackground, KeyboardAvoidingView, Modal, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Theme } from "../Branding/Theme";
 import { useState } from "react";
 import * as stream from "node:stream";
@@ -135,239 +135,348 @@ const SignUpScreen = ({
     }
 
     return (
-        <ImageBackground
-            source={require("../../assets/BackgroundImages/Background.png")}
-            style={{
-                flex: 1
-            }}>
-            {isLoading && (
-                <View style={styles.loadingOverlay}>
-                    <LottieView
-                        source={require("../../assets/ExerciseGifs/Animation - 1745262738989.json")}
-                        style={{
-                            height: 80,
-                            width: 80
-                        }}
-                        resizeMode="contain"
-                        loop={true}
-                        autoPlay={true}
-                    />
-                    <Text style={{ color: "#fff", marginTop: 10 }}>Signing you in...</Text>
-                </View>
-            )}
-            <Formik<SignUpValues>
-                initialValues={{ email: "", password: "" }}
-                validationSchema={signUpValidation}
-                onSubmit={SignUp}
+        <View style={styles.safeArea}>
+            <StatusBar
+                barStyle="light-content"
+                backgroundColor="transparent"
+                translucent={true}
+            />
+            <ImageBackground
+                source={require("../../assets/BackgroundImages/Background.png")}
+                style={styles.container}
+                resizeMode="cover"
             >
-                {({ handleChange, handleBlur, handleSubmit, validateForm, values, errors, touched, setTouched }) => (
-                    <View style={{
-                        flex: 1,
-                        justifyContent: "flex-end"
-                    }}>
-                        <View style={{
-                            position: "absolute",
-                            width: VIEW_WIDTH,
-                            height: VIEW_HEIGHT,
-                            top: offsetY,
-                            left: offsetX,
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}>
-                            <Text style={{
-                                fontWeight: "700",
-                                fontSize: 40
-                            }}>SIGN UP</Text>
-                            <Text style={{
-                                fontWeight: "300"
-                            }}>LET US CREATE AN ACCOUNT FOR YOU</Text>
-                        </View>
-                        <View style={{
-                            padding: 20,
-                            bottom: 40,
-                            gap: 20
-                        }}>
-                            <View style={{
-                                backgroundColor: "white",
-                                overflow: "hidden",
-                                borderRadius: 10,
-                                bottom: 80,
-                            }}>
-                                <View style={{
-                                    backgroundColor: "rgba(0, 0, 0, 0.1)",
-                                    gap: 10,
-                                    paddingHorizontal: 20,
-                                    paddingTop: 20,
-                                    paddingBottom: 30
-                                }}>
-                                    <View style={{
-                                        gap: 5
-                                    }}>
-                                        <View style={[styles.textinput_container, {
-                                            marginBottom: 5
-                                        }]}>
-                                            <Image source={require("../../assets/BackgroundImages/email-icon.png")}
-                                                style={{
-                                                    height: 20,
-                                                    width: 20
-                                                }}
-                                                resizeMode='contain'
-                                            />
-                                            <TextInput
-                                                style={styles.textinput}
-                                                placeholderTextColor={"#8c8c8e"}
-                                                placeholder="Your Email"
-                                                value={values.email}
-                                                onChangeText={handleChange("email")}
-                                                onBlur={handleBlur("email")}
-                                            />
-                                        </View>
-                                        {touched.email && errors.email && (
-                                            <Text style={{ color: "red" }}>{errors.email}</Text>
-                                        )}
+                {isLoading && (
+                    <View style={styles.loadingOverlay}>
+                        <LottieView
+                            source={require("../../assets/ExerciseGifs/Animation - 1745262738989.json")}
+                            style={styles.loadingAnimation}
+                            resizeMode="contain"
+                            loop={true}
+                            autoPlay={true}
+                        />
+                        <Text style={styles.loadingText}>Signing you in...</Text>
+                    </View>
+                )}
+
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={styles.keyboardAvoidingView}
+                >
+                    <ScrollView
+                        contentContainerStyle={styles.scrollContainer}
+                        keyboardShouldPersistTaps="handled"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <Formik<SignUpValues>
+                            initialValues={{ email: "", password: "" }}
+                            validationSchema={signUpValidation}
+                            onSubmit={SignUp}
+                        >
+                            {({ handleChange, handleBlur, handleSubmit, validateForm, values, errors, touched, setTouched }) => (
+                                <View style={styles.formContainer}>
+                                    {/* Header Section */}
+                                    <View style={styles.headerSection}>
+                                        <Text style={styles.headerTitle}>SIGN UP</Text>
+                                        <Text style={styles.headerSubtitle}>Welcome! Let us create an account for you</Text>
                                     </View>
-                                    <View style={{
-                                        gap: 5
-                                    }}>
-                                        <View style={styles.textinput_container}>
-                                            <Image source={require("../../assets/BackgroundImages/Password-icon.png")}
-                                                style={{
-                                                    height: 20,
-                                                    width: 20
+
+                                    {/* Form Section */}
+                                    <View style={styles.formSection}>
+                                        <View style={styles.inputContainer}>
+                                            <View style={styles.inputWrapper}>
+                                                <View style={styles.inputField}>
+                                                    <View style={styles.inputIcon}>
+                                                        <Image
+                                                            source={require("../../assets/BackgroundImages/email-icon.png")}
+                                                            style={styles.iconImage}
+                                                            resizeMode='contain'
+                                                        />
+                                                    </View>
+                                                    <TextInput
+                                                        style={styles.textInput}
+                                                        placeholderTextColor="#999"
+                                                        placeholder="Enter your email"
+                                                        value={values.email}
+                                                        onChangeText={handleChange("email")}
+                                                        onBlur={handleBlur("email")}
+                                                        keyboardType="email-address"
+                                                        autoCapitalize="none"
+                                                        autoCorrect={false}
+                                                    />
+                                                </View>
+                                                {touched.email && errors.email && (
+                                                    <Text style={styles.errorText}>{errors.email}</Text>
+                                                )}
+                                            </View>
+
+                                            <View style={styles.inputWrapper}>
+                                                <View style={styles.inputField}>
+                                                    <View style={styles.inputIcon}>
+                                                        <Image
+                                                            source={require("../../assets/BackgroundImages/Password-icon.png")}
+                                                            style={styles.iconImage}
+                                                            resizeMode='contain'
+                                                        />
+                                                    </View>
+                                                    <TextInput
+                                                        style={styles.textInput}
+                                                        placeholderTextColor="#999"
+                                                        placeholder="Enter your password"
+                                                        value={values.password}
+                                                        secureTextEntry={!togglePasswordVisibility}
+                                                        onChangeText={handleChange("password")}
+                                                        onBlur={handleBlur("password")}
+                                                        autoCapitalize="none"
+                                                        autoCorrect={false}
+                                                    />
+                                                    <TouchableOpacity
+                                                        style={styles.eyeIcon}
+                                                        onPress={() => setTogglePasswordVisibility(!togglePasswordVisibility)}
+                                                        activeOpacity={0.7}
+                                                    >
+                                                        <Feather
+                                                            name={togglePasswordVisibility ? 'eye' : 'eye-off'}
+                                                            size={20}
+                                                            color="#FA8128"
+                                                        />
+                                                    </TouchableOpacity>
+                                                </View>
+                                                {touched.password && errors.password && (
+                                                    <Text style={styles.errorText}>{errors.password}</Text>
+                                                )}
+                                            </View>
+                                        </View>
+
+                                        {/* Action Buttons */}
+                                        <View style={styles.actionSection}>
+                                            <TouchableOpacity
+                                                onPress={async () => {
+                                                    const errors = await validateForm();
+                                                    setTouched({ email: true, password: true });
+                                                    if (!errors.email && !errors.password) {
+                                                        handleSubmit();
+                                                    }
                                                 }}
-                                                resizeMode='contain'
-                                            />
-                                            <TextInput
-                                                placeholderTextColor={"#8c8c8e"}
-                                                style={styles.textinput}
-                                                value={values.password}
-                                                secureTextEntry={!togglePasswordVisibility}
-                                                placeholder='***********'
-                                                onChangeText={handleChange("password")}
-                                                onBlur={handleBlur("password")}
-                                            />
-                                            <TouchableOpacity style={{
-                                            }}
-                                                onPress={() => {
-                                                    setTogglePasswordVisibility(!togglePasswordVisibility)
-                                                }}
+                                                style={styles.signInButton}
+                                                activeOpacity={0.8}
                                             >
-                                                <Feather name={togglePasswordVisibility ? 'eye' : 'eye-off'} size={20} color={"#FA8128"} />
+                                                <Text style={styles.signInButtonText}>Sign Up</Text>
+                                                <Image
+                                                    source={require("../../assets/BackgroundImages/VectorRight.png")}
+                                                    style={styles.buttonIcon}
+                                                    resizeMode="contain"
+                                                />
                                             </TouchableOpacity>
+
+                                            <View style={styles.signUpContainer}>
+                                                <Text style={styles.signUpText}>Already have an account? </Text>
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        navigation.reset({
+                                                            index: 0,
+                                                            routes: [{ name: "LoginScreen" }]
+                                                        })
+                                                    }}
+                                                    activeOpacity={0.7}
+                                                >
+                                                    <Text style={styles.signUpLink}>Sign In</Text>
+                                                </TouchableOpacity>
+                                            </View>
                                         </View>
-                                        {touched.password && errors.password && (
-                                            <Text style={{ color: "red" }}>{errors.password}</Text>
-                                        )}
-
                                     </View>
+                                </View>
+                            )}
+                        </Formik>
+                    </ScrollView>
+                </KeyboardAvoidingView>
 
-                                </View>
-                            </View>
-                            <View style={{
-                                gap: 10
-                            }}>
-                                <TouchableOpacity
-                                    onPress={async () => {
-                                        console.log("Submit button pressed"); // Add this
-                                        const errors = await validateForm();
-                                        setTouched({ email: true, password: true });
-                                        if (!errors.email && !errors.password) {
-                                            console.log("Form is valid, submitting..."); // Add this
-                                            handleSubmit();
-                                            // onSignUpPress(values.email, values.password);
-                                        } else {
-                                            console.log("Form errors:", errors); // Add this
-                                        }
-                                    }}
-                                    style={[styles.continue_email_button, {
-                                        padding: 25
-                                    }]}>
-                                    <Text style={styles.email_button_text}>Sign Up</Text>
-                                    <Image source={require("../../assets/BackgroundImages/VectorRight.png")}
-                                        style={[styles.button_icon, {
-                                            height: 20,
-                                            width: 20
-                                        }]}
-                                    />
-                                </TouchableOpacity>
-                                <View style={{ flexDirection: 'row', gap: 6, alignSelf: "center" }}>
-                                    <Text style={{ color: '#333', fontSize: 16 }}>Already have an account?</Text>
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            navigation.reset({
-                                                index: 0,
-                                                routes: [{ name: "LoginScreen" }]
-                                            })
-                                        }}
-                                    >
-                                        <Text style={{ color: "#FFD125", fontSize: 16 }}>Log in</Text>
-                                    </TouchableOpacity>
-                                </View>
+                {/* Success Modal */}
+                <Modal
+                    visible={isLoginCompleteModalVisible}
+                    animationType="fade"
+                    transparent={true}
+                    onRequestClose={() => setIsLoginCompleteModalVisible(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContainer}>
+                            <TouchableOpacity
+                                style={styles.modalCloseButton}
+                                onPress={() => setIsLoginCompleteModalVisible(false)}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.modalCloseText}>×</Text>
+                            </TouchableOpacity>
+                            <View style={styles.modalContent}>
+                                <Image
+                                    source={require("../../assets/downloadedIcons/info-fill.png")}
+                                    style={styles.modalIcon}
+                                />
+                                <Text style={styles.modalText}>Login Successful!</Text>
                             </View>
                         </View>
                     </View>
-                )}
-            </Formik>
-        </ImageBackground>
+                </Modal>
+            </ImageBackground>
+        </View>
     )
 }
 
 export default SignUpScreen;
 
 const styles = StyleSheet.create({
-    dividerContainer: {
+    safeArea: {
+        flex: 1,
+        backgroundColor: 'transparent',
+    },
+    container: {
+        flex: 1,
+        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
+    },
+    keyboardAvoidingView: {
+        flex: 1,
+    },
+    scrollContainer: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        minHeight: screenHeight,
+    },
+    formContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        paddingHorizontal: 20,
+    },
+    headerSection: {
+        alignItems: 'center',
+        marginBottom: 50,
+        paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    },
+    headerTitle: {
+        fontSize: Platform.OS === 'ios' ? 36 : 32,
+        fontWeight: '700',
+        color: 'black',
+        textAlign: 'center',
+        marginBottom: 10,
+        letterSpacing: 1,
+    },
+    headerSubtitle: {
+        fontSize: Platform.OS === 'ios' ? 16 : 14,
+        fontWeight: '300',
+        color: "black",
+        textAlign: 'center',
+        lineHeight: 22,
+    },
+    formSection: {
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 25,
+        marginBottom: 40,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 8,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 10,
+    },
+    inputContainer: {
+        gap: 20,
+        marginBottom: 25,
+    },
+    inputWrapper: {
+        gap: 8,
+    },
+    inputField: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 10,
+        backgroundColor: '#f8f9fa',
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#e9ecef',
+        paddingHorizontal: 15,
+        minHeight: 55,
     },
-    continue_email_button: {
-        backgroundColor: "white",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: 15,
-        borderRadius: 5,
-        gap: 15
+    inputIcon: {
+        marginRight: 12,
     },
-    google_button_text: {
-        fontSize: 18,
-        fontWeight: "300"
+    iconImage: {
+        height: 20,
+        width: 20,
+        tintColor: '#666',
     },
-    email_button_text: {
-        fontSize: 18,
-        fontWeight: "500"
-    },
-    button_icon: {
-        height: 40,
-        width: 40,
-        resizeMode: "contain"
-    },
-    textinput_container: {
-        flexDirection: "row",
-        borderRadius: 5,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingHorizontal: 10,
-        borderBottomWidth: 1,
-        borderColor: Theme.colors.lightPrimary,
-        position: 'relative',
-    },
-    textinput: {
+    textInput: {
         flex: 1,
-        paddingVertical: 20,
-        paddingHorizontal: 10,
+        fontSize: Platform.OS === 'ios' ? 16 : 14,
+        color: '#333',
+        paddingVertical: Platform.OS === 'ios' ? 15 : 12,
+    },
+    eyeIcon: {
+        padding: 8,
+    },
+    errorText: {
+        color: '#dc3545',
+        fontSize: 12,
+        marginTop: 4,
+        marginLeft: 4,
+    },
+    forgotPasswordContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        marginTop: 5,
+    },
+    forgotPasswordText: {
+        color: '#666',
         fontSize: 14,
     },
-    otp_textinput: {
-        backgroundColor: "white",
-        borderRadius: 40,
-        padding: 20,
-        fontSize: 14
+    forgotPasswordLink: {
+        color: '#FA8128',
+        fontSize: 14,
+        fontWeight: '600',
     },
-    get_code_button: {
-        padding: 20,
-        backgroundColor: "#4D4D4D",
-        borderRadius: 40
+    actionSection: {
+        gap: 20,
+    },
+    signInButton: {
+        backgroundColor: '#FA8128',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 18,
+        borderRadius: 12,
+        shadowColor: '#FA8128',
+        shadowOffset: {
+            width: 0,
+            height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    signInButtonText: {
+        color: '#fff',
+        fontSize: Platform.OS === 'ios' ? 18 : 16,
+        fontWeight: '600',
+    },
+    buttonIcon: {
+        height: 20,
+        width: 20,
+        tintColor: '#fff',
+    },
+    signUpContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    signUpText: {
+        color: '#666',
+        fontSize: 15,
+    },
+    signUpLink: {
+        color: '#FFD125',
+        fontSize: 15,
+        fontWeight: '600',
     },
     loadingOverlay: {
         ...StyleSheet.absoluteFillObject,
@@ -376,14 +485,54 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         zIndex: 9999,
     },
-    line: {
+    loadingAnimation: {
+        height: 80,
+        width: 80,
+    },
+    loadingText: {
+        color: '#fff',
+        fontSize: 16,
+        marginTop: 15,
+        fontWeight: '500',
+    },
+    modalOverlay: {
         flex: 1,
-        height: 1,
-        backgroundColor: Theme.colors.lightPrimary,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+        padding: 20,
+        paddingBottom: 40,
     },
-    dividerText: {
-        paddingHorizontal: 10,
-        color: '#7A7A7A',
-        fontSize: 14,
+    modalContainer: {
+        backgroundColor: '#006F46',
+        borderRadius: 12,
+        padding: 20,
+        minHeight: 80,
+        position: 'relative',
     },
-})
+    modalCloseButton: {
+        position: 'absolute',
+        top: 10,
+        right: 15,
+        zIndex: 1,
+        padding: 5,
+    },
+    modalCloseText: {
+        color: '#fff',
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    modalContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 15,
+    },
+    modalIcon: {
+        height: 24,
+        width: 24,
+    },
+    modalText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '500',
+    },
+});

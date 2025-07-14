@@ -9,7 +9,7 @@ import { auth, db } from "../../Firebase/Settings";
 import { FlatList } from "react-native-gesture-handler";
 import { Feather } from "@expo/vector-icons";
 import LottieView from "lottie-react-native";
-import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
+import { LinearGradient } from "expo-linear-gradient";
 
 interface IHistoryProps {
 
@@ -24,20 +24,6 @@ const History = ({
     const navigation = useNavigation<DrawerNavigationProp<DrawerParamList>>();
     const [history, setHistory] = useState<{ type: string, data: any[] }[]>([]);
     const [loading, setLoading] = useState(true);
-
-
-    const createCurvedPath = () => {
-        const height = 160;
-        const waveHeight = 45;
-
-        return `M 0 0 
-        L 0 ${height} 
-        Q ${screenWidth * 0.25} ${height + waveHeight} ${screenWidth * 0.5} ${height}
-        Q ${screenWidth * 0.75} ${height - waveHeight} ${screenWidth} ${height}
-        L ${screenWidth} 0 
-        Z`;
-    };
-
 
     const categoryLabels: { [key: string]: string } = {
         SitUps: "Sit Ups",
@@ -88,55 +74,45 @@ const History = ({
 
     return (
         <View style={styles.container}>
-            <View>
-                <View style={styles.headerContainer}>
-                    <Svg height="200" width={screenWidth} style={styles.svg}>
-                        <Defs>
-                            <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                            </SvgLinearGradient>
-                        </Defs>
-                        <Path
-                            d={createCurvedPath()}
-                            fill="url(#grad)"
-                        />
-                    </Svg>
-
-                    {/* Content overlay - positioned absolutely to center over SVG */}
-                    <View style={styles.contentOverlay}>
-                        <View style={{
-                            alignItems: "center",
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            paddingHorizontal: 20,
-                        }}>
-                            <View>
-                                <Text></Text>
-                            </View>
-                            <Text style={{
-                                color: "white",
-                                left: 17,
-                                fontSize: 18,
-                                fontWeight: "700"
-                            }}>History</Text>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    navigation.openDrawer();
-                                }}
-                            >
-                                <Image source={require("../../assets/downloadedIcons/notification.png")}
-                                    style={{
-                                        height: 30,
-                                        width: 30,
-                                        resizeMode: "contain"
-                                    }}
-                                />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+            <LinearGradient
+                colors={['#FFD700', '#FFA500']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                    height: "20%",
+                    paddingTop: 50,
+                    paddingBottom: 15,
+                    borderBottomRightRadius: 10,
+                    borderBottomLeftRadius: 10,
+                    paddingHorizontal: 20,
+                    justifyContent: "space-between"
+                }}
+            >
+                <TouchableOpacity
+                    onPress={() => {
+                        navigation.openDrawer();
+                    }}
+                    style={{
+                        alignSelf: "flex-end"
+                    }}
+                >
+                    <Image source={require("../../assets/downloadedIcons/notification.png")}
+                        style={{
+                            height: 30,
+                            width: 30,
+                            resizeMode: "contain"
+                        }}
+                    />
+                </TouchableOpacity>
+                <View style={{
+                }}>
+                    <Text style={{
+                        color: "white",
+                        fontSize: 30,
+                        fontWeight: "700"
+                    }}>History</Text>
                 </View>
-            </View>
+            </LinearGradient>
             {loading ? (
                 <View style={{
                     flex: 1,
@@ -218,7 +194,7 @@ const History = ({
                                                 width: 0,
                                                 height: 5,
                                             },
-                                            shadowOpacity: 0.2,
+                                            shadowOpacity: 0.1,
                                             shadowRadius: 8,
                                         }}>
                                         <View
@@ -288,35 +264,5 @@ export default History;
 const styles = StyleSheet.create({
     container: {
         flex: 1
-    },
-    headerContainer: {
-        position: 'relative',
-        justifyContent: "center",
-        backgroundColor: 'transparent'
-    },
-    contentOverlay: {
-        position: 'absolute',
-        top: 60,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        flex: 1,
-        justifyContent: 'flex-start',
-        gap: 20,
-    },
-    svg: {
-        padding: 20,
-    },
-    shadowWrapper: {
-        justifyContent: "center",
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.8,
-        shadowRadius: 15,
-        elevation: 12,
-        zIndex: 1,
-    },
+    }
 })

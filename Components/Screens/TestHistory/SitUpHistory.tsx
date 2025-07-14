@@ -8,8 +8,7 @@ import { DrawerParamList } from "../../nav/type";
 import { auth, db } from "../../../Firebase/Settings";
 import { Theme } from "../../Branding/Theme";
 import LottieView from "lottie-react-native";
-import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
-
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -26,21 +25,6 @@ const SitUpHistory = ({
 
     const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-
-
-
-    const createCurvedPath = () => {
-        const height = 160;
-        const waveHeight = 45;
-
-        return `M 0 0 
-        L 0 ${height} 
-        Q ${screenWidth * 0.25} ${height + waveHeight} ${screenWidth * 0.5} ${height}
-        Q ${screenWidth * 0.75} ${height - waveHeight} ${screenWidth} ${height}
-        L ${screenWidth} 0 
-        Z`;
-    };
-
 
     const fetchHistory = async () => {
         const user = auth.currentUser;
@@ -86,9 +70,9 @@ const SitUpHistory = ({
             shadowColor: '#000',
             shadowOffset: {
                 width: 0,
-                height: 5,
+                height: 3,
             },
-            shadowOpacity: 0.2,
+            shadowOpacity: 0.1,
             shadowRadius: 8,
         }]}>
             <View style={[{
@@ -146,96 +130,25 @@ const SitUpHistory = ({
 
     return (
         <View style={styles.container}>
-            {/* <View style={{
-                height: "22%",
-                backgroundColor: Theme.colors.primaryColor,
-                padding: 20,
-                paddingTop: 60,
-                justifyContent: "center",
-                gap: 40
-            }}>
-                <View style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                }}>
-                    <TouchableOpacity style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 10
-                    }}
-                        onPress={() => {
-                            navigation.goBack();
-                        }}
-                    >
-                        <Image source={require("../../../assets/downloadedIcons/fast.png")}
-                            style={{
-                                width: 20,
-                                height: 20
-                            }}
-                        />
-                        <Text style={{
-                            color: "white"
-                        }}>Back</Text>
-                    </TouchableOpacity>
-                </View>
-                <View>
-                    <Text style={{
-                        fontWeight: "700",
-                        fontSize: 25,
-                        color: "white"
-                    }}>SIT UP HISTORY</Text>
-                </View>
-            </View> */}
-            <View>
-                <View style={styles.headerContainer}>
-                    <Svg height="200" width={screenWidth} style={styles.svg}>
-                        <Defs>
-                            <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                            </SvgLinearGradient>
-                        </Defs>
-                        <Path
-                            d={createCurvedPath()}
-                            fill="url(#grad)"
-                        />
-                    </Svg>
-
-                    {/* Content overlay - positioned absolutely to center over SVG */}
-                    <View style={styles.contentOverlay}>
-                        <View style={{
-                            alignItems: "center",
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            paddingHorizontal: 20,
-                        }}>
-                            <View>
-                                <Text></Text>
-                            </View>
-                            <Text style={{
-                                color: "white",
-                                left: 17,
-                                fontSize: 18,
-                                fontWeight: "700"
-                            }}>History</Text>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    navigation.openDrawer();
-                                }}
-                            >
-                                <Image source={require("../../../assets/downloadedIcons/notification.png")}
-                                    style={{
-                                        height: 30,
-                                        width: 30,
-                                        resizeMode: "contain"
-                                    }}
-                                />
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </View>
+            <LinearGradient
+                colors={['#FFD700', '#FFA500']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                    height: "20%",
+                    paddingTop: 50,
+                    borderBottomRightRadius: 10,
+                    borderBottomLeftRadius: 10,
+                    justifyContent: "flex-end",
+                    padding: 15
+                }}
+            >
+                <Text style={{
+                    color: "white",
+                    fontSize: 20,
+                    fontWeight: "700"
+                }}>SIT-UP HISTORY</Text>
+            </LinearGradient>
             {loading ? (
                 <View style={{
                     flex: 1,

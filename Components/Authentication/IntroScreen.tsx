@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { Image, ImageBackground, Platform, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+    Image,
+    ImageBackground,
+    Platform,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+    Dimensions,
+    SafeAreaView
+} from "react-native";
 import { Theme } from "../Branding/Theme";
 import AppIntroSlider from "react-native-app-intro-slider";
 
@@ -13,6 +24,8 @@ type Slide = {
     text: string;
 };
 
+const { width, height } = Dimensions.get('window');
+
 const IntroScreen = ({ navigation }: IntroIprops) => {
     const [activeIndex, setActiveIndex] = useState(0);
 
@@ -25,14 +38,14 @@ const IntroScreen = ({ navigation }: IntroIprops) => {
         {
             key: "slide2",
             title: "Fitness That Adapts to You",
-            text: "Our intelligent motion sensors track every rep and step, offering real-time feedback and form correction. Whether you're sprinting or doing core workouts, it’s like having a coach in your pocket"
+            text: "Our intelligent motion sensors track every rep and step, offering real-time feedback and form correction. Whether you're sprinting or doing core workouts, it's like having a coach in your pocket"
         },
         {
             key: "slide3",
             title: "Go Beyond the Basics",
             text: "Personalized fitness routines. Performance analytics. Progress history & goal tracking. Wristwatch integration for heart rate & vitals Get stronger, smarter, and stay motivated — every day."
         }
-    ]
+    ];
 
     const _renderItem = ({ item }: any) => {
         return (
@@ -57,16 +70,21 @@ const IntroScreen = ({ navigation }: IntroIprops) => {
     };
 
     return (
-        <ImageBackground
-            source={require("../../assets/BackgroundImages/Background.png")}
-            style={styles.container}
-            resizeMode="cover"
-        >
-            <View style={styles.sliderWrapper}>
-                <View style={{
-                    flex: 1,
-                    top: 100
-                }}>
+        <View style={[styles.safeArea]}>
+            <ImageBackground
+                source={require("../../assets/BackgroundImages/Background.png")}
+                style={[styles.container, , {
+                    paddingBottom: 20
+                }]}
+                resizeMode="cover"
+            >
+                <StatusBar
+                    barStyle="light-content"
+                    backgroundColor="transparent"
+                    translucent={true}
+                />
+
+                <View style={styles.sliderWrapper}>
                     <AppIntroSlider
                         data={slides}
                         renderItem={_renderItem}
@@ -74,106 +92,138 @@ const IntroScreen = ({ navigation }: IntroIprops) => {
                         showDoneButton={false}
                         showSkipButton={false}
                         onSlideChange={(index: number) => setActiveIndex(index)}
-                        renderPagination={() => (
-                            <View></View>
-                        )} // disable default pagination
+                        renderPagination={() => <View />} // disable default pagination
+                        activeDotStyle={styles.sliderActiveDot}
+                        dotStyle={styles.sliderDot}
                     />
                 </View>
-            </View>
 
-            <View style={styles.footer}>
-                <TouchableOpacity style={styles.btn} onPress={() => navigation.navigate("LoginScreen")}>
-                    <Text style={styles.btn_text}>Get started</Text>
-                    <Image
-                        source={require("../../assets/BackgroundImages/VectorRight.png")}
-                        style={styles.icon}
-                    />
-                </TouchableOpacity>
-                <Text style={styles.copy}>© 2025 404services. All rights reserved.</Text>
-            </View>
-        </ImageBackground>
+                <View style={styles.footer}>
+                    <TouchableOpacity
+                        style={styles.btn}
+                        onPress={() => navigation.navigate("LoginScreen")}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={styles.btn_text}>Get started</Text>
+                        <Image
+                            source={require("../../assets/BackgroundImages/VectorRight.png")}
+                            style={styles.icon}
+                        />
+                    </TouchableOpacity>
+                    <Text style={styles.copy}>© 2025 404services. All rights reserved.</Text>
+                </View>
+            </ImageBackground>
+        </View>
     );
 };
 
 export default IntroScreen;
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: 'transparent',
+    },
     container: {
         flex: 1,
-        marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
-        paddingBottom: 30
+        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
     },
-    btn: {
-        backgroundColor: "white",
-        padding: 30,
-        borderRadius: 5,
-        flexDirection: "row",
-        justifyContent: "space-between",
-    },
-    btn_text: {
-        color: "black",
-        fontSize: 16,
+    sliderWrapper: {
+        flex: 1,
+        paddingTop: Platform.OS === 'ios' ? 60 : 80,
+        paddingBottom: 20,
     },
     slide: {
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        padding: 10,
+        paddingHorizontal: 20,
     },
     slideBox: {
-        backgroundColor: "white",
-        padding: 40,
-        height: "35%",
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        paddingHorizontal: 30,
+        paddingVertical: 40,
+        minHeight: height * 0.35,
+        maxHeight: height * 0.45,
+        width: width * 0.9,
         justifyContent: "center",
         alignItems: "center",
-        borderRadius: 10,
+        borderRadius: 20,
     },
     customPagination: {
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
-        marginTop: 20
+        marginTop: 30,
     },
     dot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        marginHorizontal: 6,
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        marginHorizontal: 8,
     },
     activeDot: {
         backgroundColor: "white",
     },
     inactiveDot: {
-        backgroundColor: "lightgrey",
+        backgroundColor: "rgba(255, 255, 255, 0.5)",
     },
     title: {
-        fontSize: 22,
-        fontWeight: "bold",
+        fontSize: Platform.OS === 'ios' ? 24 : 22,
+        fontWeight: "700",
+        color: "#333",
+        textAlign: "center",
+        lineHeight: Platform.OS === 'ios' ? 32 : 30,
+        marginBottom: 15,
     },
     text: {
-        fontSize: 16,
+        fontSize: Platform.OS === 'ios' ? 16 : 15,
         textAlign: "center",
-        marginTop: 10,
-    },
-    sliderWrapper: {
-        flex: 1,
+        color: "#666",
+        lineHeight: Platform.OS === 'ios' ? 24 : 22,
+        fontWeight: "400",
     },
     footer: {
         paddingHorizontal: 20,
-        paddingBottom: 30,
+        paddingBottom: Platform.OS === 'ios' ? 30 : 40,
         backgroundColor: 'transparent',
     },
-    icon: {
-        width: 20,
-        height: 20,
-        resizeMode: "contain",
+    btn: {
+        backgroundColor: "white",
+        paddingHorizontal: 30,
+        paddingVertical: 18,
+        borderRadius: 12,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 15,
     },
-
+    btn_text: {
+        color: "#333",
+        fontSize: Platform.OS === 'ios' ? 16 : 16,
+        fontWeight: "400",
+    },
+    icon: {
+        width: 14,
+        height: 14,
+        resizeMode: "contain",
+        tintColor: "#333",
+    },
     copy: {
         alignSelf: "center",
-        marginTop: 10,
-        fontSize: 12,
-        color: "white"
+        fontSize: Platform.OS === 'ios' ? 13 : 12,
+        color: "rgba(255, 255, 255, 0.8)",
+        fontWeight: "400",
     },
-
+    // Styles for AppIntroSlider's built-in pagination (as backup)
+    sliderActiveDot: {
+        backgroundColor: "white",
+        width: 12,
+        height: 12,
+    },
+    sliderDot: {
+        backgroundColor: "rgba(255, 255, 255, 0.5)",
+        width: 12,
+        height: 12,
+    },
 });

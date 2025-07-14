@@ -1,15 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Text, View, StyleSheet, Button, TouchableOpacity, Image, ImageBackground, Modal, SafeAreaView, TextInput, Dimensions, Alert, ActivityIndicator } from "react-native";
+import { Text, View, StyleSheet, Button, TouchableOpacity, Image, ImageBackground, Modal, SafeAreaView, TextInput, Dimensions, Alert, ActivityIndicator, StatusBar } from "react-native";
 import { Camera, CameraType } from "expo-camera";
 import * as FaceDetector from "expo-face-detector";
 import { TourGuideZone, useTourGuideController } from "rn-tourguide";
 import * as Speech from "expo-speech";
 import LottieView from "lottie-react-native";
-import Svg, { Path, Defs, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { Switch } from "react-native-paper";
 import { addDoc, collection, doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../../../Firebase/Settings";
 import { Theme } from "../../Branding/Theme";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface PushUpTrackerIProps {
     navigation: any;
@@ -57,9 +57,11 @@ const PushUpsScreen = ({
         eventEmitter,
     }: any = useTourGuideController();
     const [isCountdownActive, setIsCountdownActive] = useState(false);
+    const [speechEnabled, setSpeechEnabled] = useState(true);
+    const [lastAnnouncedCount, setLastAnnouncedCount] = useState(0);
     const startIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
-    const isCountdownActiveRef = useRef(false);
+    const countdownTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 
     React.useEffect(() => {
@@ -84,31 +86,6 @@ const PushUpsScreen = ({
         }
     }, [])
 
-    const createBottomCurvedPath = () => {
-        const height = 450;
-        const waveHeight = 45;
-
-        return `M 0 0 
-        L 0 ${height} 
-        Q ${screenWidth * 0.25} ${height + waveHeight} ${screenWidth * 0.5} ${height}
-        Q ${screenWidth * 0.75} ${height - waveHeight} ${screenWidth} ${height}
-        L ${screenWidth} 0 
-        Z`;
-    };
-
-    const createTopCurvedPath = () => {
-        const height = 400;
-        const waveHeight = 45;
-
-        return `M 0 0
-            L 0 ${waveHeight}
-            Q ${screenWidth * 0.25} ${waveHeight * 2} ${screenWidth * 0.5} ${waveHeight}
-            Q ${screenWidth * 0.75} 0 ${screenWidth} ${waveHeight}
-            L ${screenWidth} ${height}
-            L 0 ${height}
-            Z`;
-    };
-
     React.useEffect(() => {
         (async () => {
             const { status } = await Camera.requestCameraPermissionsAsync();
@@ -126,19 +103,156 @@ const PushUpsScreen = ({
         )
     }
 
-    const resetTimers = () => {
-        setIsCountdownActive(false); // ✅ Add this line
-        stopCountdown();
-        setSessionActive(false);
+    const speakText = (text: string, options = {}) => {
+        if (!speechEnabled) return;
+
+        const defaultOptions = {
+            rate: 0.8,
+            pitch: 1.0,
+            volume: 1.0,
+            ...options
+        };
+
+        Speech.speak(text, defaultOptions);
+    };
+
+    const stopSpeech = () => {
+        Speech.stop();
+    };
+
+    useEffect(() => {
+        return () => {
+            resetTimers();
+            // Additional cleanup for countdown timer
+            if (countdownTimerRef.current) {
+                clearTimeout(countdownTimerRef.current);
+                countdownTimerRef.current = null;
+            }
+        };
+    }, []);
+    useEffect(() => {
+        if (countdown !== null && countdown > 0) {
+            // Announce countdown numbers
+            if (countdown <= 5) {
+                if (countdown === 5) {
+                    // Don't announce 5, just start counting
+                } else {
+                    speakText(countdown.toString());
+                }
+            }
+
+            // Store the timer reference so we can clear it
+            countdownTimerRef.current = setTimeout(() => {
+                setCountdown(countdown - 1);
+            }, 1000);
+
+            // Cleanup function to clear the timer
+            return () => {
+                if (countdownTimerRef.current) {
+                    clearTimeout(countdownTimerRef.current);
+                    countdownTimerRef.current = null;
+                }
+            };
+        } else if (countdown === 0) {
+            // Countdown finished, start the main session
+            speakText("Begin!");
+
+            setBeginModal(false);
+            setIsStartModalVisible(true);
+            setSessionActive(true);
+            setCountdownFinished(true);
+            setCountdown(null);
+
+            // Start the main timer
+            setMainTimer(time);
+            mainTimerRef.current = setInterval(() => {
+                setMainTimer((prevTime) => {
+                    if (prevTime && prevTime > 0) {
+                        // Announce time milestones
+                        if (prevTime === 30) {
+                            speakText("30 seconds remaining!");
+                        } else if (prevTime === 10) {
+                            speakText("10 seconds left!");
+                        } else if (prevTime <= 5 && prevTime > 0) {
+                            speakText(prevTime.toString());
+                        }
+
+                        return prevTime - 1;
+                    } else {
+                        // Timer finished
+                        speakText("Time's up! Great job!");
+
+                        if (mainTimerRef.current) {
+                            clearInterval(mainTimerRef.current);
+                            mainTimerRef.current = null;
+                        }
+                        setIsStartModalVisible(false);
+
+                        // Show appropriate modal based on mode
+                        setTimeout(() => {
+                            if (autoDetect) {
+                                setIsResultModalVisible(true);
+                            } else {
+                                setManualInputModal(true);
+                            }
+                        }, 300);
+
+                        return 0;
+                    }
+                });
+            }, 1000);
+        }
+    }, [countdown, time, autoDetect, speechEnabled]);
+
+    // Function to handle closing the countdown modal
+    const handleCloseCountdownModal = () => {
+        // Clear the countdown timer
+        if (countdownTimerRef.current) {
+            clearTimeout(countdownTimerRef.current);
+            countdownTimerRef.current = null;
+        }
+
+        // Stop speech
+        stopSpeech();
+
+        // Reset countdown state
+        setCountdown(null);
+        setBeginModal(false);
         setCountdownFinished(false);
+        setSessionActive(false);
+
+        // Reset other related states
+        setPushUpCount(0);
+        setFaceData([]);
+        setFaceClose(false);
+        previousY.current = null;
+        setLastAnnouncedCount(0);
+
+        console.log("Countdown timer cancelled");
+    };
+
+    // Updated resetTimers function to include countdown cleanup
+    const resetTimers = () => {
+        setSessionActive(false);
         setPushUpCount(0);
         setMainTimer(null);
         setFaceData([]);
-        setCountdown(null);
+        stopSpeech();
         setFaceClose(false);
+        setLastAnnouncedCount(0);
         previousY.current = null;
 
-        // Clear all timers
+        // Clear countdown timer
+        if (countdownTimerRef.current) {
+            clearTimeout(countdownTimerRef.current);
+            countdownTimerRef.current = null;
+        }
+
+        // Reset countdown state
+        setCountdown(null);
+        setCountdownFinished(false);
+
+        // Clear all other timers
         if (mainTimerRef.current) {
             clearInterval(mainTimerRef.current);
             mainTimerRef.current = null;
@@ -153,102 +267,22 @@ const PushUpsScreen = ({
         }
     };
 
-    const startCountdown = () => {
-        countRef.current = 5;
-        setCountdown(5);
-        setCountdownFinished(false);
-        isCountdownActiveRef.current = true;
+    useEffect(() => {
+        if (pushUpCount > lastAnnouncedCount && pushUpCount > 0) {
 
-        const speakAndCount = () => {
-            if (!isCountdownActiveRef.current) return;
-
-            Speech.speak(String(countRef.current), {
-                rate: 0.9,
-                onDone: () => {
-                    if (!isCountdownActiveRef.current) return;
-
-                    countRef.current--;
-                    setCountdown(countRef.current);
-
-                    if (countRef.current > 0) {
-                        timeoutRef.current = setTimeout(speakAndCount, 800);
-                    } else {
-                        Speech.speak("Begin!", {
-                            rate: 0.9,
-                            onDone: () => {
-                                if (!isCountdownActiveRef.current) return;
-
-                                setCountdownFinished(true);
-                                setBeginModal(false);
-                                isCountdownActiveRef.current = false;
-
-                                setTimeout(() => {
-                                    setSessionActive(true);
-                                    startMainTimer(time);
-                                }, 500);
-                            }
-                        });
-                    }
-                },
-            });
-        };
-
-        speakAndCount();
-    };
-
-
-    const stopMainTimer = () => {
-        if (mainTimerRef.current) {
-            clearTimeout(mainTimerRef.current);
-            mainTimerRef.current = null;
-        }
-    };
-
-    const startMainTimer = (duration: number) => {
-        let remaining = duration;
-        setMainTimer(remaining);
-        setIsStartModalVisible(true);
-
-        const tick = async () => {
-            remaining--;
-            setMainTimer(remaining);
-
-            if (remaining > 0) {
-                mainTimerRef.current = setTimeout(tick, 1000);
-            } else {
-                setSessionActive(false);
-                setCountdownFinished(false);
-                stopMainTimer();
-                setIsStartModalVisible(false);
-
-                setTimeout(() => {
-                    if (autoDetect) {
-                        setIsResultModalVisible(true);
-                    } else {
-                        setManualInputModal(true);
-                    }
-                }, 500);
+            if (pushUpCount === 10) {
+                setTimeout(() => speakText("Great job! Keep going!"), 1000);
+            } else if (pushUpCount === 25) {
+                setTimeout(() => speakText("You're doing amazing!"), 1000);
+            } else if (pushUpCount === 38) {
+                setTimeout(() => speakText("Excellent! You've reached the tactical standard!"), 1000);
+            } else if (pushUpCount === 50) {
+                setTimeout(() => speakText("Outstanding! Fifty push-ups!"), 1000);
             }
-        };
 
-        mainTimerRef.current = setTimeout(tick, 1000);
-    };
-
-
-
-    const stopCountdown = () => {
-        setIsCountdownActive(false); // ✅ Mark countdown as inactive first
-
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-            timeoutRef.current = null;
+            setLastAnnouncedCount(pushUpCount);
         }
-
-        Speech.stop();
-
-        setCountdown(null);
-        countRef.current = 5;
-    };
+    }, [pushUpCount, lastAnnouncedCount, speechEnabled]);
 
     const handleEndCountdown = () => {
         Alert.alert(
@@ -287,6 +321,9 @@ const PushUpsScreen = ({
                             setMainTimer(null);
 
                             // Show result modal after delay
+
+                            speakText(`Session ended! You completed ${pushUpCount} push-ups!`);
+
                             setTimeout(() => {
                                 if (autoDetect) {
                                     setIsResultModalVisible(true);
@@ -307,21 +344,28 @@ const PushUpsScreen = ({
 
     const handleBeginPress = () => {
         setBeginModal(true);
-        startCountdown();
-
+        setCountdown(5); // Start 5-second countdown
+        setPushUpCount(0); // Reset count
+        setFaceData([]); // Reset face data
+        setFaceClose(false); // Reset face close state
+        previousY.current = null; // Reset previous Y position
+        setLastAnnouncedCount(0); // Reset speech counter
     };
 
-    useEffect(() => {
-        return () => {
-            resetTimers();
-        };
-    }, []);
-
     const handleSubmitResult = async () => {
+        // Prevent multiple submissions
+        if (isUploading) {
+            return;
+        }
+
+        // Set uploading state to true immediately
+        setIsUploading(true);
+
         const user = auth.currentUser;
 
         if (!user) {
             console.warn("No user signed in");
+            setIsUploading(false);
             return;
         }
 
@@ -369,17 +413,22 @@ const PushUpsScreen = ({
             // Reset and navigate after successful save
             resetTimers();
             setIsResultModalVisible(false);
+            setManualInputModal(false); // Close manual input modal too
             navigation.goBack();
             setTime(60);
             setVideoUri(null);
+
+            // Show success message
+            Alert.alert('Success', 'Your push-up session has been saved!');
+
         } catch (error) {
             console.error("Error saving push-up session data to Firestore:", error);
             Alert.alert('Error', 'Failed to submit result. Please try again.');
         } finally {
+            // Always reset uploading state
             setIsUploading(false);
         }
     };
-
 
     const handleFaceDetected = ({ faces }: any) => {
         if (!countdownFinished || !autoDetect) return;
@@ -415,431 +464,410 @@ const PushUpsScreen = ({
     const increaseTime = () => setTime(prev => prev + 10);
     const decreaseTime = () => setTime(prev => (prev > 10 ? prev - 10 : 0));
 
+    const toggleSpeech = () => {
+        setSpeechEnabled(!speechEnabled);
+        if (!speechEnabled) {
+            speakText("Speech enabled");
+        } else {
+            stopSpeech();
+        }
+    };
+
     return (
         <View
             style={[styles.container, {
-                backgroundColor: "white"
             }]}
         >
-            <View style={styles.shadowWrapper}>
-                <View style={styles.headerContainer}>
-                    <Svg height="500" width={screenWidth} style={styles.svg}>
-                        <Defs>
-                            <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                            </SvgLinearGradient>
-                        </Defs>
-                        <Path
-                            d={createBottomCurvedPath()}
-                            fill="url(#grad)"
-                        />
-                    </Svg>
-
-                    {/* Content overlay - positioned absolutely to center over SVG */}
-                    <View style={styles.contentOverlay}>
+            <View style={{
+                height: "40%",
+            }}>
+                <LinearGradient
+                    colors={['#FFD700', '#FFA500']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                        flex: 1,
+                        paddingTop: 50
+                    }}
+                >
+                    <View style={{
+                        flexDirection: "row",
+                        paddingHorizontal: 20,
+                        alignItems: "center",
+                        justifyContent: "space-between"
+                    }}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.goBack();
+                            }}
+                        >
+                            <Image source={require("../../../assets/downloadedIcons/back1.png")}
+                                style={{
+                                    width: 20,
+                                    height: 20
+                                }}
+                            />
+                        </TouchableOpacity>
+                        <Text style={{
+                        }}>PUSH UPS</Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate("PushUpHistory")
+                            }}
+                        >
+                            <Image
+                                source={require("../../../assets/downloadedIcons/notification.png")}
+                                style={{
+                                    height: 30,
+                                    width: 30,
+                                    resizeMode: "contain"
+                                }}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                    <View style={{ flex: 1, padding: 20 }}>
                         <View style={{
-                            alignItems: "center",
-                            flexDirection: "row",
-                            justifyContent: "space-between",
+                            flex: 1,
+                            borderRadius: 10,
+                            overflow: "hidden"
                         }}>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    navigation.goBack();
+                            <Camera
+                                type={CameraType.front}
+                                style={{ flex: 1 }}
+                                onFacesDetected={handleFaceDetected}
+                                faceDetectorSettings={{
+                                    mode: FaceDetector.FaceDetectorMode.fast,
+                                    detectLandmarks: FaceDetector.FaceDetectorLandmarks.none,
+                                    runClassification: FaceDetector.FaceDetectorClassifications.none,
+                                    minDetectionInterval: 100,
+                                    tracking: true,
                                 }}
                             >
-                                <Image source={require("../../../assets/downloadedIcons/back1.png")}
-                                    style={{
-                                        width: 20,
-                                        height: 20
-                                    }}
-                                />
-                            </TouchableOpacity>
-                            <Text style={{
-                                color: "white"
-                            }}>PUSH UPS</Text>
-                            <TouchableOpacity
-                                onPress={() => {
-                                    navigation.navigate("SitUpHistory")
-                                }}
-                            >
-                                <Image
-                                    source={require("../../../assets/downloadedIcons/notification.png")}
-                                    style={{
-                                        height: 30,
-                                        width: 30,
-                                        resizeMode: "contain"
-                                    }}
-                                />
-                            </TouchableOpacity>
-                        </View>
-                        <View style={{ alignItems: "center", padding: 10 }}>
-                            <TourGuideZone
-                                zone={1}
-                                shape="rectangle"
-                                text="📹 Camera View: Position your face in the center of the camera. The system will track your face movement to count push-ups automatically when auto-detect is enabled."
-                            >
-                                <View
-                                    style={{
-                                        width: 350,
-                                        height: 200,
-                                        borderRadius: 10,
-                                        overflow: "hidden",
-                                    }}
-                                >
-                                    <Camera
-                                        type={CameraType.front}
-                                        style={{ flex: 1 }}
-                                        onFacesDetected={handleFaceDetected}
-                                        faceDetectorSettings={{
-                                            mode: FaceDetector.FaceDetectorMode.fast,
-                                            detectLandmarks: FaceDetector.FaceDetectorLandmarks.none,
-                                            runClassification: FaceDetector.FaceDetectorClassifications.none,
-                                            minDetectionInterval: 100,
-                                            tracking: true,
-                                        }}
-                                    >
-                                        {recordingStarted && (
-                                            <View style={styles.recordingIndicator}>
-                                                <Text style={styles.recordingText}>●</Text>
-                                            </View>
-                                        )}
-                                    </Camera>
-                                </View>
-                            </TourGuideZone>
+                                {recordingStarted && (
+                                    <View style={styles.recordingIndicator}>
+                                        <Text style={styles.recordingText}>●</Text>
+                                    </View>
+                                )}
+                            </Camera>
                         </View>
                     </View>
-                </View>
+                </LinearGradient>
             </View>
             <View style={{
                 flex: 1,
-                zIndex: 999
             }}>
                 <View style={{
                     flex: 1,
                     paddingBottom: 20,
                     justifyContent: "space-between"
                 }}>
-                    <View style={{
-                        gap: 20,
+
+                    <SafeAreaView style={{
+                        padding: 20,
                         flex: 1,
                     }}>
                         <View style={{
                             padding: 20,
                             flex: 1,
-                            zIndex: 999
+                            justifyContent: "space-between"
                         }}>
-                            <SafeAreaView style={{
-                                padding: 20,
-                                flex: 1,
-                                justifyContent: "space-between"
+                            <View style={{
+                                gap: 20,
                             }}>
                                 <View style={{
-                                    bottom: 60,
-                                    gap: 20
+                                    padding: 20,
+                                    gap: 20,
+                                    backgroundColor: 'white',
+                                    borderRadius: 16,
+                                    justifyContent: "center",
+                                    shadowColor: '#000',
+                                    shadowOffset: {
+                                        width: 0,
+                                        height: 10,
+                                    },
+                                    shadowOpacity: 0.1,
+                                    shadowRadius: 8,
                                 }}>
-                                    <View style={{
-                                        padding: 20,
-                                        gap: 20,
-                                        backgroundColor: 'white',
-                                        borderRadius: 16,
-                                        justifyContent: "center",
-                                        shadowColor: '#000',
-                                        shadowOffset: {
-                                            width: 0,
-                                            height: 10,
-                                        },
-                                        shadowOpacity: 0.3,
-                                        shadowRadius: 8,
+                                    <Text style={{
+                                        alignSelf: "center",
+                                        fontWeight: "400",
+                                        textAlign: "center",
+                                        fontSize: 14
                                     }}>
-                                        <Text style={{
-                                            alignSelf: "center",
-                                            fontWeight: "400",
-                                            textAlign: "center",
-                                            fontSize: 14
-                                        }}>
-                                            Target Push-Up Count
-                                        </Text>
-                                        <View style={{
-                                            paddingHorizontal: 10,
-                                            alignItems: "center",
-                                            borderRadius: 25,
-                                            flexDirection: "row",
-                                            justifyContent: "space-between",
-                                        }}>
-                                            <TourGuideZone
-                                                zone={2}
-                                                shape="rectangle"
-                                                text="🎯 Minimum Target: This is the minimum number of push-ups you need to complete to pass the fitness test. Aim to reach or exceed this number!"
-                                            >
-                                                <View style={{
-                                                    alignItems: "center"
-                                                }}>
-                                                    <Text style={{
-                                                        fontSize: 35,
-                                                        fontWeight: "600"
-                                                    }}>
-                                                        38
-                                                    </Text>
-                                                    <Text style={{
-                                                        fontSize: 10,
-                                                        fontWeight: "400"
-                                                    }}>MINIMUM</Text>
-                                                </View>
-                                            </TourGuideZone>
-                                            <TourGuideZone
-                                                zone={3}
-                                                shape="rectangle"
-                                                text="🔄 Auto-Detect Mode: Toggle ON to automatically count push-ups using face tracking. Toggle OFF to manually input your count at the end of the session."
-                                            >
-                                                <View style={{
-                                                    alignItems: "center",
-                                                    gap: 10
-                                                }}>
-                                                    <Switch
-                                                        color={"#FA812890"}
-                                                        value={autoDetect}
-                                                        onValueChange={(value) => setAutoDetect(value)}
-                                                    />
-                                                    <Text style={{
-                                                        fontSize: 10,
-                                                        fontWeight: "400"
-                                                    }}>AUTO DETECT</Text>
-                                                </View>
-                                            </TourGuideZone>
-                                        </View>
-                                    </View>
+                                        Target Push-Up Count
+                                    </Text>
                                     <View style={{
-                                        padding: 20,
-                                        gap: 20,
-                                        backgroundColor: 'white',
-                                        borderRadius: 16,
-                                        justifyContent: "center",
-                                        shadowColor: '#000',
-                                        shadowOffset: {
-                                            width: 0,
-                                            height: 10,
-                                        },
-                                        shadowOpacity: 0.3,
-                                        shadowRadius: 8,
+                                        paddingHorizontal: 10,
+                                        alignItems: "center",
+                                        borderRadius: 25,
+                                        flexDirection: "row",
+                                        justifyContent: "space-between",
                                     }}>
-                                        <Text style={{
-                                            alignSelf: "center",
-                                            fontWeight: "400",
-                                            textAlign: "center",
-                                            fontSize: 14
-                                        }}>
-                                            Session Duration
-                                        </Text>
                                         <View style={{
-                                            paddingHorizontal: 10,
                                             alignItems: "center",
-                                            borderRadius: 25,
-                                            flexDirection: "row",
-                                            justifyContent: "space-between",
+                                            gap: 10
                                         }}>
-                                            <TourGuideZone
-                                                zone={4}
-                                                shape="circle"
-                                                text="➖ Decrease Time: Tap to reduce the session duration by 10 seconds. Minimum duration is 10 seconds."
-                                            >
-                                                <TouchableOpacity
-                                                    style={{
-                                                        height: 30,
-                                                        width: 30,
-                                                        alignItems: "center",
-                                                        backgroundColor: "#FA812890",
-                                                        borderRadius: 15,
-                                                        justifyContent: "center"
-                                                    }}
-                                                    onPress={() => {
-                                                        decreaseTime();
-                                                    }}
-                                                >
-                                                    <Text style={{
-                                                        color: "white",
-                                                        fontSize: 20
-                                                    }}>-</Text>
-                                                </TouchableOpacity>
-                                            </TourGuideZone>
-                                            <TourGuideZone
-                                                zone={5}
-                                                shape="rectangle"
-                                                text="⏱️ Timer Display: Shows your selected session duration. You can increase or decrease this time based on your fitness level and goals."
-                                            >
-                                                <View style={{
-                                                    alignItems: "center"
-                                                }}>
-                                                    <Text style={{
-                                                        fontSize: 35,
-                                                        fontWeight: "600"
-                                                    }}>
-                                                        {formatTime(time)}
-                                                    </Text>
-                                                    <Text style={{
-                                                        fontSize: 10
-                                                    }}>DURATION</Text>
-                                                </View>
-                                            </TourGuideZone>
-                                            <TourGuideZone
-                                                zone={6}
-                                                shape="circle"
-                                                text="➕ Increase Time: Tap to add 10 seconds to your session duration. Adjust based on your fitness level."
-                                            >
-                                                <TouchableOpacity
-                                                    style={{
-                                                        height: 30,
-                                                        width: 30,
-                                                        alignItems: "center",
-                                                        backgroundColor: "#FA812890",
-                                                        borderRadius: 15,
-                                                        justifyContent: "center"
-                                                    }}
-                                                    onPress={() => {
-                                                        increaseTime();
-                                                    }}
-                                                >
-                                                    <Text style={{
-                                                        color: "white",
-                                                        fontSize: 20
-                                                    }}>+</Text>
-                                                </TouchableOpacity>
-                                            </TourGuideZone>
+                                            <Switch
+                                                value={speechEnabled}
+                                                onValueChange={toggleSpeech}
+                                                color={"#FA812890"}
+                                            />
+                                            <Text style={{
+                                                fontWeight: "400",
+                                                fontSize: 10
+                                            }}>Enable speech</Text>
                                         </View>
+                                        <TourGuideZone
+                                            zone={2}
+                                            shape="rectangle"
+                                            text="🎯 Minimum Target: This is the minimum number of push-ups you need to complete to pass the fitness test. Aim to reach or exceed this number!"
+                                        >
+                                            <View style={{
+                                                alignItems: "center"
+                                            }}>
+                                                <Text style={{
+                                                    fontSize: 35,
+                                                    fontWeight: "600"
+                                                }}>
+                                                    38
+                                                </Text>
+                                                <Text style={{
+                                                    fontSize: 10,
+                                                    fontWeight: "400"
+                                                }}>MINIMUM</Text>
+                                            </View>
+                                        </TourGuideZone>
+                                        <TourGuideZone
+                                            zone={3}
+                                            shape="rectangle"
+                                            text="🔄 Auto-Detect Mode: Toggle ON to automatically count push-ups using face tracking. Toggle OFF to manually input your count at the end of the session."
+                                        >
+                                            <View style={{
+                                                alignItems: "center",
+                                                gap: 10
+                                            }}>
+                                                <Switch
+                                                    color={"#FA812890"}
+                                                    value={autoDetect}
+                                                    onValueChange={(value) => setAutoDetect(value)}
+                                                />
+                                                <Text style={{
+                                                    fontSize: 10,
+                                                    fontWeight: "400"
+                                                }}>AUTO DETECT</Text>
+                                            </View>
+                                        </TourGuideZone>
                                     </View>
                                 </View>
-                                <TourGuideZone
-                                    zone={7}
-                                    shape="rectangle"
-                                    text="🚀 Start Your Session: Tap to begin your push-up session. You'll get a 5-second countdown to prepare before the timer starts!"
-                                >
-                                    <View style={{}}>
-                                        <TouchableOpacity style={{
-                                            backgroundColor: "#FA812890",
-                                            justifyContent: "space-between",
-                                            flexDirection: "row",
-                                            alignItems: "center",
-                                            padding: 20,
-                                            borderRadius: 5
-                                        }}
-                                            onPress={() => {
-                                                handleBeginPress();
-                                            }}
+                                <View style={{
+                                    padding: 20,
+                                    gap: 20,
+                                    backgroundColor: 'white',
+                                    borderRadius: 16,
+                                    justifyContent: "center",
+                                    shadowColor: '#000',
+                                    shadowOffset: {
+                                        width: 0,
+                                        height: 10,
+                                    },
+                                    shadowOpacity: 0.1,
+                                    shadowRadius: 8,
+                                }}>
+                                    <Text style={{
+                                        alignSelf: "center",
+                                        fontWeight: "400",
+                                        textAlign: "center",
+                                        fontSize: 14
+                                    }}>
+                                        Session Duration
+                                    </Text>
+                                    <View style={{
+                                        paddingHorizontal: 10,
+                                        alignItems: "center",
+                                        borderRadius: 25,
+                                        flexDirection: "row",
+                                        justifyContent: "space-between",
+                                    }}>
+                                        <TourGuideZone
+                                            zone={4}
+                                            shape="circle"
+                                            text="➖ Decrease Time: Tap to reduce the session duration by 10 seconds. Minimum duration is 10 seconds."
                                         >
-                                            <Text style={{
-                                                color: "white",
-                                                fontWeight: "600"
-                                            }}>START PUSH-UPS</Text>
-                                            <Image source={require("../../../assets/BackgroundImages/VectorRight.png")}
+                                            <TouchableOpacity
                                                 style={{
-                                                    height: 20,
-                                                    width: 20
+                                                    height: 30,
+                                                    width: 30,
+                                                    alignItems: "center",
+                                                    backgroundColor: "#FA812890",
+                                                    borderRadius: 15,
+                                                    justifyContent: "center"
                                                 }}
-                                            />
-                                        </TouchableOpacity>
+                                                onPress={() => {
+                                                    decreaseTime();
+                                                }}
+                                            >
+                                                <Text style={{
+                                                    color: "white",
+                                                    fontSize: 20
+                                                }}>-</Text>
+                                            </TouchableOpacity>
+                                        </TourGuideZone>
+                                        <TourGuideZone
+                                            zone={5}
+                                            shape="rectangle"
+                                            text="⏱️ Timer Display: Shows your selected session duration. You can increase or decrease this time based on your fitness level and goals."
+                                        >
+                                            <View style={{
+                                                alignItems: "center"
+                                            }}>
+                                                <Text style={{
+                                                    fontSize: 35,
+                                                    fontWeight: "600"
+                                                }}>
+                                                    {formatTime(time)}
+                                                </Text>
+                                                <Text style={{
+                                                    fontSize: 10
+                                                }}>DURATION</Text>
+                                            </View>
+                                        </TourGuideZone>
+                                        <TourGuideZone
+                                            zone={6}
+                                            shape="circle"
+                                            text="➕ Increase Time: Tap to add 10 seconds to your session duration. Adjust based on your fitness level."
+                                        >
+                                            <TouchableOpacity
+                                                style={{
+                                                    height: 30,
+                                                    width: 30,
+                                                    alignItems: "center",
+                                                    backgroundColor: "#FA812890",
+                                                    borderRadius: 15,
+                                                    justifyContent: "center"
+                                                }}
+                                                onPress={() => {
+                                                    increaseTime();
+                                                }}
+                                            >
+                                                <Text style={{
+                                                    color: "white",
+                                                    fontSize: 20
+                                                }}>+</Text>
+                                            </TouchableOpacity>
+                                        </TourGuideZone>
                                     </View>
-                                </TourGuideZone>
-                            </SafeAreaView>
+                                </View>
+                            </View>
+                            <TourGuideZone
+                                zone={7}
+                                shape="rectangle"
+                                text="🚀 Start Your Session: Tap to begin your push-up session. You'll get a 5-second countdown to prepare before the timer starts!"
+                            >
+                                <View style={{}}>
+                                    <TouchableOpacity style={{
+                                        backgroundColor: "#FA812890",
+                                        justifyContent: "space-between",
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        padding: 20,
+                                        borderRadius: 5
+                                    }}
+                                        onPress={() => {
+                                            handleBeginPress();
+                                        }}
+                                    >
+                                        <Text style={{
+                                            color: "white",
+                                            fontWeight: "600"
+                                        }}>START PUSH-UPS</Text>
+                                        <Image source={require("../../../assets/Icons/fast-forward.png")}
+                                            style={{
+                                                width: 15,
+                                                height: 15,
+                                                resizeMode: "contain"
+                                            }}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                            </TourGuideZone>
                         </View>
-                    </View>
+                    </SafeAreaView>
                 </View>
                 <Modal
                     visible={beginModal}
                     animationType="slide"
                     transparent={true}
-                    onRequestClose={() => {
-                        setBeginModal(beginModal);
-                    }}
+                    onRequestClose={handleCloseCountdownModal}
                 >
                     <View style={{
                         flex: 1,
                         justifyContent: "flex-end",
                     }}>
-                        <View style={[styles.shadowTopWrapper, {
-                            top: 100,
-                        }]}>
-                            <View style={styles.headerContainer}>
-                                <Svg height="500" width={screenWidth} style={styles.svg}>
-                                    <Defs>
-                                        <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                            <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                                        </SvgLinearGradient>
-                                    </Defs>
-                                    <Path
-                                        d={createTopCurvedPath()}
-                                        fill="url(#grad)"
-                                    />
-                                </Svg>
-                                {/* Content overlay - positioned absolutely to center over SVG */}
-                                <View style={styles.contentOverlay}>
-                                    <View
-                                        style={{
-                                            height: 300,
-                                            width: "100%",
-                                            alignSelf: "center",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            borderRadius: 15
-                                        }}>
-                                        <View style={{
-                                            position: "absolute",
-                                            top: 0,
-                                            right: 0,
-                                            paddingHorizontal: 20
-                                        }}>
-                                            <TouchableOpacity style={{
-                                            }}
-                                                onPress={() => {
-                                                    stopCountdown();
-                                                    setBeginModal(false);
-                                                    setCountdown(null);
-                                                    setCountdownFinished(false);
-                                                }}
-                                            >
-                                                <Text style={{
-                                                    fontSize: 17,
-                                                    color: "white",
-                                                }}>close</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                        <View style={{
-                                            height: 150,
-                                            width: '70%',
-                                            borderRadius: 5,
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: 10,
-                                        }}>
-                                            <View style={{
-                                                flexDirection: "row",
-                                                alignItems: "flex-end",
-                                            }}>
-                                                <View>
-                                                    {countdown !== null && (
-                                                        <Text style={styles.countdownText}>{countdown > 0 ? countdown : "Begin!"}</Text>
-                                                    )}
-                                                </View>
-                                                <Text style={{
-                                                    fontSize: 17,
-                                                    bottom: 10,
-                                                    color: "white",
-                                                }}>sec</Text>
-                                            </View>
-                                            <TouchableOpacity
-                                                onPress={() => {
-
-                                                }}
-                                            >
-                                                <Text style={{
-                                                    color: "white"
-                                                }}>GET READY</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-                                </View>
+                        <LinearGradient
+                            colors={['#FFD700', '#FFA500']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={{
+                                height: "30%",
+                                width: "100%",
+                                justifyContent: "center",
+                                alignSelf: "center",
+                                alignItems: "center",
+                                borderRadius: 15
+                            }}
+                        >
+                            <View style={{
+                                position: "absolute",
+                                top: 0,
+                                right: 0,
+                                padding: 20
+                            }}>
+                                <TouchableOpacity style={{
+                                }}
+                                    onPress={() => {
+                                        handleCloseCountdownModal();
+                                    }}
+                                >
+                                    <Text style={{
+                                        fontSize: 17,
+                                        color: "white",
+                                    }}>close</Text>
+                                </TouchableOpacity>
                             </View>
-                        </View>
+                            <View style={{
+                                height: 150,
+                                width: '70%',
+                                borderRadius: 5,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 10,
+                            }}>
+                                <View style={{
+                                    flexDirection: "row",
+                                    alignItems: "flex-end",
+                                }}>
+                                    <View>
+                                        {countdown !== null && (
+                                            <Text style={styles.countdownText}>{countdown > 0 ? countdown : "Begin!"}</Text>
+                                        )}
+                                    </View>
+                                    <Text style={{
+                                        fontSize: 17,
+                                        bottom: 10,
+                                        color: "white",
+                                    }}>sec</Text>
+                                </View>
+                                <TouchableOpacity
+                                    onPress={() => {
+
+                                    }}
+                                >
+                                    <Text style={{
+                                        color: "white"
+                                    }}>GET READY</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </LinearGradient>
                     </View>
                 </Modal>
                 <Modal
@@ -854,101 +882,81 @@ const PushUpsScreen = ({
                         flex: 1,
                         justifyContent: "flex-end"
                     }}>
-                        <View style={[styles.shadowTopWrapper, {
-                            top: 100,
-                        }]}>
-                            <View style={styles.headerContainer}>
-                                <Svg height="500" width={screenWidth} style={styles.svg}>
-                                    <Defs>
-                                        <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                            <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                                        </SvgLinearGradient>
-                                    </Defs>
-                                    <Path
-                                        d={createTopCurvedPath()}
-                                        fill="url(#grad)"
-                                    />
-                                </Svg>
+                        <LinearGradient
+                            colors={['#FFD700', '#FFA500']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={{
+                                height: "35%",
+                                paddingTop: 50,
+                                borderBottomRightRadius: 10,
+                                alignItems: "center",
+                                gap: 20,
+                                borderBottomLeftRadius: 10
+                            }}
+                        >
+                            <View style={{
+                                height: 120,
+                                width: '70%',
+                                borderRadius: 5,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 10,
+                                backgroundColor: "rgba(0, 0, 0, 0.3)"
+                            }}>
+                                <View style={{
+                                    flexDirection: "row",
+                                    alignItems: "flex-end",
 
-                                {/* Content overlay - positioned absolutely to center over SVG */}
-                                <View style={styles.contentOverlay}>
-                                    <View
-                                        style={{
-                                            height: 300,
-                                            width: "100%",
-                                            alignSelf: "center",
-                                            gap: 20,
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            borderRadius: 15
-                                        }}
-                                    >
-                                        <View style={{
-                                            height: 120,
-                                            width: '70%',
-                                            borderRadius: 5,
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: 10,
-                                            backgroundColor: "rgba(0, 0, 0, 0.3)"
-                                        }}>
-                                            <View style={{
-                                                flexDirection: "row",
-                                                alignItems: "flex-end",
-
-                                            }}>
-                                                <Text style={{
-                                                    fontSize: 20,
-                                                    color: "white"
-                                                }}>
-                                                    {mainTimer !== null ? formatTime(mainTimer) : formatTime(time)}
-                                                </Text>
-                                                <Text style={{
-                                                    fontSize: 12,
-                                                    color: "white",
-                                                }}>sec</Text>
-                                            </View>
-                                            <View style={{
-                                                flexDirection: "row",
-                                                alignItems: "flex-end",
-                                            }}>
-                                                <Text style={{
-                                                    fontSize: 50,
-                                                    color: "white",
-                                                }}>{pushUpCount}</Text>
-
-                                            </View>
-                                        </View>
-                                        <TouchableOpacity
-                                            style={{
-                                                backgroundColor: "rgba(0, 0, 0, 0.3)",
-                                                padding: 20,
-                                                width: "70%",
-                                                justifyContent: "space-between",
-                                                flexDirection: "row",
-                                                alignItems: "center"
-                                            }}
-                                            onPress={() => {
-                                                handleEndCountdown();
-                                            }}
-                                        >
-                                            <Text style={{
-                                                color: "white"
-                                            }}>END SITUP</Text>
-                                            <Image source={require("../../../assets/Icons/fast-forward.png")}
-                                                style={{
-                                                    width: 15,
-                                                    height: 15,
-                                                    resizeMode: "contain"
-                                                }}
-                                            />
-                                        </TouchableOpacity>
-                                    </View>
+                                }}>
+                                    <Text style={{
+                                        fontSize: 20,
+                                        color: "white"
+                                    }}>
+                                        {mainTimer !== null ? formatTime(mainTimer) : formatTime(time)}
+                                    </Text>
+                                    <Text style={{
+                                        fontSize: 12,
+                                        color: "white",
+                                    }}>sec</Text>
+                                </View>
+                                <View style={{
+                                    flexDirection: "row",
+                                    alignItems: "flex-end",
+                                }}>
+                                    <Text style={{
+                                        fontSize: 50,
+                                        color: "white",
+                                    }}>{pushUpCount}</Text>
 
                                 </View>
                             </View>
-                        </View>
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: "rgba(0, 0, 0, 0.3)",
+                                    padding: 20,
+                                    width: "70%",
+                                    borderRadius: 5,
+                                    justifyContent: "space-between",
+                                    flexDirection: "row",
+                                    alignItems: "center"
+                                }}
+                                onPress={() => {
+                                    handleEndCountdown();
+                                }}
+                            >
+                                <Text style={{
+                                    color: "white"
+                                }}>END SITUP</Text>
+                                <Image source={require("../../../assets/Icons/fast-forward.png")}
+                                    style={{
+                                        width: 15,
+                                        height: 15,
+                                        resizeMode: "contain"
+                                    }}
+                                />
+                            </TouchableOpacity>
+                        </LinearGradient>
                     </View>
                 </Modal>
                 <Modal
@@ -963,131 +971,104 @@ const PushUpsScreen = ({
                         flex: 1,
                         justifyContent: "flex-end"
                     }}>
-                        <View style={[styles.shadowTopWrapper, {
-                            top: 100,
-                        }]}>
-                            <View style={styles.headerContainer}>
-                                <Svg height="500" width={screenWidth} style={styles.svg}>
-                                    <Defs>
-                                        <SvgLinearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <Stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                                            <Stop offset="100%" stopColor="#FFA500" stopOpacity="1" />
-                                        </SvgLinearGradient>
-                                    </Defs>
-                                    <Path
-                                        d={createTopCurvedPath()}
-                                        fill="url(#grad)"
-                                    />
-                                </Svg>
+                        <LinearGradient
+                            colors={['#FFD700', '#FFA500']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={{
+                                height: "35%",
+                                paddingTop: 50,
+                                alignItems: "center",
+                                gap: 20,
+                                borderTopRightRadius: 10,
+                                borderTopLeftRadius: 10
+                            }}
+                        >
+                            <View style={{
+                                position: "absolute",
+                                top: 10,
+                                right: 0,
+                                paddingHorizontal: 20
+                            }}>
+                                <TouchableOpacity style={{
 
-                                {/* Content overlay - positioned absolutely to center over SVG */}
-                                <View style={styles.contentOverlay}
+                                }}
+                                    onPress={() => {
+                                        setIsResultModalVisible(false);
+                                        resetTimers();
+                                        setPrepTime(5);
+                                        if (intervalRef.current) {
+                                            clearInterval(intervalRef.current);
+                                            intervalRef.current = null;
+                                        }
+                                        setTime(60);
+                                        if (startIntervalRef.current) {
+                                            clearInterval(startIntervalRef.current);
+                                            startIntervalRef.current = null;
+                                        }
+                                    }}
                                 >
-                                    <View
-                                        style={{
-                                            height: 300,
-                                            width: "100%",
-                                            alignSelf: "center",
-                                            gap: 20,
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            borderRadius: 15
-                                        }}
-                                    >
-                                        <View style={{
-                                            position: "absolute",
-                                            top: 0,
-                                            right: 0,
-                                            paddingHorizontal: 20
-                                        }}>
-                                            <TouchableOpacity style={{
-
-                                            }}
-                                                onPress={() => {
-                                                    setIsResultModalVisible(false);
-                                                    resetTimers();
-                                                    setPrepTime(5);
-                                                    if (intervalRef.current) {
-                                                        clearInterval(intervalRef.current);
-                                                        intervalRef.current = null;
-                                                    }
-                                                    setTime(60);
-                                                    if (startIntervalRef.current) {
-                                                        clearInterval(startIntervalRef.current);
-                                                        startIntervalRef.current = null;
-                                                    }
-                                                }}
-                                            >
-                                                <Text style={{
-                                                    fontSize: 17,
-                                                    color: "white",
-                                                }}>close</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                        <View style={{
-                                            height: 100,
-                                            width: '70%',
-                                            borderRadius: 5,
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            gap: 10,
-                                            backgroundColor: "rgba(0, 0, 0, 0.3)"
-                                        }}>
-                                            <View style={{
-                                                flexDirection: "row",
-                                                alignItems: "flex-end",
-                                            }}>
-                                                <Text style={{
-                                                    fontSize: 40,
-                                                    color: "white",
-                                                }}>{pushUpCount}</Text>
-                                                {/* <Text style={{
-                                                        fontSize: 17,
-                                                        bottom: 10,
-                                                        color: "white",
-                                                    }}>min</Text> */}
-                                            </View>
-                                            <View
-                                            >
-                                                <Text style={{
-                                                    color: "white"
-                                                }}>Correct Sit Ups</Text>
-                                            </View>
-                                        </View>
-                                        <TouchableOpacity style={{
-                                            width: "70%",
-                                            backgroundColor: "rgba(0, 0, 0, 0.3)",
-                                            justifyContent: "space-between",
-                                            flexDirection: "row",
-                                            padding: 20,
-                                            borderRadius: 5,
-                                            alignItems: "center",
-                                            opacity: isUploading ? 0.6 : 1
-                                        }}
-                                            onPress={() => {
-                                                handleSubmitResult();
-                                            }}
-                                            disabled={isUploading}
-                                        >
-                                            <Text style={{
-                                                color: "white"
-                                            }}>{isUploading ? 'UPLOADING...' : 'SUBMIT'}</Text>
-                                            {isUploading ? (
-                                                <ActivityIndicator color="white" size="small" />
-                                            ) : (
-                                                <Image source={require("../../../assets/downloadedIcons/fast.png")}
-                                                    style={{
-                                                        width: 25,
-                                                        height: 25,
-                                                        resizeMode: "contain"
-                                                    }}
-                                                />
-                                            )}
-                                        </TouchableOpacity>
-                                    </View>
+                                    <Text style={{
+                                        fontSize: 17,
+                                        color: "white",
+                                    }}>close</Text>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={{
+                                height: 100,
+                                width: '70%',
+                                borderRadius: 5,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 10,
+                                backgroundColor: "rgba(0, 0, 0, 0.3)"
+                            }}>
+                                <View style={{
+                                    flexDirection: "row",
+                                    alignItems: "flex-end",
+                                }}>
+                                    <Text style={{
+                                        fontSize: 40,
+                                        color: "white",
+                                    }}>{pushUpCount}</Text>
+                                </View>
+                                <View
+                                >
+                                    <Text style={{
+                                        color: "white"
+                                    }}>Correct Sit Ups</Text>
                                 </View>
                             </View>
-                        </View>
+                            <TouchableOpacity style={{
+                                width: "70%",
+                                backgroundColor: "rgba(0, 0, 0, 0.3)",
+                                justifyContent: "space-between",
+                                flexDirection: "row",
+                                padding: 20,
+                                borderRadius: 5,
+                                alignItems: "center",
+                                opacity: isUploading ? 0.6 : 1
+                            }}
+                                onPress={handleSubmitResult}
+                                disabled={isUploading}
+                                activeOpacity={isUploading ? 1 : 0.7}
+                            >
+                                <Text style={{
+                                    color: "white"
+                                }}>{isUploading ? 'UPLOADING...' : 'SUBMIT'}</Text>
+                                {isUploading ? (
+                                    <ActivityIndicator color="white" size="small" />
+                                ) : (
+                                    <Image source={require("../../../assets/downloadedIcons/fast.png")}
+                                        style={{
+                                            width: 25,
+                                            height: 25,
+                                            resizeMode: "contain"
+                                        }}
+                                    />
+                                )}
+                            </TouchableOpacity>
+                        </LinearGradient>
                     </View>
                 </Modal>
                 <Modal
@@ -1143,17 +1124,24 @@ const PushUpsScreen = ({
                                     color: '#000',
                                 }}
                             />
-                            <TouchableOpacity style={[styles.getStartedBtn, {
-                                backgroundColor: "#FA812890",
-                                opacity: isUploading ? 0.6 : 1
-                            }]}
-                                onPress={() => {
-                                    handleSubmitResult();
-                                }}
+                            <TouchableOpacity
+                                style={[styles.getStartedBtn, {
+                                    backgroundColor: "#FA812890",
+                                    opacity: (isUploading || !pushUpCount) ? 0.6 : 1,
+                                    flexDirection: "row",
+                                    justifyContent: "space-between",
+                                    alignItems: "center"
+                                }]}
+                                onPress={handleSubmitResult}
+                                disabled={isUploading || !pushUpCount}
+                                activeOpacity={(isUploading || !pushUpCount) ? 1 : 0.7}
                             >
                                 <Text style={{
-                                    color: "white"
-                                }}>{isUploading ? 'UPLOADING...' : 'SUBMIT'}</Text>
+                                    color: "white",
+                                    fontWeight: "600"
+                                }}>
+                                    {isUploading ? 'UPLOADING...' : 'SUBMIT'}
+                                </Text>
                                 {isUploading ? (
                                     <ActivityIndicator color="white" size="small" />
                                 ) : (
@@ -1325,22 +1313,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         textAlign: "center",
     },
-    headerContainer: {
-        position: 'relative',
-        justifyContent: "center",
-        backgroundColor: 'transparent'
-    },
-    contentOverlay: {
-        position: 'absolute',
-        top: 30,
-        left: 0,
-        right: 0,
-        padding: 20,
-        bottom: 0,
-        flex: 1,
-        justifyContent: 'flex-start',
-        gap: 20,
-    },
     svg: {
         padding: 20,
     },
@@ -1357,10 +1329,5 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         gap: 10,
         flexDirection: "row"
-    },
-    shadowTopWrapper: {
-        flex: 1,
-        justifyContent: "flex-end",
-
     },
 });
